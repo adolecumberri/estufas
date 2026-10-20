@@ -17,6 +17,7 @@ import { useCatalogo } from '@/hooks/use-catalogo';
 import { useCliente, useDescuentos } from '@/hooks/use-comercial';
 import { usePedidos } from '@/hooks/use-pedidos';
 import { formatEUR, formatPct } from '@/lib/format';
+import { useColoresIcono } from '@/lib/theme';
 
 export default function ClienteDetalle() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -27,6 +28,7 @@ export default function ClienteDetalle() {
   const { asignarGeneral, asignarProducto, anularProducto } = useDescuentos();
   const { pedidos } = usePedidos();
   const catalogo = useCatalogo(id);
+  const colores = useColoresIcono();
 
   const [pctGeneral, setPctGeneral] = React.useState('');
   const [productoSeleccionado, setProductoSeleccionado] = React.useState<string | null>(null);
@@ -82,7 +84,7 @@ export default function ClienteDetalle() {
       <View style={{ paddingTop: insets.top + 8 }} className="gap-4 p-4">
         <View className="flex-row items-center gap-2">
           <Pressable onPress={() => router.back()} className="rounded-md p-1 active:bg-accent">
-            <ChevronLeft size={24} className="text-foreground" />
+            <ChevronLeft size={24} color={colores.primerPlano} />
           </Pressable>
           <Text className="text-xl font-bold tracking-tight">
             {cliente.razon_social ?? `${cliente.nombre} ${cliente.apellidos ?? ''}`.trim()}

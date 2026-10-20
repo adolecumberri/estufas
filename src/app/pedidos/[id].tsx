@@ -14,6 +14,7 @@ import { ESTADOS_PEDIDO, ORIGENES_DESCUENTO, type EstadoPedido } from '@/constan
 import { useAuth } from '@/hooks/use-auth';
 import { useAccionesPedido, usePedido } from '@/hooks/use-pedidos';
 import { formatEUR, formatFechaHora } from '@/lib/format';
+import { useColoresIcono } from '@/lib/theme';
 
 export default function PedidoDetalle() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -21,6 +22,7 @@ export default function PedidoDetalle() {
   const { session, perfil } = useAuth();
   const { detalle, cargando, error, recargar } = usePedido(id);
   const { cancelar, confirmar, avanzar, ajustarDescuento } = useAccionesPedido();
+  const colores = useColoresIcono();
 
   const [lineaAjuste, setLineaAjuste] = React.useState<string | null>(null);
   const [pctAjuste, setPctAjuste] = React.useState('');
@@ -82,7 +84,7 @@ export default function PedidoDetalle() {
       <View style={{ paddingTop: insets.top + 8 }} className="gap-4 p-4">
         <View className="flex-row items-center gap-2">
           <Pressable onPress={() => router.back()} className="rounded-md p-1 active:bg-accent">
-            <ChevronLeft size={24} className="text-foreground" />
+            <ChevronLeft size={24} color={colores.primerPlano} />
           </Pressable>
           <Text className="text-xl font-bold tracking-tight">Pedido nº {pedido.numero_pedido}</Text>
           <Badge variant={varianteEstado(pedido.estado)} className="ml-auto">

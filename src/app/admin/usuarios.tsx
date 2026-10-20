@@ -14,12 +14,14 @@ import { useAuth } from '@/hooks/use-auth';
 import { useUsuarios } from '@/hooks/use-admin';
 import { useDescuentos } from '@/hooks/use-comercial';
 import { formatPct } from '@/lib/format';
+import { useColoresIcono } from '@/lib/theme';
 
 export default function AdminUsuarios() {
   const insets = useSafeAreaInsets();
   const { session, perfil } = useAuth();
   const { usuarios, cargando, recargar, asignarComercial } = useUsuarios();
   const { asignarGeneral } = useDescuentos();
+  const colores = useColoresIcono();
 
   const [mensaje, setMensaje] = React.useState<string | null>(null);
 
@@ -41,7 +43,7 @@ export default function AdminUsuarios() {
       <View style={{ paddingTop: insets.top + 8 }} className="gap-4 p-4">
         <View className="flex-row items-center gap-2">
           <Pressable onPress={() => router.back()} className="rounded-md p-1 active:bg-accent">
-            <ChevronLeft size={24} className="text-foreground" />
+            <ChevronLeft size={24} color={colores.primerPlano} />
           </Pressable>
           <Text className="text-xl font-bold tracking-tight">Usuarios</Text>
         </View>

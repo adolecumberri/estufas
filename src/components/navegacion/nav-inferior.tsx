@@ -8,6 +8,7 @@ import { Text } from '@/components/ui/text';
 import { RUTAS } from '@/constants';
 import { useSolicitud } from '@/contexts/solicitud-context';
 import { useAuth } from '@/hooks/use-auth';
+import { useColoresIcono } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 
 type PestanaNav = 'catalogo' | 'solicitud' | 'pedidos' | 'cartera' | 'acceso';
@@ -35,6 +36,7 @@ export function NavInferior({ activa }: { activa: 'catalogo' | 'solicitud' | 'pe
   const insets = useSafeAreaInsets();
   const { lineas } = useSolicitud();
   const { session, perfil } = useAuth();
+  const colores = useColoresIcono();
 
   const pestanas = React.useMemo(
     () =>
@@ -62,7 +64,7 @@ export function NavInferior({ activa }: { activa: 'catalogo' | 'solicitud' | 'pe
             }}
             className="relative flex-col items-center justify-center gap-0.5 py-1 active:opacity-70"
           >
-            <Icono size={24} className={cn(esActiva ? 'text-primary' : 'text-muted-foreground')} />
+            <Icono size={24} color={esActiva ? colores.primario : colores.tenue} />
             {id === 'solicitud' && lineas.length > 0 && (
               <View className="absolute right-2 top-0 h-2 w-2 rounded-full bg-primary ring-2 ring-white" />
             )}

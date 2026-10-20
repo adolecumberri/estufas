@@ -16,6 +16,7 @@ import { useSolicitud } from '@/contexts/solicitud-context';
 import { useAuth } from '@/hooks/use-auth';
 import { useProducto } from '@/hooks/use-producto';
 import { formatEUR, formatPct } from '@/lib/format';
+import { useColoresIcono } from '@/lib/theme';
 
 export default function ProductoDetalle() {
   const { id, origen: origenParam } = useLocalSearchParams<{ id: string; origen?: string }>();
@@ -24,6 +25,7 @@ export default function ProductoDetalle() {
   const { session } = useAuth();
   const { clienteObjetivoId, anadir } = useSolicitud();
   const { producto, cargando, error } = useProducto(id, clienteObjetivoId);
+  const colores = useColoresIcono();
 
   const [cantidad, setCantidad] = React.useState(1);
 
@@ -97,7 +99,7 @@ export default function ProductoDetalle() {
             className="rounded-md p-2 active:bg-accent"
             accessibilityLabel="Volver"
           >
-            <ChevronLeft size={24} className="text-foreground" />
+            <ChevronLeft size={24} color={colores.primerPlano} />
           </Pressable>
           <Text className="flex-1 font-medium">{origen}</Text>
         </View>
@@ -158,7 +160,7 @@ export default function ProductoDetalle() {
                   className="p-3 active:bg-accent"
                   accessibilityLabel="Restar"
                 >
-                  <Minus size={16} className="text-foreground" />
+                  <Minus size={16} color={colores.primerPlano} />
                 </Pressable>
                 <Text className="w-10 text-center text-base font-semibold">{cantidad}</Text>
                 <Pressable
@@ -166,7 +168,7 @@ export default function ProductoDetalle() {
                   className="p-3 active:bg-accent"
                   accessibilityLabel="Sumar"
                 >
-                  <Plus size={16} className="text-foreground" />
+                  <Plus size={16} color={colores.primerPlano} />
                 </Pressable>
               </View>
               <Button className="flex-1" onPress={anadirASolicitud}>

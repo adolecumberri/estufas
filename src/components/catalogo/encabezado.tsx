@@ -8,6 +8,7 @@ import { Text } from '@/components/ui/text';
 import { APP, RUTAS } from '@/constants';
 import { useSolicitud } from '@/contexts/solicitud-context';
 import { useAuth } from '@/hooks/use-auth';
+import { useColoresIcono } from '@/lib/theme';
 
 // Cabecera fija del catálogo (diseño Stitch): marca + acceso al carrito y a
 // la cuenta. El destino de la cuenta depende del rol del perfil autenticado.
@@ -15,6 +16,7 @@ import { useAuth } from '@/hooks/use-auth';
 export function EncabezadoCatalogo({ onAbrirMenu }: { onAbrirMenu?: () => void }) {
   const { session, perfil } = useAuth();
   const { lineas, clienteObjetivoId } = useSolicitud();
+  const colores = useColoresIcono();
 
   const totalLineas = lineas.reduce((acc, l) => acc + l.cantidad, 0);
 
@@ -38,11 +40,11 @@ export function EncabezadoCatalogo({ onAbrirMenu }: { onAbrirMenu?: () => void }
             onPress={onAbrirMenu}
             className="rounded-lg p-2 active:bg-muted"
           >
-            <Menu size={22} className="text-foreground" />
+            <Menu size={22} color={colores.primerPlano} />
           </Pressable>
         )}
         <View className="h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-          <Flame size={22} className="text-primary" />
+          <Flame size={22} color={colores.primario} />
         </View>
         <Text className="text-xl font-bold tracking-tight">{APP.nombre}</Text>
       </View>
@@ -56,7 +58,7 @@ export function EncabezadoCatalogo({ onAbrirMenu }: { onAbrirMenu?: () => void }
           onPress={() => router.push('/solicitud')}
           className="relative rounded-lg p-2 active:bg-muted"
         >
-          <ShoppingCart size={20} className="text-foreground" />
+          <ShoppingCart size={20} color={colores.primerPlano} />
           {totalLineas > 0 && (
             <View className="absolute -right-0.5 -top-0.5 h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1">
               <Text className="text-[10px] font-bold leading-tight text-primary-foreground">
@@ -79,9 +81,9 @@ export function EncabezadoCatalogo({ onAbrirMenu }: { onAbrirMenu?: () => void }
           className="rounded-lg p-2 active:bg-muted"
         >
           {session ? (
-            <UserRound size={20} className="text-foreground" />
+            <UserRound size={20} color={colores.primerPlano} />
           ) : (
-            <LogIn size={20} className="text-foreground" />
+            <LogIn size={20} color={colores.primerPlano} />
           )}
         </Pressable>
       </View>

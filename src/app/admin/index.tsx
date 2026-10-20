@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Text } from '@/components/ui/text';
 import { useAuth } from '@/hooks/use-auth';
+import { useColoresIcono } from '@/lib/theme';
 
 const SECCIONES = [
   { titulo: 'Productos', descripcion: 'Publicación y precios', icono: Boxes, ruta: '/admin/productos' },
@@ -17,6 +18,7 @@ const SECCIONES = [
 export default function Admin() {
   const insets = useSafeAreaInsets();
   const { session, perfil, cerrarSesion } = useAuth();
+  const colores = useColoresIcono();
 
   if (!session) return <Redirect href="/acceso" />;
   if (perfil && perfil.rol !== 'admin') return <Redirect href="/pedidos" />;
@@ -26,7 +28,7 @@ export default function Admin() {
       <View className="flex-row items-center justify-between px-4 pb-4">
         <Text className="text-xl font-bold tracking-tight">Administración</Text>
         <Pressable onPress={() => void cerrarSesion()} className="rounded-md p-2 active:bg-accent">
-          <LogOut size={20} className="text-muted-foreground" />
+          <LogOut size={20} color={colores.tenue} />
         </Pressable>
       </View>
       <View className="gap-3 px-4">
@@ -34,7 +36,7 @@ export default function Admin() {
           <Pressable key={s.ruta} onPress={() => router.push(s.ruta)} className="active:opacity-80">
             <Card>
               <CardContent className="flex-row items-center gap-3">
-                <s.icono size={20} className="text-primary" />
+                <s.icono size={20} color={colores.primario} />
                 <View className="flex-1">
                   <CardTitle className="text-base">{s.titulo}</CardTitle>
                   <Text className="text-xs text-muted-foreground">{s.descripcion}</Text>

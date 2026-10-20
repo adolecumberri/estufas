@@ -1,3 +1,5 @@
+import { useColorScheme } from 'react-native';
+
 import { DarkTheme, DefaultTheme } from 'expo-router';
 
 // Tema de la app: escala de grises (zinc) + un único acento ámbar.
@@ -72,3 +74,27 @@ export const NAV_THEME: Record<'light' | 'dark', typeof DefaultTheme> = {
     },
   },
 };
+
+// Colores explícitos para iconos lucide: react-native-svg resuelve
+// "currentColor" a negro en nativo, así que los iconos reciben color
+// explícito según el tema (los tokens de clase no llegan al stroke del SVG).
+export const COLORES_ICONO = {
+  light: {
+    primario: '#f97316',
+    primarioClaro: '#fafafa',
+    primerPlano: '#09090b',
+    tenue: '#71717a',
+    destructivo: '#dc2626',
+  },
+  dark: {
+    primario: '#f97316',
+    primarioClaro: '#fafafa',
+    primerPlano: '#fafafa',
+    tenue: '#a1a1aa',
+    destructivo: '#ef4444',
+  },
+} as const;
+
+export function useColoresIcono() {
+  return useColorScheme() === 'dark' ? COLORES_ICONO.dark : COLORES_ICONO.light;
+}

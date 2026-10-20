@@ -13,11 +13,13 @@ import { ESTADOS_PEDIDO, ROLES } from '@/constants';
 import { useAuth } from '@/hooks/use-auth';
 import { usePedidos } from '@/hooks/use-pedidos';
 import { formatEUR, formatFecha } from '@/lib/format';
+import { useColoresIcono } from '@/lib/theme';
 
 export default function Pedidos() {
   const insets = useSafeAreaInsets();
   const { session, perfil, cerrarSesion } = useAuth();
   const { pedidos, cargando, error } = usePedidos();
+  const colores = useColoresIcono();
 
   if (!session) return <Redirect href="/acceso" />;
 
@@ -46,7 +48,7 @@ export default function Pedidos() {
           </Text>
         </View>
         <Pressable onPress={() => void cerrarSesion()} className="rounded-md p-2 active:bg-accent">
-          <LogOut size={20} className="text-muted-foreground" />
+          <LogOut size={20} color={colores.tenue} />
         </Pressable>
       </View>
 

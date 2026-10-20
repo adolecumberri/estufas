@@ -14,6 +14,7 @@ import { Text } from '@/components/ui/text';
 import { COMBUSTIBLES } from '@/constants';
 import { useSolicitud } from '@/contexts/solicitud-context';
 import { useCatalogo } from '@/hooks/use-catalogo';
+import { useColoresIcono } from '@/lib/theme';
 
 // Pantalla raíz de la app: catálogo público. Vive como componente compartido
 // para ser la ruta inicial (/) sin depender de un Redirect (que provoca el
@@ -26,6 +27,7 @@ export default function CatalogoScreen() {
   const { clienteObjetivoId } = useSolicitud();
   const cat = useCatalogo(clienteObjetivoId);
   const [menuAbierto, setMenuAbierto] = React.useState(false);
+  const colores = useColoresIcono();
 
   // Chips del combustible activo, sin las categorías "comodín" pellet/leña.
   const categoriasFiltradas = cat.categorias.filter(
@@ -105,7 +107,7 @@ export default function CatalogoScreen() {
                 className="w-full rounded-[10px] py-2.5"
                 onPress={() => cat.setPagina((p) => p + 1)}
               >
-                <RefreshCw size={18} className="text-muted-foreground size-[18px]" />
+                <RefreshCw size={18} color={colores.tenue} className="size-[18px]" />
                 <Text>Cargar más estufas</Text>
               </Button>
             </View>

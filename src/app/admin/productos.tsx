@@ -13,12 +13,14 @@ import { Text } from '@/components/ui/text';
 import { useAuth } from '@/hooks/use-auth';
 import { useProductosAdmin } from '@/hooks/use-admin';
 import { formatEUR } from '@/lib/format';
+import { useColoresIcono } from '@/lib/theme';
 
 export default function AdminProductos() {
   const insets = useSafeAreaInsets();
   const { session, perfil } = useAuth();
   const { productos, cargando, error, recargar, alternarPublicacion, actualizarPrecio } =
     useProductosAdmin();
+  const colores = useColoresIcono();
 
   const [precios, setPrecios] = React.useState<Record<string, string>>({});
   const [mensaje, setMensaje] = React.useState<string | null>(null);
@@ -51,7 +53,7 @@ export default function AdminProductos() {
       <View style={{ paddingTop: insets.top + 8 }} className="gap-4 p-4">
         <View className="flex-row items-center gap-2">
           <Pressable onPress={() => router.back()} className="rounded-md p-1 active:bg-accent">
-            <ChevronLeft size={24} className="text-foreground" />
+            <ChevronLeft size={24} color={colores.primerPlano} />
           </Pressable>
           <Text className="text-xl font-bold tracking-tight">Productos</Text>
         </View>

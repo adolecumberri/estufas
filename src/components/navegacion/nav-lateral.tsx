@@ -9,6 +9,7 @@ import { Text } from '@/components/ui/text';
 import { APP, COMBUSTIBLES, RUTAS } from '@/constants';
 import { useAuth } from '@/hooks/use-auth';
 import type { Categoria, Combustible } from '@/lib/types';
+import { useColoresIcono } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 
 // Navegación lateral (cajón) del catálogo: las dos secciones de combustible
@@ -33,6 +34,7 @@ export function NavLateral({
 }) {
   const insets = useSafeAreaInsets();
   const { session, perfil } = useAuth();
+  const colores = useColoresIcono();
 
   const destinoCuenta = () => {
     if (perfil?.rol === 'admin') return RUTAS.admin;
@@ -59,7 +61,7 @@ export function NavLateral({
           <View className="flex-row items-center justify-between px-4 pb-2">
             <View className="flex-row items-center gap-2">
               <View className="h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                <Flame size={20} className="text-primary" />
+                <Flame size={20} color={colores.primario} />
               </View>
               <Text className="text-lg font-bold">{APP.nombre}</Text>
             </View>
@@ -69,7 +71,7 @@ export function NavLateral({
               onPress={onCerrar}
               className="rounded-lg p-2 active:bg-muted"
             >
-              <X size={20} className="text-muted-foreground" />
+              <X size={20} color={colores.tenue} />
             </Pressable>
           </View>
 
@@ -154,7 +156,7 @@ export function NavLateral({
                   onCerrar();
                 }}
               >
-                <LogIn size={16} className="text-primary-foreground" />
+                <LogIn size={16} color={colores.primarioClaro} />
                 <Text>Iniciar sesión</Text>
               </Button>
             )}

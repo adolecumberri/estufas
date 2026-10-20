@@ -15,9 +15,11 @@ import { useAuth } from '@/hooks/use-auth';
 import { useCartera } from '@/hooks/use-comercial';
 import { usePedidos } from '@/hooks/use-pedidos';
 import { formatEUR, formatPct } from '@/lib/format';
+import { useColoresIcono } from '@/lib/theme';
 
 export default function Cartera() {
   const insets = useSafeAreaInsets();
+  const colores = useColoresIcono();
   const { session, perfil, cerrarSesion } = useAuth();
   const { clientes, cargando, error } = useCartera();
   const { pedidos, cargando: cargandoPedidos, error: errorPedidos, recargar } = usePedidos();
@@ -51,7 +53,7 @@ export default function Cartera() {
               <Text className="text-xs text-muted-foreground">{perfil?.email}</Text>
             </View>
             <Pressable onPress={() => void cerrarSesion()} className="rounded-md p-2 active:bg-accent">
-              <LogOut size={20} className="text-muted-foreground" />
+              <LogOut size={20} color={colores.tenue} />
             </Pressable>
           </View>
 

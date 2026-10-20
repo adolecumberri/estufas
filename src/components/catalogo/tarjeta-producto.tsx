@@ -10,6 +10,7 @@ import { RUTAS } from '@/constants';
 import { useSolicitud } from '@/contexts/solicitud-context';
 import { useAuth } from '@/hooks/use-auth';
 import { formatEUR, formatPct } from '@/lib/format';
+import { useColoresIcono } from '@/lib/theme';
 import type { LineaSolicitud, ProductoCatalogo } from '@/lib/types';
 
 const CANTIDAD_MIN = 1;
@@ -28,6 +29,7 @@ export function TarjetaProducto({
   const { session } = useAuth();
   const { anadir } = useSolicitud();
   const [cantidad, setCantidad] = React.useState(1);
+  const colores = useColoresIcono();
 
   const restar = () => setCantidad((c) => Math.max(CANTIDAD_MIN, c - 1));
   const sumar = () => setCantidad((c) => Math.min(CANTIDAD_MAX, c + 1));
@@ -122,7 +124,7 @@ export function TarjetaProducto({
                 }}
                 className="h-6 w-6 items-center justify-center active:scale-90"
               >
-                <Minus size={16} className="text-muted-foreground" />
+                <Minus size={16} color={colores.tenue} />
               </Pressable>
               <Text className="text-xs font-semibold">{cantidad}</Text>
               <Pressable
@@ -133,7 +135,7 @@ export function TarjetaProducto({
                 }}
                 className="h-6 w-6 items-center justify-center active:scale-90"
               >
-                <Plus size={16} className="text-muted-foreground" />
+                <Plus size={16} color={colores.tenue} />
               </Pressable>
             </View>
             <Pressable

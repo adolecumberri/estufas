@@ -2,13 +2,16 @@ import { Search } from 'lucide-react-native';
 import * as React from 'react';
 import { TextInput, View } from 'react-native';
 
+import { useColoresIcono } from '@/lib/theme';
+
 // Campo de búsqueda del catálogo (diseño Stitch): icono integrado a la
 // izquierda, radio 10px y anillo de foco ámbar en web.
 export function Buscador({ valor, onChange }: { valor: string; onChange: (texto: string) => void }) {
+  const colores = useColoresIcono();
   return (
     <View className="relative justify-center">
       <View className="pointer-events-none absolute inset-y-0 left-3.5 justify-center">
-        <Search size={20} className="text-muted-foreground" />
+        <Search size={20} color={colores.tenue} />
       </View>
       <TextInput
         value={valor}

@@ -13,11 +13,13 @@ import { Text } from '@/components/ui/text';
 import { useAuth } from '@/hooks/use-auth';
 import { usePromocionesAdmin } from '@/hooks/use-admin';
 import { formatFecha, formatPct } from '@/lib/format';
+import { useColoresIcono } from '@/lib/theme';
 
 export default function AdminPromociones() {
   const insets = useSafeAreaInsets();
   const { session, perfil } = useAuth();
   const { promociones, cargando, recargar, crear, alternar } = usePromocionesAdmin();
+  const colores = useColoresIcono();
 
   const [nombre, setNombre] = React.useState('');
   const [descripcion, setDescripcion] = React.useState('');
@@ -50,7 +52,7 @@ export default function AdminPromociones() {
       <View style={{ paddingTop: insets.top + 8 }} className="gap-4 p-4">
         <View className="flex-row items-center gap-2">
           <Pressable onPress={() => router.back()} className="rounded-md p-1 active:bg-accent">
-            <ChevronLeft size={24} className="text-foreground" />
+            <ChevronLeft size={24} color={colores.primerPlano} />
           </Pressable>
           <Text className="text-xl font-bold tracking-tight">Promociones de tienda</Text>
         </View>

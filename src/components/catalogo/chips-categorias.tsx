@@ -3,6 +3,7 @@ import * as React from 'react';
 import { Platform, Pressable, ScrollView, View } from 'react-native';
 
 import { Text } from '@/components/ui/text';
+import { useColoresIcono } from '@/lib/theme';
 import type { Categoria } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -16,6 +17,7 @@ type Props = {
 // el chip activo lleva acento ámbar + icono de llama y se deselecciona al
 // tocarlo de nuevo.
 export function ChipsCategorias({ categorias, seleccionada, onSeleccionar }: Props) {
+  const colores = useColoresIcono();
   return (
     <ScrollView
       horizontal
@@ -38,7 +40,7 @@ export function ChipsCategorias({ categorias, seleccionada, onSeleccionar }: Pro
                 activa ? 'bg-primary' : 'border border-border bg-background'
               )}
             >
-              {activa && <Flame size={16} className="text-primary-foreground" />}
+              {activa && <Flame size={16} color={colores.primarioClaro} />}
               <Text
                 className={cn(
                   'text-sm font-medium',

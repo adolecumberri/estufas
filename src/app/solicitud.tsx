@@ -16,6 +16,7 @@ import { useSolicitud } from '@/contexts/solicitud-context';
 import { useAuth } from '@/hooks/use-auth';
 import { useAccionesPedido, usePedido } from '@/hooks/use-pedidos';
 import { formatEUR } from '@/lib/format';
+import { useColoresIcono } from '@/lib/theme';
 
 export default function Solicitud() {
   const insets = useSafeAreaInsets();
@@ -25,6 +26,7 @@ export default function Solicitud() {
   const { crear, editar } = useAccionesPedido();
   const params = useLocalSearchParams<{ editar?: string }>();
   const { detalle } = usePedido(params.editar);
+  const colores = useColoresIcono();
 
   const [observaciones, setObservaciones] = React.useState('');
   const [error, setError] = React.useState<string | null>(null);
@@ -109,7 +111,7 @@ export default function Solicitud() {
           {perfil?.rol === 'comercial' && !params.editar && (
             <Card className="rounded-[10px] border-primary/40 bg-primary/10">
               <CardContent className="flex-row items-center gap-3">
-                <UserRound size={18} className="text-muted-foreground" />
+                <UserRound size={18} color={colores.tenue} />
                 {clienteObjetivoId ? (
                   <View className="flex-1 gap-1">
                     <Text className="text-sm font-medium">Pedido para un cliente asignado</Text>
@@ -169,19 +171,19 @@ export default function Solicitud() {
                             onPress={() => cambiarCantidad(l.producto_id, -1)}
                             className="p-1.5 active:bg-accent"
                           >
-                            <Minus size={14} className="text-foreground" />
+                            <Minus size={14} color={colores.primerPlano} />
                           </Pressable>
                           <Text className="w-8 text-center text-sm font-semibold">{l.cantidad}</Text>
                           <Pressable
                             onPress={() => cambiarCantidad(l.producto_id, 1)}
                             className="p-1.5 active:bg-accent"
                           >
-                            <Plus size={14} className="text-foreground" />
+                            <Plus size={14} color={colores.primerPlano} />
                           </Pressable>
                         </View>
                         <Text className="text-sm font-semibold">{formatEUR(l.precio_final * l.cantidad)}</Text>
                         <Pressable onPress={() => quitar(l.producto_id)} className="ml-auto p-1.5 active:bg-accent">
-                          <Trash2 size={16} className="text-destructive" />
+                          <Trash2 size={16} color={colores.destructivo} />
                         </Pressable>
                       </View>
                     </View>

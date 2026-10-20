@@ -11,10 +11,12 @@ import { Label } from '@/components/ui/label';
 import { Text } from '@/components/ui/text';
 import { APP } from '@/constants';
 import { useAuth } from '@/hooks/use-auth';
+import { useColoresIcono } from '@/lib/theme';
 
 export default function Acceso() {
   const insets = useSafeAreaInsets();
   const { iniciarSesion, perfil } = useAuth();
+  const colores = useColoresIcono();
 
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
@@ -57,7 +59,7 @@ export default function Acceso() {
           <CardHeader className="gap-4">
             <View className="flex-row items-center gap-2.5">
               <View className="h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                <Flame size={18} className="text-primary" />
+                <Flame size={18} color={colores.primario} />
               </View>
               <Text className="text-xl font-bold">{APP.nombre}</Text>
             </View>
