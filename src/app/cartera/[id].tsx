@@ -66,7 +66,7 @@ export default function ClienteDetalle() {
 
   const empezarPedido = () => {
     setClienteObjetivoId(id ?? null);
-    router.replace('/catalogo');
+    router.replace('/');
   };
 
   if (cargando || !cliente) {

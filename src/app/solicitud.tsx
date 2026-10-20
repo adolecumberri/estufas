@@ -135,7 +135,7 @@ export default function Solicitud() {
           <Card>
             <CardContent className="items-center gap-2 py-8">
               <Text className="text-muted-foreground">La solicitud está vacía.</Text>
-              <Button variant="outline" size="sm" onPress={() => router.replace('/catalogo')}>
+              <Button variant="outline" size="sm" onPress={() => router.replace('/')}>
                 <Text>Ver catálogo</Text>
               </Button>
             </CardContent>

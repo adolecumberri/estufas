@@ -88,7 +88,7 @@ export const STORAGE_KEYS = {
 } as const;
 
 export const RUTAS = {
-  catalogo: '/catalogo',
+  catalogo: '/',
   login: '/acceso',
   registro: '/registro',
   pedidos: '/pedidos',

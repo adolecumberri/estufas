@@ -61,7 +61,10 @@ function TarjetaProducto({ producto }: { producto: ProductoCatalogo }) {
   );
 }
 
-export default function Catalogo() {
+// Pantalla raíz de la app: catálogo público. Vive como componente compartido
+// para ser la ruta inicial (/) sin depender de un Redirect (que provoca el
+// aviso "GO_BACK was not handled" en Android).
+export default function CatalogoScreen() {
   const insets = useSafeAreaInsets();
   const { session, perfil } = useAuth();
   const { lineas, clienteObjetivoId } = useSolicitud();

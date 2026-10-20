@@ -62,7 +62,7 @@ export default function Pedidos() {
           <Text className="text-center text-muted-foreground">
             Todavía no hay pedidos. Añade productos a tu solicitud desde el catálogo.
           </Text>
-          <Button onPress={() => router.replace('/catalogo')}>
+          <Button onPress={() => router.replace('/')}>
             <Text>Ver catálogo</Text>
           </Button>
         </View>

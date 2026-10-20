@@ -43,7 +43,7 @@ export default function Admin() {
             </Card>
           </Pressable>
         ))}
-        <Pressable onPress={() => router.replace('/catalogo')} className="pt-2">
+        <Pressable onPress={() => router.replace('/')} className="pt-2">
           <Text className="text-center text-sm text-muted-foreground">Volver al catálogo</Text>
         </Pressable>
       </View>

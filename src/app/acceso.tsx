@@ -90,7 +90,7 @@ export default function Acceso() {
             <Button variant="link" onPress={() => router.push('/registro')}>
               <Text className="text-sm">¿No tienes cuenta? Regístrate</Text>
             </Button>
-            <Button variant="ghost" onPress={() => router.replace('/catalogo')}>
+            <Button variant="ghost" onPress={() => router.replace('/')}>
               <Text className="text-sm text-muted-foreground">Volver al catálogo</Text>
             </Button>
           </CardContent>

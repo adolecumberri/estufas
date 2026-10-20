@@ -26,7 +26,7 @@ export default function Cartera() {
     <ScrollView className="flex-1 bg-background" contentContainerStyle={{ paddingBottom: 32 }}>
       <View style={{ paddingTop: insets.top + 8 }} className="gap-4 p-4">
         <View className="flex-row items-center gap-2">
-          <Pressable onPress={() => router.replace('/catalogo')} className="rounded-md p-1 active:bg-accent">
+          <Pressable onPress={() => router.replace('/')} className="rounded-md p-1 active:bg-accent">
             <ChevronLeft size={24} className="text-foreground" />
           </Pressable>
           <Text className="text-xl font-bold tracking-tight">Cartera de clientes</Text>
