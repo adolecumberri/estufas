@@ -20,7 +20,7 @@ RPC); no hay servidor de aplicación.
 1. [`README.md`](README.md)
 2. [`docs/PRD.md`](PRD.md) — especificación funcional (referencia principal)
 3. [`docs/ASUNCIONES.md`](ASUNCIONES.md) — reglas resueltas y supuestos explícitos
-4. [`docs/GOOGLE_STITCH.md`](GOOGLE_STITCH.md) — design brief
+4. [`docs/DESIGN.md`](GOOGLE_STITCH.md) — design brief
 5. [`supabase/migrations/`](../supabase/migrations/) — esquema, RLS y funciones de negocio
 6. [`src/lib/types.ts`](../src/lib/types.ts) + [`src/hooks/`](../src/hooks/) — contratos de datos
 
