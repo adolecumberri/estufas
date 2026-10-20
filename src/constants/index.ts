@@ -1,3 +1,6 @@
+import Constants from 'expo-constants';
+import { Platform } from 'react-native';
+
 // ============================================================================
 // Constantes globales de la aplicación.
 // Regla del proyecto: TODA constante que pueda repetirse vive aquí.
@@ -10,9 +13,18 @@ export const APP = {
   idioma: 'es-ES',
 } as const;
 
+// En desarrollo, el host de Supabase se deriva del host de Metro (el QR de Expo
+// apunta a la IP del PC; así el móvil llega a Supabase sin configuración).
+// En producción, EXPO_PUBLIC_SUPABASE_URL siempre tiene prioridad.
+const hostMetro = Constants.expoConfig?.hostUri?.split(':')[0];
+const hostSupabaseLocal =
+  hostMetro && !hostMetro.startsWith('localhost') && !hostMetro.startsWith('127.') && Platform.OS !== 'web'
+    ? hostMetro
+    : '127.0.0.1';
+
 export const SUPABASE = {
   // Local: supabase start. En producción: variables de entorno EXPO_PUBLIC_*.
-  url: process.env.EXPO_PUBLIC_SUPABASE_URL ?? 'http://127.0.0.1:54321',
+  url: process.env.EXPO_PUBLIC_SUPABASE_URL ?? `http://${hostSupabaseLocal}:54321`,
   anonKey:
     process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ??
     // Clave anon del stack local de Supabase (pública, solo desarrollo).
