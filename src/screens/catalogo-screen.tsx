@@ -7,7 +7,6 @@ import { Buscador } from '@/components/catalogo/buscador';
 import { ChipsCategorias } from '@/components/catalogo/chips-categorias';
 import { EncabezadoCatalogo } from '@/components/catalogo/encabezado';
 import { TarjetaProducto } from '@/components/catalogo/tarjeta-producto';
-import { NavInferior } from '@/components/navegacion/nav-inferior';
 import { NavLateral } from '@/components/navegacion/nav-lateral';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
@@ -79,7 +78,7 @@ export default function CatalogoScreen() {
         keyExtractor={(p) => p.producto_id}
         numColumns={2}
         columnWrapperStyle={{ gap: 12, paddingHorizontal: 16 }}
-        contentContainerStyle={{ gap: 12, paddingBottom: 88 + insets.bottom }}
+        contentContainerStyle={{ gap: 12, paddingBottom: 24 + insets.bottom }}
         renderItem={({ item }) => <TarjetaProducto producto={item} origen={origen} />}
         ListEmptyComponent={
           cat.cargando ? (
@@ -125,9 +124,6 @@ export default function CatalogoScreen() {
         categoria={cat.categoria}
         setCategoria={cat.setCategoria}
       />
-
-      {/* Barra de navegación inferior fija */}
-      <NavInferior activa="catalogo" />
     </View>
   );
 }
