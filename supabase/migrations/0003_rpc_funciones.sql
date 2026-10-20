@@ -169,7 +169,7 @@ BEGIN
             JOIN categorias c2 ON c2.id = pc2.categoria_id AND c2.borrado = FALSE
             WHERE pc2.producto_id = v.producto_id AND pc2.borrado = FALSE
             ORDER BY c2.orden, c2.nombre
-        ),
+        )::text[],
         v.etiqueta_energetica,
         p.destacado,
         v.precio,
@@ -264,7 +264,7 @@ BEGIN
             JOIN categorias c2 ON c2.id = pc2.categoria_id AND c2.borrado = FALSE
             WHERE pc2.producto_id = v.producto_id AND pc2.borrado = FALSE
             ORDER BY c2.orden, c2.nombre
-        ),
+        )::text[],
         v.etiqueta_energetica,
         p.destacado,
         v.precio,
