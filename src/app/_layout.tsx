@@ -4,6 +4,7 @@ import { PortalHost } from '@rn-primitives/portal';
 import { Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
+import * as SystemUI from 'expo-system-ui';
 import * as React from 'react';
 import { Platform, useColorScheme, View } from 'react-native';
 
@@ -22,6 +23,13 @@ export default function RootLayout() {
     if (Platform.OS !== 'web') return;
     const root = document.documentElement;
     root.classList.toggle('dark', scheme === 'dark');
+  }, [scheme]);
+
+  // El fondo de la ventana debe seguir al tema: en Android, durante las
+  // transiciones (p. ej. el gesto lateral de volver) se ve el fondo de la
+  // ventana detrás de la pantalla; blanco en modo oscuro provoca un destello.
+  React.useEffect(() => {
+    void SystemUI.setBackgroundColorAsync(scheme === 'dark' ? '#09090b' : '#ffffff');
   }, [scheme]);
 
   React.useEffect(() => {
