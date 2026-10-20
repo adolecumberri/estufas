@@ -1,5 +1,6 @@
 import { RefreshCw } from 'lucide-react-native';
-import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
+import * as React from 'react';
+import { ActivityIndicator, FlatList, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Buscador } from '@/components/catalogo/buscador';
@@ -7,23 +8,24 @@ import { ChipsCategorias } from '@/components/catalogo/chips-categorias';
 import { EncabezadoCatalogo } from '@/components/catalogo/encabezado';
 import { TarjetaProducto } from '@/components/catalogo/tarjeta-producto';
 import { NavInferior } from '@/components/navegacion/nav-inferior';
+import { NavLateral } from '@/components/navegacion/nav-lateral';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { COMBUSTIBLES } from '@/constants';
 import { useSolicitud } from '@/contexts/solicitud-context';
 import { useCatalogo } from '@/hooks/use-catalogo';
-import { cn } from '@/lib/utils';
 
 // Pantalla raíz de la app: catálogo público. Vive como componente compartido
 // para ser la ruta inicial (/) sin depender de un Redirect (que provoca el
 // aviso "GO_BACK was not handled" en Android). Compone los componentes
-// compartidos del catálogo (diseño Stitch): cabecera fija, selector de
-// combustible, buscador, chips de categorías, rejilla de 2 columnas con
-// paginación y barra de navegación.
+// compartidos del catálogo (diseño Stitch): cabecera fija, navegación
+// lateral por combustible, buscador, chips de categorías, rejilla de 2
+// columnas con paginación y barra de navegación.
 export default function CatalogoScreen() {
   const insets = useSafeAreaInsets();
   const { clienteObjetivoId } = useSolicitud();
   const cat = useCatalogo(clienteObjetivoId);
+  const [menuAbierto, setMenuAbierto] = React.useState(false);
 
   // Chips del combustible activo, sin las categorías "comodín" pellet/leña.
   const categoriasFiltradas = cat.categorias.filter(
@@ -44,34 +46,7 @@ export default function CatalogoScreen() {
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       {/* Cabecera */}
-      <EncabezadoCatalogo />
-
-      {/* Selector de combustible */}
-      <View className="px-4 pt-2">
-        <View className="flex-row gap-1 rounded-[10px] border border-border bg-muted p-1">
-          {COMBUSTIBLES.map((c) => {
-            const activo = cat.combustible === c.id;
-            return (
-              <Pressable
-                key={c.id}
-                accessibilityRole="button"
-                accessibilityState={{ selected: activo }}
-                onPress={() => cat.setCombustible(c.id)}
-                className={cn('flex-1 items-center rounded-[8px] py-2', activo && 'bg-primary')}
-              >
-                <Text
-                  className={cn(
-                    'text-sm',
-                    activo ? 'font-medium text-primary-foreground' : 'text-muted-foreground'
-                  )}
-                >
-                  {c.etiqueta}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-      </View>
+      <EncabezadoCatalogo onAbrirMenu={() => setMenuAbierto(true)} />
 
       {/* Buscador */}
       <View className="mt-2 px-4 pb-2">
@@ -136,6 +111,17 @@ export default function CatalogoScreen() {
             </View>
           ) : null
         }
+      />
+
+      {/* Navegación lateral (cajón) */}
+      <NavLateral
+        abierto={menuAbierto}
+        onCerrar={() => setMenuAbierto(false)}
+        combustible={cat.combustible}
+        categorias={cat.categorias}
+        setCombustible={cat.setCombustible}
+        categoria={cat.categoria}
+        setCategoria={cat.setCategoria}
       />
 
       {/* Barra de navegación inferior fija */}

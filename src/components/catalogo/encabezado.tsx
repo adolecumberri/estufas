@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Flame, LogIn, ShoppingCart, UserRound } from 'lucide-react-native';
+import { Flame, LogIn, Menu, ShoppingCart, UserRound } from 'lucide-react-native';
 import * as React from 'react';
 import { Pressable, View } from 'react-native';
 
@@ -11,7 +11,8 @@ import { useAuth } from '@/hooks/use-auth';
 
 // Cabecera fija del catálogo (diseño Stitch): marca + acceso al carrito y a
 // la cuenta. El destino de la cuenta depende del rol del perfil autenticado.
-export function EncabezadoCatalogo() {
+// Con `onAbrirMenu` se muestra el botón que abre la navegación lateral.
+export function EncabezadoCatalogo({ onAbrirMenu }: { onAbrirMenu?: () => void }) {
   const { session, perfil } = useAuth();
   const { lineas, clienteObjetivoId } = useSolicitud();
 
@@ -30,6 +31,16 @@ export function EncabezadoCatalogo() {
   return (
     <View className="h-14 flex-row items-center justify-between border-b border-border bg-background px-4">
       <View className="flex-row items-center gap-2">
+        {onAbrirMenu && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Abrir menú de navegación"
+            onPress={onAbrirMenu}
+            className="rounded-lg p-2 active:bg-muted"
+          >
+            <Menu size={22} className="text-foreground" />
+          </Pressable>
+        )}
         <View className="h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
           <Flame size={22} className="text-primary" />
         </View>
