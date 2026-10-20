@@ -1,9 +1,10 @@
 import { Redirect, router } from 'expo-router';
 import { LogOut } from 'lucide-react-native';
 import * as React from 'react';
-import { ActivityIndicator, Pressable, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { NavInferior } from '@/components/navegacion/nav-inferior';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -49,51 +50,57 @@ export default function Pedidos() {
         </Pressable>
       </View>
 
-      {cargando ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color="hsl(24.6 95% 53.1%)" />
-        </View>
-      ) : error ? (
-        <View className="flex-1 items-center justify-center gap-3 px-8">
-          <Text className="text-center text-muted-foreground">{error}</Text>
-        </View>
-      ) : pedidos.length === 0 ? (
-        <View className="flex-1 items-center justify-center gap-4 px-8">
-          <Text className="text-center text-muted-foreground">
-            Todavía no hay pedidos. Añade productos a tu solicitud desde el catálogo.
-          </Text>
-          <Button onPress={() => router.replace('/')}>
-            <Text>Ver catálogo</Text>
-          </Button>
-        </View>
-      ) : (
-        <View className="gap-3 p-4">
-          {pedidos.map((p) => {
-            const total = (p.pedido_lineas ?? []).reduce((acc, l) => acc + l.total_linea, 0);
-            return (
-              <Pressable key={p.id} onPress={() => router.push(`/pedidos/${p.id}`)} className="active:opacity-80">
-                <Card>
-                  <CardContent className="gap-2">
-                    <View className="flex-row items-center justify-between">
-                      <Text className="font-semibold">Pedido nº {p.numero_pedido}</Text>
-                      <Badge variant={varianteEstado(p.estado)}>
-                        <Text>{ESTADOS_PEDIDO[p.estado].etiqueta}</Text>
-                      </Badge>
-                    </View>
-                    <Text className="text-xs text-muted-foreground">{formatFecha(p.fecha_pedido)}</Text>
-                    <View className="flex-row items-center justify-between">
-                      <Text className="text-xs text-muted-foreground">
-                        {(p.pedido_lineas ?? []).length} líneas
-                      </Text>
-                      <Text className="font-semibold">{formatEUR(total)}</Text>
-                    </View>
-                  </CardContent>
-                </Card>
-              </Pressable>
-            );
-          })}
-        </View>
-      )}
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 96 + insets.bottom }}
+      >
+        {cargando ? (
+          <View className="flex-1 items-center justify-center">
+            <ActivityIndicator color="hsl(24.6 95% 53.1%)" />
+          </View>
+        ) : error ? (
+          <View className="flex-1 items-center justify-center gap-3 px-8">
+            <Text className="text-center text-muted-foreground">{error}</Text>
+          </View>
+        ) : pedidos.length === 0 ? (
+          <View className="flex-1 items-center justify-center gap-4 px-8">
+            <Text className="text-center text-muted-foreground">Aún no tienes pedidos.</Text>
+            <Button onPress={() => router.replace('/')}>
+              <Text>Ver catálogo</Text>
+            </Button>
+          </View>
+        ) : (
+          <View className="gap-3 p-4">
+            {pedidos.map((p) => {
+              const total = (p.pedido_lineas ?? []).reduce((acc, l) => acc + l.total_linea, 0);
+              const numLineas = (p.pedido_lineas ?? []).length;
+              return (
+                <Pressable key={p.id} onPress={() => router.push(`/pedidos/${p.id}`)} className="active:opacity-80">
+                  <Card className="rounded-[10px]">
+                    <CardContent className="gap-2">
+                      <View className="flex-row items-center justify-between">
+                        <Text className="font-medium">Pedido nº {p.numero_pedido}</Text>
+                        <Badge variant={varianteEstado(p.estado)}>
+                          <Text>{ESTADOS_PEDIDO[p.estado].etiqueta}</Text>
+                        </Badge>
+                      </View>
+                      <Text className="text-xs text-muted-foreground">{formatFecha(p.fecha_pedido)}</Text>
+                      <View className="flex-row items-center justify-between">
+                        <Text className="text-xs text-muted-foreground">
+                          {numLineas} {numLineas === 1 ? 'producto' : 'productos'}
+                        </Text>
+                        <Text className="font-bold">{formatEUR(total)}</Text>
+                      </View>
+                    </CardContent>
+                  </Card>
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
+      </ScrollView>
+
+      <NavInferior activa="pedidos" />
     </View>
   );
 }

@@ -1,6 +1,14 @@
 import { router } from 'expo-router';
+import { Flame } from 'lucide-react-native';
 import * as React from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/button';
@@ -8,7 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Text } from '@/components/ui/text';
-import { TIPOS_CLIENTE, type TipoCliente } from '@/constants';
+import { APP, TIPOS_CLIENTE, type TipoCliente } from '@/constants';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 
@@ -63,28 +71,37 @@ export default function Registro() {
         contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}
         style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
       >
-        <Card className="max-w-sm w-full self-center">
-          <CardHeader>
-            <CardTitle className="text-xl">Crear cuenta</CardTitle>
-            <Text className="text-sm text-muted-foreground">
-              Regístrate como cliente para solicitar productos con tus condiciones.
-            </Text>
+        <Card className="w-full max-w-sm self-center">
+          <CardHeader className="gap-4">
+            <View className="flex-row items-center gap-2.5">
+              <View className="h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                <Flame size={18} className="text-primary" />
+              </View>
+              <Text className="text-xl font-bold">{APP.nombre}</Text>
+            </View>
+            <View className="gap-1.5">
+              <CardTitle className="text-2xl font-bold">Crear cuenta</CardTitle>
+              <Text className="text-sm text-muted-foreground">
+                Regístrate como cliente para solicitar productos con tus condiciones.
+              </Text>
+            </View>
           </CardHeader>
           <CardContent className="gap-4">
-            <View className="flex-row gap-2">
+            <View className="flex-row gap-1 rounded-[10px] border border-border bg-muted p-1">
               {(Object.keys(TIPOS_CLIENTE) as TipoCliente[]).map((t) => (
                 <Pressable
                   key={t}
+                  accessibilityRole="button"
                   onPress={() => setTipo(t)}
                   className={cn(
-                    'flex-1 rounded-md border border-input px-3 py-2',
-                    tipo === t && 'border-primary bg-primary'
+                    'flex-1 items-center justify-center rounded-[8px] px-3 py-2',
+                    tipo === t && 'bg-primary'
                   )}
                 >
                   <Text
                     className={cn(
-                      'text-center text-sm',
-                      tipo === t ? 'text-primary-foreground' : 'text-foreground'
+                      'text-center text-sm font-medium',
+                      tipo === t ? 'text-primary-foreground' : 'text-muted-foreground'
                     )}
                   >
                     {TIPOS_CLIENTE[t].etiqueta}
@@ -95,21 +112,46 @@ export default function Registro() {
 
             <View className="gap-1.5">
               <Label nativeID="nombre">Nombre</Label>
-              <Input id="nombre" value={nombre} onChangeText={setNombre} placeholder="Tu nombre" />
+              <Input
+                id="nombre"
+                className="h-11 rounded-[10px] sm:h-11"
+                value={nombre}
+                onChangeText={setNombre}
+                placeholder="Tu nombre"
+              />
             </View>
             <View className="gap-1.5">
               <Label nativeID="apellidos">Apellidos</Label>
-              <Input id="apellidos" value={apellidos} onChangeText={setApellidos} placeholder="Tus apellidos" />
+              <Input
+                id="apellidos"
+                className="h-11 rounded-[10px] sm:h-11"
+                value={apellidos}
+                onChangeText={setApellidos}
+                placeholder="Tus apellidos"
+              />
             </View>
             {tipo === 'empresa' && (
               <>
                 <View className="gap-1.5">
                   <Label nativeID="razon">Razón social</Label>
-                  <Input id="razon" value={razonSocial} onChangeText={setRazonSocial} placeholder="Nombre de la empresa" />
+                  <Input
+                    id="razon"
+                    className="h-11 rounded-[10px] sm:h-11"
+                    value={razonSocial}
+                    onChangeText={setRazonSocial}
+                    placeholder="Nombre de la empresa"
+                  />
                 </View>
                 <View className="gap-1.5">
                   <Label nativeID="nif">NIF/CIF</Label>
-                  <Input id="nif" value={nifCif} onChangeText={setNifCif} placeholder="B12345678" autoCapitalize="characters" />
+                  <Input
+                    id="nif"
+                    className="h-11 rounded-[10px] sm:h-11"
+                    value={nifCif}
+                    onChangeText={setNifCif}
+                    placeholder="B12345678"
+                    autoCapitalize="characters"
+                  />
                 </View>
               </>
             )}
@@ -117,6 +159,7 @@ export default function Registro() {
               <Label nativeID="email">Email</Label>
               <Input
                 id="email"
+                className="h-11 rounded-[10px] sm:h-11"
                 autoCapitalize="none"
                 keyboardType="email-address"
                 autoComplete="email"
@@ -127,19 +170,43 @@ export default function Registro() {
             </View>
             <View className="gap-1.5">
               <Label nativeID="telefono">Teléfono (opcional)</Label>
-              <Input id="telefono" keyboardType="phone-pad" value={telefono} onChangeText={setTelefono} placeholder="600 000 000" />
+              <Input
+                id="telefono"
+                className="h-11 rounded-[10px] sm:h-11"
+                keyboardType="phone-pad"
+                value={telefono}
+                onChangeText={setTelefono}
+                placeholder="600 000 000"
+              />
             </View>
             <View className="gap-1.5">
               <Label nativeID="password">Contraseña</Label>
-              <Input id="password" secureTextEntry value={password} onChangeText={setPassword} placeholder="Mínimo 6 caracteres" />
+              <Input
+                id="password"
+                className="h-11 rounded-[10px] sm:h-11"
+                secureTextEntry
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Mínimo 6 caracteres"
+              />
             </View>
             {error && <Text className="text-sm text-destructive">{error}</Text>}
-            <Button disabled={enviando} onPress={() => void crearCuenta()}>
-              <Text>{enviando ? 'Creando cuenta…' : 'Crear cuenta'}</Text>
+            <Button
+              className="h-11 w-full sm:h-11"
+              disabled={enviando}
+              onPress={() => void crearCuenta()}
+            >
+              {enviando ? <ActivityIndicator color="hsl(0 0% 98%)" /> : <Text>Crear cuenta</Text>}
             </Button>
-            <Button variant="ghost" onPress={() => router.back()}>
-              <Text className="text-sm text-muted-foreground">Volver</Text>
-            </Button>
+            <Pressable
+              accessibilityRole="link"
+              className="self-center py-1"
+              onPress={() => router.push('/acceso')}
+            >
+              <Text className="text-sm font-medium text-primary">
+                ¿Ya tienes cuenta? Inicia sesión
+              </Text>
+            </Pressable>
           </CardContent>
         </Card>
       </ScrollView>

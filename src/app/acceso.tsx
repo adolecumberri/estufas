@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
+import { Flame } from 'lucide-react-native';
 import * as React from 'react';
-import { KeyboardAvoidingView, Platform, View } from 'react-native';
+import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/button';
@@ -52,18 +53,27 @@ export default function Acceso() {
         className="flex-1 justify-center px-6"
         style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
       >
-        <Card className="max-w-sm self-center">
-          <CardHeader>
-            <CardTitle className="text-xl">Iniciar sesión</CardTitle>
-            <Text className="text-sm text-muted-foreground">
-              Accede a tu área de {APP.nombre} para consultar tus condiciones y pedidos.
-            </Text>
+        <Card className="w-full max-w-sm self-center">
+          <CardHeader className="gap-4">
+            <View className="flex-row items-center gap-2.5">
+              <View className="h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                <Flame size={18} className="text-primary" />
+              </View>
+              <Text className="text-xl font-bold">{APP.nombre}</Text>
+            </View>
+            <View className="gap-1.5">
+              <CardTitle className="text-2xl font-bold">Inicia sesión</CardTitle>
+              <Text className="text-sm text-muted-foreground">
+                Accede a tu área de {APP.nombre} para consultar tus condiciones y pedidos.
+              </Text>
+            </View>
           </CardHeader>
           <CardContent className="gap-4">
             <View className="gap-1.5">
               <Label nativeID="email">Email</Label>
               <Input
                 id="email"
+                className="h-11 rounded-[10px] sm:h-11"
                 autoCapitalize="none"
                 keyboardType="email-address"
                 autoComplete="email"
@@ -76,6 +86,7 @@ export default function Acceso() {
               <Label nativeID="password">Contraseña</Label>
               <Input
                 id="password"
+                className="h-11 rounded-[10px] sm:h-11"
                 secureTextEntry
                 value={password}
                 onChangeText={setPassword}
@@ -84,13 +95,23 @@ export default function Acceso() {
               />
             </View>
             {error && <Text className="text-sm text-destructive">{error}</Text>}
-            <Button disabled={enviando} onPress={() => void entrar()}>
-              <Text>{enviando ? 'Entrando…' : 'Entrar'}</Text>
+            <Button
+              className="h-11 w-full sm:h-11"
+              disabled={enviando}
+              onPress={() => void entrar()}
+            >
+              {enviando ? <ActivityIndicator color="hsl(0 0% 98%)" /> : <Text>Entrar</Text>}
             </Button>
-            <Button variant="link" onPress={() => router.push('/registro')}>
-              <Text className="text-sm">¿No tienes cuenta? Regístrate</Text>
-            </Button>
-            <Button variant="ghost" onPress={() => router.replace('/')}>
+            <Pressable
+              accessibilityRole="link"
+              className="self-center py-1"
+              onPress={() => router.push('/registro')}
+            >
+              <Text className="text-sm font-medium text-primary">
+                ¿No tienes cuenta? Regístrate
+              </Text>
+            </Pressable>
+            <Button variant="ghost" className="w-full" onPress={() => router.replace('/')}>
               <Text className="text-sm text-muted-foreground">Volver al catálogo</Text>
             </Button>
           </CardContent>

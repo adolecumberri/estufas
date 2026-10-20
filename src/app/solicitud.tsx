@@ -5,6 +5,7 @@ import * as React from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { NavInferior } from '@/components/navegacion/nav-inferior';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -93,127 +94,135 @@ export default function Solicitud() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-background" contentContainerStyle={{ paddingBottom: 32 }}>
-      <View style={{ paddingTop: insets.top + 8 }} className="gap-4 p-4">
-        <View className="flex-row items-center justify-between">
-          <Text className="text-xl font-bold tracking-tight">
-            {params.editar ? 'Editar solicitud' : 'Tu solicitud'}
-          </Text>
-          <Button variant="ghost" size="sm" onPress={() => router.back()}>
-            <Text className="text-sm text-muted-foreground">Volver</Text>
-          </Button>
-        </View>
+    <>
+      <ScrollView className="flex-1 bg-background" contentContainerStyle={{ paddingBottom: 96 + insets.bottom }}>
+        <View style={{ paddingTop: insets.top + 8 }} className="gap-4 p-4">
+          <View className="flex-row items-center justify-between">
+            <Text className="text-xl font-bold tracking-tight">
+              {params.editar ? 'Editar solicitud' : 'Tu solicitud'}
+            </Text>
+            <Button variant="ghost" size="sm" onPress={() => router.back()}>
+              <Text className="text-sm text-muted-foreground">Volver</Text>
+            </Button>
+          </View>
 
-        {perfil?.rol === 'comercial' && !params.editar && (
-          <Card>
-            <CardContent className="flex-row items-center gap-3">
-              <UserRound size={18} className="text-muted-foreground" />
-              {clienteObjetivoId ? (
-                <View className="flex-1 gap-1">
-                  <Text className="text-sm font-medium">Pedido para un cliente asignado</Text>
-                  <Text className="text-xs text-muted-foreground">
-                    Los precios mostrados son los del cliente.
-                  </Text>
-                </View>
-              ) : (
-                <View className="flex-1">
-                  <Text className="text-sm">Selecciona el cliente destinatario.</Text>
-                </View>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                onPress={() => router.push(clienteObjetivoId ? '/cartera' : '/cartera')}
-              >
-                <Text>{clienteObjetivoId ? 'Cambiar' : 'Seleccionar'}</Text>
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-
-        {lineas.length === 0 ? (
-          <Card>
-            <CardContent className="items-center gap-2 py-8">
-              <Text className="text-muted-foreground">La solicitud está vacía.</Text>
-              <Button variant="outline" size="sm" onPress={() => router.replace('/')}>
-                <Text>Ver catálogo</Text>
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <View className="gap-3">
-            {lineas.map((l) => (
-              <Card key={l.producto_id} className="p-3">
-                <CardContent className="flex-row gap-3">
-                  <Image
-                    source={{ uri: l.imagen_url ?? undefined }}
-                    className="h-16 w-16 rounded-md bg-muted"
-                    contentFit="cover"
-                  />
+          {perfil?.rol === 'comercial' && !params.editar && (
+            <Card className="rounded-[10px] border-primary/40 bg-primary/10">
+              <CardContent className="flex-row items-center gap-3">
+                <UserRound size={18} className="text-muted-foreground" />
+                {clienteObjetivoId ? (
                   <View className="flex-1 gap-1">
-                    <Text numberOfLines={2} className="text-sm font-medium">
-                      {l.nombre}
+                    <Text className="text-sm font-medium">Pedido para un cliente asignado</Text>
+                    <Text className="text-xs text-muted-foreground">
+                      Los precios mostrados son los del cliente.
                     </Text>
-                    <Text className="text-xs text-muted-foreground">{l.referencia}</Text>
-                    <Text className="text-sm font-semibold">{formatEUR(l.precio_final)}</Text>
-                    {l.descuento_pct > 0 && (
-                      <Text className="text-xs text-muted-foreground">
-                        Incluye {l.descuento_pct.toLocaleString('es-ES')}% de descuento
+                  </View>
+                ) : (
+                  <View className="flex-1">
+                    <Text className="text-sm">Selecciona el cliente destinatario.</Text>
+                  </View>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onPress={() => (clienteObjetivoId ? setClienteObjetivoId(null) : router.push('/cartera'))}
+                >
+                  <Text>{clienteObjetivoId ? 'Cambiar' : 'Seleccionar'}</Text>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {lineas.length === 0 ? (
+            <Card className="rounded-[10px]">
+              <CardContent className="items-center gap-2 py-8">
+                <Text className="text-muted-foreground">Tu solicitud está vacía.</Text>
+                <Button onPress={() => router.replace('/')}>
+                  <Text>Ver catálogo</Text>
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <View className="gap-3">
+              {lineas.map((l) => (
+                <Card key={l.producto_id} className="rounded-[10px] p-3">
+                  <CardContent className="flex-row gap-3">
+                    <Image
+                      source={{ uri: l.imagen_url ?? undefined }}
+                      className="h-14 w-14 rounded-md bg-muted"
+                      contentFit="cover"
+                    />
+                    <View className="flex-1 gap-1">
+                      <Text numberOfLines={2} className="text-sm font-medium">
+                        {l.nombre}
                       </Text>
-                    )}
-                    <View className="mt-1 flex-row items-center gap-3">
-                      <View className="flex-row items-center rounded-md border border-input">
-                        <Pressable onPress={() => cambiarCantidad(l.producto_id, -1)} className="p-1.5 active:bg-accent">
-                          <Minus size={14} className="text-foreground" />
-                        </Pressable>
-                        <Text className="w-8 text-center text-sm font-semibold">{l.cantidad}</Text>
-                        <Pressable onPress={() => cambiarCantidad(l.producto_id, 1)} className="p-1.5 active:bg-accent">
-                          <Plus size={14} className="text-foreground" />
+                      <Text className="text-xs text-muted-foreground">{l.referencia}</Text>
+                      <Text className="text-sm font-semibold">{formatEUR(l.precio_final)}</Text>
+                      {l.descuento_pct > 0 && (
+                        <Text className="text-xs text-muted-foreground">
+                          Incluye {l.descuento_pct.toLocaleString('es-ES')}% de descuento
+                        </Text>
+                      )}
+                      <View className="mt-1 flex-row items-center gap-3">
+                        <View className="flex-row items-center rounded-[10px] border border-border">
+                          <Pressable
+                            onPress={() => cambiarCantidad(l.producto_id, -1)}
+                            className="p-1.5 active:bg-accent"
+                          >
+                            <Minus size={14} className="text-foreground" />
+                          </Pressable>
+                          <Text className="w-8 text-center text-sm font-semibold">{l.cantidad}</Text>
+                          <Pressable
+                            onPress={() => cambiarCantidad(l.producto_id, 1)}
+                            className="p-1.5 active:bg-accent"
+                          >
+                            <Plus size={14} className="text-foreground" />
+                          </Pressable>
+                        </View>
+                        <Text className="text-sm font-semibold">{formatEUR(l.precio_final * l.cantidad)}</Text>
+                        <Pressable onPress={() => quitar(l.producto_id)} className="ml-auto p-1.5 active:bg-accent">
+                          <Trash2 size={16} className="text-destructive" />
                         </Pressable>
                       </View>
-                      <Text className="text-sm text-muted-foreground">
-                        = {formatEUR(l.precio_final * l.cantidad)}
-                      </Text>
-                      <Pressable onPress={() => quitar(l.producto_id)} className="ml-auto p-1.5 active:bg-accent">
-                        <Trash2 size={16} className="text-destructive" />
-                      </Pressable>
                     </View>
-                  </View>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))}
 
-            <Separator />
+              <Separator />
 
-            <View className="flex-row items-center justify-between px-1">
-              <Text className="text-sm text-muted-foreground">Total (sin impuestos)</Text>
-              <Text className="text-lg font-bold">{formatEUR(total)}</Text>
+              <View className="flex-row items-center justify-between px-1">
+                <Text className="text-sm font-semibold">Total (sin impuestos)</Text>
+                <Text className="text-lg font-bold">{formatEUR(total)}</Text>
+              </View>
+
+              <View className="gap-1.5">
+                <Label nativeID="observaciones">Observaciones (opcional)</Label>
+                <Input
+                  id="observaciones"
+                  value={observaciones}
+                  onChangeText={setObservaciones}
+                  placeholder="Comentarios para tu solicitud"
+                  multiline
+                  numberOfLines={3}
+                  className="h-20 py-2 text-base"
+                />
+              </View>
+
+              {error && <Text className="text-sm text-destructive">{error}</Text>}
+
+              <Button disabled={enviando} onPress={() => void enviar()}>
+                <Text>{enviando ? 'Enviando…' : params.editar ? 'Guardar cambios' : 'Enviar solicitud'}</Text>
+              </Button>
+              <Text className="text-center text-xs text-muted-foreground">
+                Al enviar, la solicitud queda registrada y un comercial la revisará para confirmarla.
+              </Text>
             </View>
+          )}
+        </View>
+      </ScrollView>
 
-            <View className="gap-1.5">
-              <Label nativeID="observaciones">Observaciones (opcional)</Label>
-              <Input
-                id="observaciones"
-                value={observaciones}
-                onChangeText={setObservaciones}
-                placeholder="Comentarios para tu solicitud"
-                multiline
-                numberOfLines={3}
-                className="h-20 py-2 text-base"
-              />
-            </View>
-
-            {error && <Text className="text-sm text-destructive">{error}</Text>}
-
-            <Button disabled={enviando} onPress={() => void enviar()}>
-              <Text>{enviando ? 'Enviando…' : params.editar ? 'Guardar cambios' : 'Enviar solicitud'}</Text>
-            </Button>
-            <Text className="text-center text-xs text-muted-foreground">
-              Al enviar, la solicitud queda registrada y un comercial la revisará para confirmarla.
-            </Text>
-          </View>
-        )}
-      </View>
-    </ScrollView>
+      <NavInferior activa="solicitud" />
+    </>
   );
 }

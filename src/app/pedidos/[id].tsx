@@ -90,7 +90,7 @@ export default function PedidoDetalle() {
           </Badge>
         </View>
 
-        <Card>
+        <Card className="rounded-[10px]">
           <CardContent className="gap-1">
             <Text className="text-xs text-muted-foreground">Fecha</Text>
             <Text className="text-sm">{formatFechaHora(pedido.fecha_pedido)}</Text>
@@ -104,7 +104,7 @@ export default function PedidoDetalle() {
         </Card>
 
         {/* Líneas */}
-        <Card className="p-3">
+        <Card className="rounded-[10px] p-3">
           <CardHeader className="px-3 pt-1">
             <CardTitle className="text-base">Líneas</CardTitle>
           </CardHeader>
@@ -193,10 +193,11 @@ export default function PedidoDetalle() {
               </Button>
               <Button
                 variant="outline"
+                className="border-destructive"
                 disabled={trabajando}
                 onPress={() => void ejecutar(() => cancelar(pedido.id, 'Cancelado por el cliente'), 'Pedido cancelado')}
               >
-                <Text>Cancelar solicitud</Text>
+                <Text className="text-destructive">Cancelar solicitud</Text>
               </Button>
             </>
           )}
@@ -210,10 +211,11 @@ export default function PedidoDetalle() {
               </Button>
               <Button
                 variant="outline"
+                className="border-destructive"
                 disabled={trabajando}
                 onPress={() => void ejecutar(() => cancelar(pedido.id, 'Cancelado por comercial'), 'Pedido cancelado')}
               >
-                <Text>Cancelar</Text>
+                <Text className="text-destructive">Cancelar pedido</Text>
               </Button>
             </>
           )}
@@ -229,10 +231,11 @@ export default function PedidoDetalle() {
               </Button>
               <Button
                 variant="outline"
+                className="border-destructive"
                 disabled={trabajando}
                 onPress={() => void ejecutar(() => cancelar(pedido.id, 'Cancelado por comercial'), 'Pedido cancelado')}
               >
-                <Text>Cancelar</Text>
+                <Text className="text-destructive">Cancelar pedido</Text>
               </Button>
             </>
           )}
@@ -248,7 +251,7 @@ export default function PedidoDetalle() {
         </View>
 
         {/* Historial */}
-        <Card>
+        <Card className="rounded-[10px]">
           <CardHeader>
             <CardTitle className="text-base">Historial de estados</CardTitle>
           </CardHeader>

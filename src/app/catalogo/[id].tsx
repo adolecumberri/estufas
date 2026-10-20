@@ -89,8 +89,8 @@ export default function ProductoDetalle() {
   return (
     <ScrollView className="flex-1 bg-background" contentContainerStyle={{ paddingBottom: 32 }}>
       <View style={{ paddingTop: insets.top + 8 }}>
-        {/* Cabecera */}
-        <View className="flex-row items-center px-2">
+        {/* 1. Cabecera: volver + referencia + etiqueta energética */}
+        <View className="flex-row items-center gap-1 px-2">
           <Pressable
             onPress={() => router.back()}
             className="rounded-md p-2 active:bg-accent"
@@ -98,10 +98,19 @@ export default function ProductoDetalle() {
           >
             <ChevronLeft size={24} className="text-foreground" />
           </Pressable>
-          <Text className="text-sm text-muted-foreground">{producto.referencia}</Text>
+          <Text className="flex-1 text-sm text-muted-foreground">
+            Ref: {producto.referencia}
+          </Text>
+          {producto.etiqueta_energetica && (
+            <Badge variant="outline" className="border-emerald-600">
+              <Text className="text-xs font-medium text-emerald-600">
+                {producto.etiqueta_energetica}
+              </Text>
+            </Badge>
+          )}
         </View>
 
-        {/* Galería */}
+        {/* 2. Galería de imágenes */}
         <ScrollView
           horizontal
           pagingEnabled
@@ -112,7 +121,7 @@ export default function ProductoDetalle() {
             <Image
               key={`${url}-${i}`}
               source={{ uri: url }}
-              className="h-72 w-screen bg-muted web:max-w-lg"
+              className="h-80 w-screen bg-muted web:max-w-lg"
               contentFit="cover"
               transition={200}
             />
@@ -120,55 +129,52 @@ export default function ProductoDetalle() {
         </ScrollView>
 
         <View className="gap-4 p-4">
-          {/* Título y precio */}
+          {/* 3. Título */}
           <View className="gap-2">
+            <Text className="text-2xl font-bold tracking-tight">{producto.nombre}</Text>
+            <Text className="text-sm text-muted-foreground">
+              {producto.marca} · {producto.tipo}
+            </Text>
             <View className="flex-row flex-wrap gap-1.5">
-              {producto.etiqueta_energetica && (
-                <Badge variant="outline">
-                  <Text>Energía {producto.etiqueta_energetica}</Text>
-                </Badge>
-              )}
               {producto.categorias.map((c) => (
                 <Badge key={c} variant="secondary">
                   <Text>{c}</Text>
                 </Badge>
               ))}
+              {producto.etiqueta_energetica && (
+                <Badge className="bg-emerald-600">
+                  <Text className="text-white">Energía {producto.etiqueta_energetica}</Text>
+                </Badge>
+              )}
             </View>
-            <Text className="text-2xl font-bold tracking-tight">{producto.nombre}</Text>
-            <Text className="text-sm text-muted-foreground">
-              {producto.marca} · {producto.tipo}
-            </Text>
-
-            <Card className="mt-1">
-              <CardContent className="gap-1">
-                <View className="flex-row items-baseline gap-2">
-                  <Text className="text-2xl font-bold">{formatEUR(producto.precio_final)}</Text>
-                  {producto.descuento_pct > 0 && (
-                    <Text className="text-sm text-muted-foreground line-through">
-                      {formatEUR(producto.precio_base)}
-                    </Text>
-                  )}
-                </View>
-                {producto.descuento_pct > 0 && (
-                  <Badge variant="secondary" className="self-start">
-                    <Text>
-                      {ORIGENES_DESCUENTO[producto.descuento_origen]?.etiqueta ?? 'Descuento'} ·{' '}
-                      {formatPct(producto.descuento_pct)}
-                    </Text>
-                  </Badge>
-                )}
-                <Text className="text-xs text-muted-foreground">
-                  Los precios no incluyen impuestos. Consulta tus condiciones al solicitar.
-                </Text>
-              </CardContent>
-            </Card>
-
-            {producto.descripcion && (
-              <Text className="mt-2 leading-relaxed text-foreground">{producto.descripcion}</Text>
-            )}
           </View>
 
-          {/* Características agrupadas */}
+          {/* 4. Precio */}
+          <Card>
+            <CardContent className="gap-1">
+              <View className="flex-row items-baseline gap-2">
+                <Text className="text-2xl font-bold">{formatEUR(producto.precio_final)}</Text>
+                {producto.descuento_pct > 0 && (
+                  <Text className="text-sm text-muted-foreground line-through">
+                    {formatEUR(producto.precio_base)}
+                  </Text>
+                )}
+              </View>
+              {producto.descuento_pct > 0 && (
+                <Badge variant="secondary" className="self-start">
+                  <Text>
+                    {ORIGENES_DESCUENTO[producto.descuento_origen]?.etiqueta ?? 'Descuento'} ·{' '}
+                    {formatPct(producto.descuento_pct)}
+                  </Text>
+                </Badge>
+              )}
+              <Text className="text-xs text-muted-foreground">
+                Los precios no incluyen impuestos.
+              </Text>
+            </CardContent>
+          </Card>
+
+          {/* 5. Características agrupadas (antes de la descripción) */}
           {grupos.map(([grupo, caracteristicas]) => (
             <Card key={grupo}>
               <CardHeader>
@@ -195,9 +201,21 @@ export default function ProductoDetalle() {
             </Card>
           ))}
 
-          {/* Cantidad y añadir */}
+          {/* 6. Descripción (debajo de las características) */}
+          {producto.descripcion && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Descripción</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Text className="leading-relaxed text-foreground">{producto.descripcion}</Text>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* 7. Cantidad y añadir */}
           <View className="flex-row items-center gap-3">
-            <View className="flex-row items-center rounded-md border border-input">
+            <View className="flex-row items-center rounded-[10px] border border-input">
               <Pressable
                 onPress={() => setCantidad((c) => Math.max(1, c - 1))}
                 className="p-3 active:bg-accent"
