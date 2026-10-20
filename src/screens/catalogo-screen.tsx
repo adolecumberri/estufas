@@ -4,7 +4,6 @@ import { ActivityIndicator, FlatList, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Buscador } from '@/components/catalogo/buscador';
-import { ChipsCategorias } from '@/components/catalogo/chips-categorias';
 import { EncabezadoCatalogo } from '@/components/catalogo/encabezado';
 import { TarjetaProducto } from '@/components/catalogo/tarjeta-producto';
 import { NavLateral } from '@/components/navegacion/nav-lateral';
@@ -28,11 +27,6 @@ export default function CatalogoScreen() {
   const [menuAbierto, setMenuAbierto] = React.useState(false);
   const colores = useColoresIcono();
 
-  // Chips del combustible activo, sin las categorías "comodín" pellet/leña.
-  const categoriasFiltradas = cat.categorias.filter(
-    (c) => c.combustible === cat.combustible && c.clave !== 'pellet' && c.clave !== 'lena'
-  );
-
   // Etiqueta a la que se vuelve desde el detalle: categoría seleccionada o,
   // si no la hay, el combustible activo. Con búsqueda activa los resultados
   // cruzan combustibles, así que se usa una etiqueta neutra.
@@ -53,17 +47,6 @@ export default function CatalogoScreen() {
       <View className="mt-2 px-4 pb-2">
         <Buscador valor={cat.busqueda} onChange={cat.setBusqueda} />
       </View>
-
-      {/* Chips de categorías (solo las del combustible activo) */}
-      {categoriasFiltradas.length > 0 && (
-        <View className="pb-2">
-          <ChipsCategorias
-            categorias={categoriasFiltradas}
-            seleccionada={cat.categoria}
-            onSeleccionar={cat.setCategoria}
-          />
-        </View>
-      )}
 
       {/* Cabecera de resultados */}
       <View className="flex-row items-center justify-between px-4 pb-2 pt-1">
