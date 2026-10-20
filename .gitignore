@@ -55,3 +55,5 @@ coverage
 # supabase CLI local runtime state
 supabase/.temp/
 supabase/.branches/
+
+.dotslash-cache/
