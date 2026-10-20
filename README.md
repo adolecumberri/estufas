@@ -58,6 +58,12 @@ npx supabase test db     # tests pgTAP (supabase/tests)
 > verificar en local; los builds de producción (EAS Build, Linux/macOS) compilan
 > el bytecode sin problema. Los builds de desarrollo (`expo run:android`) no
 > usan bytecode y no se ven afectados.
+>
+> **Nota Windows (CLI de Supabase):** si `supabase start` falla con
+> `permission denied while trying to connect to the docker API at npipe://...`,
+> activa en Docker Desktop *Settings → General → "Expose daemon on
+> tcp://localhost:2375 without TLS"* y ejecuta
+> `$env:DOCKER_HOST = "tcp://127.0.0.1:2375"` antes del comando.
 
 ## Estructura
 

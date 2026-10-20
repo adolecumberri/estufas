@@ -46,3 +46,12 @@ expo-env.d.ts
 
 # output
 coverage
+
+# supabase CLI global dir (USERPROFILE override)
+.cli-home/
+
+.tmp/
+
+# supabase CLI local runtime state
+supabase/.temp/
+supabase/.branches/

@@ -15,9 +15,12 @@ BEGIN
 END;
 $$;
 
+GRANT USAGE ON SCHEMA tests TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION tests.authenticate_as(UUID) TO anon, authenticated;
+
 -- El cliente crea un pedido vía RPC (los permisos se validan en la BD).
 SET LOCAL ROLE authenticated;
-PERFORM tests.authenticate_as('33333333-3333-4333-8333-333333333333');
+SELECT tests.authenticate_as('33333333-3333-4333-8333-333333333333');
 
 CREATE TEMP TABLE tmp_pedido AS
 SELECT * FROM crear_pedido(
@@ -41,7 +44,7 @@ SELECT results_eq(
 );
 
 -- 3. Otro cliente NO ve el pedido.
-PERFORM tests.authenticate_as('44444444-4444-4444-8444-444444444444');
+SELECT tests.authenticate_as('44444444-4444-4444-8444-444444444444');
 SELECT results_eq(
     'SELECT count(*)::int FROM pedidos',
     ARRAY[0],
@@ -49,7 +52,7 @@ SELECT results_eq(
 );
 
 -- 4. El comercial responsable SÍ lo ve.
-PERFORM tests.authenticate_as('22222222-2222-4222-8222-222222222222');
+SELECT tests.authenticate_as('22222222-2222-4222-8222-222222222222');
 SELECT results_eq(
     'SELECT count(*)::int FROM pedidos',
     ARRAY[1],

@@ -15,10 +15,13 @@ BEGIN
 END;
 $$;
 
+GRANT USAGE ON SCHEMA tests TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION tests.authenticate_as(UUID) TO anon, authenticated;
+
 SET LOCAL ROLE authenticated;
 
 -- Pedido del cliente particular (comercial responsable: 2222...).
-PERFORM tests.authenticate_as('33333333-3333-4333-8333-333333333333');
+SELECT tests.authenticate_as('33333333-3333-4333-8333-333333333333');
 CREATE TEMP TABLE tmp_pedido AS
 SELECT * FROM crear_pedido(NULL, '[{"producto_id":"f1000000-0000-4000-8000-000000000003","cantidad":1}]'::jsonb, NULL);
 
@@ -40,7 +43,7 @@ CREATE TEMP TABLE tmp_pedido2 AS
 SELECT * FROM crear_pedido(NULL, '[{"producto_id":"f1000000-0000-4000-8000-000000000003","cantidad":2}]'::jsonb, NULL);
 
 -- 3. El comercial responsable confirma.
-PERFORM tests.authenticate_as('22222222-2222-4222-8222-222222222222');
+SELECT tests.authenticate_as('22222222-2222-4222-8222-222222222222');
 SELECT lives_ok(
     $q$ SELECT confirmar_pedido((SELECT pedido_id FROM tmp_pedido2), 'ok') $q$,
     'el comercial responsable confirma el pedido'
@@ -64,7 +67,7 @@ SELECT throws_ok(
 );
 
 -- 6. El cliente NO puede cancelar un pedido ya confirmado.
-PERFORM tests.authenticate_as('33333333-3333-4333-8333-333333333333');
+SELECT tests.authenticate_as('33333333-3333-4333-8333-333333333333');
 SELECT throws_ok(
     $q$ SELECT cancelar_pedido((SELECT pedido_id FROM tmp_pedido2)) $q$,
     'El cliente solo puede cancelar solicitudes pendientes',

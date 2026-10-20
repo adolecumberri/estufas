@@ -23,7 +23,9 @@ están marcados con su número.
 - **Nº 1 — Promociones de tienda vs. descuentos individuales:** no se acumulan.
   El específico cliente/producto sustituye al general del cliente; después se
   compara con la mejor promoción de tienda vigente y gana el porcentaje MAYOR.
-  (Coherente con la nota 4 del esquema v0.5.)
+  Consecuencia práctica: un descuento específico del 0% excluye el producto del
+  descuento general del cliente, pero una promo de tienda superior puede seguir
+  aplicando (regla del esquema v0.5, nota 4; decisión definitiva pendiente).
 - **Nº 2 — Descuentos adicionales del comercial:** solo mientras el pedido está
   `solicitado` (regla provisional del PRD §6.5). Se registran con origen
   `ajuste_comercial` y quedan auditados (fila anterior completa en `auditoria`).

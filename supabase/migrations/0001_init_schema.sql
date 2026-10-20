@@ -676,6 +676,8 @@ CREATE INDEX ix_pedido_historial_pedido_fecha
 CREATE OR REPLACE FUNCTION fn_pedido_validar()
 RETURNS TRIGGER
 LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
     v_ok BOOLEAN;
@@ -777,6 +779,8 @@ FOR EACH ROW EXECUTE FUNCTION fn_pedido_registrar_historial();
 CREATE OR REPLACE FUNCTION fn_pedido_linea_solo_solicitado()
 RETURNS TRIGGER
 LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
     v_pedido_id UUID;

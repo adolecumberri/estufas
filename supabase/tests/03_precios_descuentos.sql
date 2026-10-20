@@ -15,6 +15,9 @@ BEGIN
 END;
 $$;
 
+GRANT USAGE ON SCHEMA tests TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION tests.authenticate_as(UUID) TO anon, authenticated;
+
 -- 1. Anónimo: precio base sin descuentos.
 SET LOCAL ROLE anon;
 SELECT results_eq(
@@ -25,7 +28,7 @@ SELECT results_eq(
 
 -- 2. Empresa (10% general + promo 5%): gana el 10% individual en TF-12.
 SET LOCAL ROLE authenticated;
-PERFORM tests.authenticate_as('44444444-4444-4444-8444-444444444444');
+SELECT tests.authenticate_as('44444444-4444-4444-8444-444444444444');
 SELECT results_eq(
     $q$ SELECT descuento_pct::numeric, descuento_origen::varchar, round(precio_final, 2)::numeric
         FROM fn_calcular_precio('f1000000-0000-4000-8000-000000000002', '44444444-4444-4444-8444-444444444444') $q$,
@@ -34,15 +37,17 @@ SELECT results_eq(
 );
 
 -- 3. El 0% específico SUSTITUYE al general del 10% (LP-9 para la empresa).
+--    Después se compara con la mejor promo vigente y gana el MAYOR (regla
+--    documentada; decisión pendiente nº 1 del PRD): 5% > 0% → promo aplica.
 SELECT results_eq(
     $q$ SELECT descuento_pct::numeric, descuento_origen::varchar, round(precio_final, 2)::numeric
         FROM fn_calcular_precio('f1000000-0000-4000-8000-000000000001', '44444444-4444-4444-8444-444444444444') $q$,
-    $$ VALUES (0.00::numeric, 'cliente_producto'::varchar, 999.00::numeric) $$,
-    'el descuento específico 0% sustituye al general'
+    $$ VALUES (5.00::numeric, 'promocion_tienda'::varchar, 949.05::numeric) $$,
+    'el descuento específico 0% sustituye al general; la promo (mayor) sigue aplicando'
 );
 
 -- 4. Particular sin descuentos individuales: se aplica la promo de tienda (5%).
-PERFORM tests.authenticate_as('33333333-3333-4333-8333-333333333333');
+SELECT tests.authenticate_as('33333333-3333-4333-8333-333333333333');
 SELECT results_eq(
     $q$ SELECT descuento_pct::numeric, descuento_origen::varchar
         FROM fn_calcular_precio('f1000000-0000-4000-8000-000000000002', '33333333-3333-4333-8333-333333333333') $q$,
@@ -62,8 +67,8 @@ SELECT results_eq(
 );
 
 -- 6. Un cambio de precio posterior NO altera el pedido existente.
-PERFORM tests.authenticate_as('11111111-1111-4111-8111-111111111111');
-PERFORM actualizar_precio('f1000000-0000-4000-8000-000000000002', 2000.00);
+SELECT tests.authenticate_as('11111111-1111-4111-8111-111111111111');
+SELECT actualizar_precio('f1000000-0000-4000-8000-000000000002', 2000.00);
 
 SELECT results_eq(
     $q$ SELECT precio_unitario::numeric FROM pedido_lineas
@@ -74,7 +79,7 @@ SELECT results_eq(
 
 -- 7. Un cliente no puede sondear condiciones de otro cliente.
 SET LOCAL ROLE authenticated;
-PERFORM tests.authenticate_as('33333333-3333-4333-8333-333333333333');
+SELECT tests.authenticate_as('33333333-3333-4333-8333-333333333333');
 SELECT throws_ok(
     $q$ SELECT * FROM fn_calcular_precio('f1000000-0000-4000-8000-000000000002',
         '44444444-4444-4444-8444-444444444444') $q$,
