@@ -108,6 +108,10 @@ export function NavLateral({
                         accessibilityRole="button"
                         accessibilityState={{ selected: activa }}
                         onPress={() => {
+                          // Si la subsección pertenece al combustible inactivo,
+                          // se cambia el combustible antes que la categoría
+                          // (ambos filtros a la vez dejarían el catálogo vacío).
+                          if (!activo) setCombustible(c.id);
                           setCategoria(activa ? null : x.id);
                           onCerrar();
                         }}
