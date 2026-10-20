@@ -2,7 +2,7 @@
 
 Aplicación de catálogo de productos y gestión comercial (PRD en [`docs/PRD.md`](docs/PRD.md)) construida con:
 
-- **Frontend:** Expo (SDK 58) + Expo Router — nativo (iOS/Android) y web desde un único código. Estilo shadcn/ui (escala de grises + acento ámbar) con NativeWind y componentes propios en `src/components/ui`.
+- **Frontend:** Expo (SDK 57 — fijado a la versión de Expo Go disponible en Play Store) + Expo Router — nativo (iOS/Android) y web desde un único código. Estilo shadcn/ui (escala de grises + acento ámbar) con NativeWind y componentes propios en `src/components/ui`.
 - **Backend:** Supabase (PostgreSQL + Auth + PostgREST). El esquema parte de `docs/schema05.sql`, adaptado a Supabase en [`supabase/migrations`](supabase/migrations).
 - **Autorización:** Row Level Security + funciones RPC transaccionales (`security definer`) — los permisos se comprueban en la base de datos, nunca en el cliente.
 - **Llamadas al backend:** exclusivamente mediante hooks personalizados en [`src/hooks`](src/hooks) (regla de arquitectura del proyecto). Constantes globales en [`src/constants/index.ts`](src/constants/index.ts).
@@ -25,6 +25,15 @@ npx supabase start          # arranca Postgres+Auth+Studio en http://127.0.0.1:5
 # 3. Frontend
 npm run web                 # navegador
 npm start                   # Expo Go / emuladores
+
+# Móvil en la misma Wi-Fi: Expo Go debe tener el MISMO SDK que el proyecto
+# (57). Los datos llegan vía el host de Metro automáticamente (src/constants).
+
+# Si el móvil no alcanza Supabase (Docker Desktop en Windows no expone
+# 54321 a la LAN), crear un puente de red (PowerShell admin) y un .env.local:
+#   netsh interface portproxy add v4tov4 listenport=8450 listenaddress=0.0.0.0 connectport=54321 connectaddress=127.0.0.1
+#   New-NetFirewallRule -DisplayName "Supabase bridge 8450" -Direction Inbound -Protocol TCP -LocalPort 8450 -Action Allow -Profile Private,Public
+#   .env.local -> EXPO_PUBLIC_SUPABASE_URL=http://<IP-DEL-PC>:8450
 
 # Sin Docker: crea un proyecto en supabase.com y usa variables de entorno:
 #   EXPO_PUBLIC_SUPABASE_URL=https://<ref>.supabase.co
