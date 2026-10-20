@@ -26,6 +26,19 @@ export default function ProductoDetalle() {
 
   const [cantidad, setCantidad] = React.useState(1);
 
+  // Agrupación de características por grupo. Hook SIEMPRE antes de los returns
+  // condicionales (regla de hooks de React).
+  const grupos = React.useMemo(() => {
+    if (!producto) return [];
+    const mapa = new Map<string, typeof producto.caracteristicas>();
+    for (const c of producto.caracteristicas) {
+      const lista = mapa.get(c.grupo) ?? [];
+      lista.push(c);
+      mapa.set(c.grupo, lista);
+    }
+    return Array.from(mapa.entries());
+  }, [producto]);
+
   if (cargando) {
     return (
       <View className="flex-1 gap-4 bg-background p-4" style={{ paddingTop: insets.top + 8 }}>
@@ -54,16 +67,6 @@ export default function ProductoDetalle() {
     producto.imagen_url,
     ...producto.galeria.map((g) => g.url),
   ].filter((u): u is string => Boolean(u));
-
-  const grupos = React.useMemo(() => {
-    const mapa = new Map<string, typeof producto.caracteristicas>();
-    for (const c of producto.caracteristicas) {
-      const lista = mapa.get(c.grupo) ?? [];
-      lista.push(c);
-      mapa.set(c.grupo, lista);
-    }
-    return Array.from(mapa.entries());
-  }, [producto.caracteristicas]);
 
   const anadirASolicitud = () => {
     if (!session) {
