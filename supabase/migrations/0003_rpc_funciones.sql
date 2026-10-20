@@ -494,11 +494,6 @@ BEGIN
         RAISE EXCEPTION 'Sin permiso para editar este pedido';
     END IF;
 
-    -- Un cliente solo edita pedidos que él mismo creó.
-    IF COALESCE(fn_rol_usuario(), 'cliente') = 'cliente' AND v_pedido.creado_por <> v_uid THEN
-        RAISE EXCEPTION 'Sin permiso para editar este pedido';
-    END IF;
-
     PERFORM set_config('app.nota_estado', 'Pedido editado', true);
 
     UPDATE pedidos
@@ -548,10 +543,6 @@ BEGIN
     IF NOT (fn_es_admin()
             OR v_pedido.cliente_id = v_uid
             OR fn_comercial_responsable(v_pedido.cliente_id)) THEN
-        RAISE EXCEPTION 'Sin permiso para cancelar este pedido';
-    END IF;
-
-    IF COALESCE(fn_rol_usuario(), 'cliente') = 'cliente' AND v_pedido.creado_por <> v_uid THEN
         RAISE EXCEPTION 'Sin permiso para cancelar este pedido';
     END IF;
 

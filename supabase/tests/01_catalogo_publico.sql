@@ -4,6 +4,8 @@
 BEGIN;
 SELECT plan(6);
 
+CREATE SCHEMA IF NOT EXISTS tests;
+
 CREATE OR REPLACE FUNCTION tests.authenticate_as(p_sub UUID)
 RETURNS VOID
 LANGUAGE plpgsql

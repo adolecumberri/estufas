@@ -52,6 +52,13 @@ npx supabase db reset    # recrea la BD local (migraciones + seed)
 npx supabase test db     # tests pgTAP (supabase/tests)
 ```
 
+> **Nota Windows:** `npx expo export --platform android` puede fallar en el paso de
+> bytecode de Hermes (`hermesc exited with non-zero code: 6`) en algunas
+> máquinas Windows. El bundle JS es correcto — usa `--no-bytecode` para
+> verificar en local; los builds de producción (EAS Build, Linux/macOS) compilan
+> el bytecode sin problema. Los builds de desarrollo (`expo run:android`) no
+> usan bytecode y no se ven afectados.
+
 ## Estructura
 
 ```
