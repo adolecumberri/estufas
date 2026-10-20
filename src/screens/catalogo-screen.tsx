@@ -31,11 +31,15 @@ export default function CatalogoScreen() {
   );
 
   // Etiqueta a la que se vuelve desde el detalle: categoría seleccionada o,
-  // si no la hay, el combustible activo.
+  // si no la hay, el combustible activo. Con búsqueda activa los resultados
+  // cruzan combustibles, así que se usa una etiqueta neutra.
   const categoriaActiva = cat.categorias.find((c) => c.id === cat.categoria);
+  const buscando = cat.busqueda.trim().length > 0;
   const origen =
     categoriaActiva?.nombre ??
-    (COMBUSTIBLES.find((c) => c.id === cat.combustible)?.etiqueta ?? 'Catálogo');
+    (buscando
+      ? 'Catálogo'
+      : (COMBUSTIBLES.find((c) => c.id === cat.combustible)?.etiqueta ?? 'Catálogo'));
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>

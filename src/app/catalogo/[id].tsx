@@ -127,9 +127,11 @@ export default function ProductoDetalle() {
         {/* 4. Referencia y marca · tipo */}
         <View className="mt-2 gap-0.5 px-4">
           <Text className="text-sm text-muted-foreground">Ref: {producto.referencia}</Text>
-          <Text className="text-sm text-muted-foreground">
-            {producto.marca} · {producto.tipo}
-          </Text>
+          {(producto.marca || producto.tipo) && (
+            <Text className="text-sm text-muted-foreground">
+              {[producto.marca, producto.tipo].filter(Boolean).join(' · ')}
+            </Text>
+          )}
         </View>
 
         {/* 5. Chips de categoría + etiqueta energética */}
