@@ -38,6 +38,10 @@ export function EncabezadoCatalogo() {
 
       <View className="flex-row items-center gap-1.5">
         <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={
+            totalLineas > 0 ? `Ver carrito de compras, ${totalLineas} artículos` : 'Ver carrito de compras'
+          }
           onPress={() => router.push('/solicitud')}
           className="relative rounded-lg p-2 active:bg-muted"
         >
@@ -57,7 +61,12 @@ export function EncabezadoCatalogo() {
           </Badge>
         )}
 
-        <Pressable onPress={destinoCuenta} className="rounded-lg p-2 active:bg-muted">
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={session ? 'Cuenta de usuario' : 'Iniciar sesión'}
+          onPress={destinoCuenta}
+          className="rounded-lg p-2 active:bg-muted"
+        >
           {session ? (
             <UserRound size={20} className="text-foreground" />
           ) : (

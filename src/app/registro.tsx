@@ -92,6 +92,7 @@ export default function Registro() {
                 <Pressable
                   key={t}
                   accessibilityRole="button"
+                  accessibilityState={{ selected: tipo === t }}
                   onPress={() => setTipo(t)}
                   className={cn(
                     'flex-1 items-center justify-center rounded-[8px] px-3 py-2',
@@ -184,6 +185,7 @@ export default function Registro() {
               <Input
                 id="password"
                 className="h-11 rounded-[10px] sm:h-11"
+                autoComplete="new-password"
                 secureTextEntry
                 value={password}
                 onChangeText={setPassword}

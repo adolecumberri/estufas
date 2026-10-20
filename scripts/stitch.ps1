@@ -1,4 +1,4 @@
-# Helper: llamadas al MCP oficial de Google Stitch desde PowerShell.
+﻿# Helper: llamadas al MCP oficial de Google Stitch desde PowerShell.
 # Uso: .\scripts\stitch.ps1 -Tool list_projects
 #       .\scripts\stitch.ps1 -Tool get_screen -Args '{"project_name":"projects/123","screen_name":"projects/123/screens/abc"}'
 # La API key se lee de .env.local (STITCH_API_KEY=...) — nunca se commitea.
@@ -31,9 +31,32 @@ $response = Invoke-WebRequest -Method Post -Uri "https://stitch.googleapis.com/m
     } `
     -Body $body -UseBasicParsing -TimeoutSec 600
 
-$json = $response.Content | ConvertFrom-Json
+$contentType = [string]$response.Headers["Content-Type"]
+if ($contentType -like "text/event-stream*") {
+    # Respuesta SSE: extraer las líneas `data:`, descartar [DONE] y parsear el último payload JSON-RPC.
+    $json = $response.Content -split "`r?`n" |
+        Where-Object { $_ -like "data:*" } |
+        ForEach-Object { $_.Substring(5).TrimStart() } |
+        Where-Object { $_ -and $_ -ne "[DONE]" } |
+        Select-Object -Last 1 |
+        ConvertFrom-Json
+} else {
+    $json = $response.Content | ConvertFrom-Json
+}
 if ($json.error) {
     Write-Output ("ERROR: " + $json.error.message)
+    exit 1
+}
+if ($json.result -and $json.result.isError) {
+    # Llamada a herramienta fallida: el error va a stderr y se sale con código 1.
+    if ($json.result.error -and $json.result.error.message) {
+        $errText = $json.result.error.message
+    } elseif ($json.result.content -and $json.result.content[0].text) {
+        $errText = $json.result.content[0].text
+    } else {
+        $errText = $json.result | ConvertTo-Json -Depth 10 -Compress
+    }
+    Write-Error -ErrorAction Continue ("ERROR: " + $errText)
     exit 1
 }
 if ($json.result.structuredContent) {

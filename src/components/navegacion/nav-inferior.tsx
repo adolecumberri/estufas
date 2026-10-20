@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '@/components/ui/text';
 import { RUTAS } from '@/constants';
 import { useSolicitud } from '@/contexts/solicitud-context';
+import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 
 type PestanaNav = 'catalogo' | 'solicitud' | 'pedidos' | 'cartera';
@@ -24,13 +25,22 @@ const PESTANAS: { id: PestanaNav; etiqueta: string; icono: LucideIcon; ruta: Hre
 export function NavInferior({ activa }: { activa: 'catalogo' | 'solicitud' | 'pedidos' | 'cartera' }) {
   const insets = useSafeAreaInsets();
   const { lineas } = useSolicitud();
+  const { perfil } = useAuth();
+
+  const pestanas = React.useMemo(
+    () =>
+      PESTANAS.filter(
+        (p) => p.id !== 'cartera' || perfil?.rol === 'comercial' || perfil?.rol === 'admin'
+      ),
+    [perfil]
+  );
 
   return (
     <View
       className="absolute bottom-0 left-0 right-0 h-16 flex-row items-center justify-around border-t border-border bg-background px-2"
       style={{ height: 64 + insets.bottom, paddingBottom: insets.bottom }}
     >
-      {PESTANAS.map(({ id, etiqueta, icono: Icono, ruta }) => {
+      {pestanas.map(({ id, etiqueta, icono: Icono, ruta }) => {
         const esActiva = id === activa;
         return (
           <Pressable

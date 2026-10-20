@@ -1,6 +1,6 @@
-import { Redirect, router } from 'expo-router';
+import { Redirect, router, useFocusEffect } from 'expo-router';
 import { LogOut } from 'lucide-react-native';
-import * as React from 'react';
+import { useCallback, useRef } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -20,7 +20,19 @@ export default function Cartera() {
   const insets = useSafeAreaInsets();
   const { session, perfil, cerrarSesion } = useAuth();
   const { clientes, cargando, error } = useCartera();
-  const { pedidos, cargando: cargandoPedidos } = usePedidos();
+  const { pedidos, cargando: cargandoPedidos, error: errorPedidos, recargar } = usePedidos();
+
+  // La primera carga ya la hace el hook al montar; en los siguientes enfoques se refresca.
+  const primerEnfoque = useRef(true);
+  useFocusEffect(
+    useCallback(() => {
+      if (primerEnfoque.current) {
+        primerEnfoque.current = false;
+        return;
+      }
+      void recargar();
+    }, [recargar])
+  );
 
   if (!session) return <Redirect href="/acceso" />;
   if (perfil && perfil.rol !== 'comercial' && perfil.rol !== 'admin') {
@@ -51,12 +63,17 @@ export default function Cartera() {
             <CardContent className="gap-3 px-3">
               {cargandoPedidos ? (
                 <ActivityIndicator color="hsl(24.6 95% 53.1%)" />
+              ) : errorPedidos ? (
+                <Text className="text-muted-foreground">{errorPedidos}</Text>
               ) : pendientes.length === 0 ? (
                 <Text className="text-muted-foreground">No hay pedidos pendientes de confirmar.</Text>
               ) : (
                 pendientes.map((p, indice) => {
                   const total = (p.pedido_lineas ?? []).reduce((acc, l) => acc + l.total_linea, 0);
-                  const nombreCliente = p.cliente?.razon_social ?? p.cliente?.nombre;
+                  const cliente = clientes.find((c) => c.id === p.cliente_id);
+                  const nombreCliente = cliente
+                    ? (cliente.razon_social ?? `${cliente.nombre} ${cliente.apellidos ?? ''}`.trim())
+                    : null;
                   return (
                     <View key={p.id} className="gap-3">
                       {indice > 0 && <Separator />}

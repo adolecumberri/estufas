@@ -47,7 +47,7 @@ export function TarjetaProducto({ producto }: { producto: ProductoCatalogo }) {
   return (
     <Pressable
       onPress={() => router.push(`/catalogo/${producto.producto_id}`)}
-      className="flex-1 active:opacity-80"
+      className="max-w-[50%] flex-1 active:opacity-80"
     >
       <Card className="flex-1 justify-between gap-0 overflow-hidden rounded-[10px] border border-border bg-background p-0 shadow-sm">
         <View>

@@ -7,7 +7,7 @@
 ## 1. Qué es este proyecto
 
 Catálogo de productos y gestión comercial ("Estufas") — MVP funcional.
-Detalles en [`README.md`](README.md).
+Detalles en [`README.md`](../README.md).
 
 Stack: **Expo SDK 57** (fijado a la versión de Expo Go del Play Store — **no
 actualizar el SDK sin pedirlo**), Expo Router, NativeWind + componentes
@@ -17,10 +17,10 @@ RPC); no hay servidor de aplicación.
 
 ## 2. Orden de lectura obligatorio
 
-1. [`README.md`](README.md)
+1. [`README.md`](../README.md)
 2. [`docs/PRD.md`](PRD.md) — especificación funcional (referencia principal)
 3. [`docs/ASUNCIONES.md`](ASUNCIONES.md) — reglas resueltas y supuestos explícitos
-4. [`docs/DESIGN.md`](GOOGLE_STITCH.md) — design brief
+4. [`docs/DESIGN.md`](DESIGN.md) — design brief
 5. [`supabase/migrations/`](../supabase/migrations/) — esquema, RLS y funciones de negocio
 6. [`src/lib/types.ts`](../src/lib/types.ts) + [`src/hooks/`](../src/hooks/) — contratos de datos
 
@@ -58,7 +58,7 @@ RPC); no hay servidor de aplicación.
 ```powershell
 npm run typecheck                            # TypeScript estricto — obligatorio
 npx expo export --platform web               # build de producción web
-npx supabase db reset                        # reconstruye la BD (migraciones + seed)
+npx supabase db reset                        # solo tras cambios de migraciones o seed (borra la BD local y los datos manuales)
 npx supabase test db                         # 24 tests pgTAP — obligatorio si toca backend
 ```
 
@@ -70,11 +70,19 @@ Notas de esta máquina:
   Studio en `http://127.0.0.1:54323`, Postgres directo en `127.0.0.1:54322`.
 - Para probar desde un móvil en la LAN existe el puente `netsh portproxy
   8450 → 127.0.0.1:54321` y `.env.local` (gitignored) apunta a él. No borrarlo.
+- **Aviso de seguridad**: el puente HTTP (`8450 → 127.0.0.1:54321`) expone en
+  claro por la LAN el tráfico de auth (`signInWithPassword`/`signUp`); es solo
+  para desarrollo en una red de confianza/aislada. Nunca usar credenciales
+  reales a través de él; en producción usar HTTPS (Supabase cloud o túnel/VPN
+  seguro).
 
 ## 7. Cómo se descubre la API (para el agente)
 
-- Cada tabla/vista de `public` → `GET/POST/PATCH/DELETE /rest/v1/<nombre>`.
-- Cada función (no trigger) de `public` → `POST /rest/v1/rpc/<nombre>`.
+- Los métodos disponibles dependen del tipo de objeto (tabla/vista), los permisos
+  (RLS), los triggers de vista y la volatilidad de las funciones: no asumir que
+  todo objeto expone todos los verbos.
+- Para conocer los métodos permitidos por objeto, consultar el Swagger vivo en
+  `/rest/v1/` (o una petición `OPTIONS` a `/rest/v1/<nombre>`).
 - Lista viva: Swagger `/rest/v1/` o Studio → API Docs.
 - Regla del proyecto: consumir SIEMPRE vía hooks en `src/hooks`.
 

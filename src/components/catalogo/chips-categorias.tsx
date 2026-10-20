@@ -21,9 +21,10 @@ export function ChipsCategorias({ categorias, seleccionada, onSeleccionar }: Pro
       horizontal
       showsHorizontalScrollIndicator={false}
       className={cn(
-        '-mx-4 px-4 py-0.5',
+        'py-0.5',
         Platform.select({ web: '[scrollbar-width:none] [&::-webkit-scrollbar]:hidden' })
       )}
+      contentContainerStyle={{ paddingHorizontal: 16 }}
     >
       <View className="flex-row items-center gap-2">
         {categorias.map((c) => {

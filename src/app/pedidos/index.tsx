@@ -73,7 +73,7 @@ export default function Pedidos() {
           <View className="gap-3 p-4">
             {pedidos.map((p) => {
               const total = (p.pedido_lineas ?? []).reduce((acc, l) => acc + l.total_linea, 0);
-              const numLineas = (p.pedido_lineas ?? []).length;
+              const numLineas = (p.pedido_lineas ?? []).reduce((acc, l) => acc + l.cantidad, 0);
               return (
                 <Pressable key={p.id} onPress={() => router.push(`/pedidos/${p.id}`)} className="active:opacity-80">
                   <Card className="rounded-[10px]">
