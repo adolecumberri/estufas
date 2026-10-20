@@ -48,6 +48,13 @@ export const TIPOS_CLIENTE = {
 
 export type TipoCliente = keyof typeof TIPOS_CLIENTE;
 
+export const COMBUSTIBLES = [
+  { id: 'pellets', etiqueta: 'Pellets' },
+  { id: 'lena', etiqueta: 'Leña' },
+] as const;
+
+export type CombustibleId = (typeof COMBUSTIBLES)[number]['id'];
+
 export const ESTADOS_PEDIDO = {
   solicitado: { etiqueta: 'Solicitado' },
   confirmado: { etiqueta: 'Confirmado' },

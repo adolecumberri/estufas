@@ -17,7 +17,14 @@ const CANTIDAD_MAX = 999;
 
 // Tarjeta de producto del catálogo (diseño Stitch): imagen con insignias de
 // energía/descuento, datos y fila de acción con stepper + botón "Añadir".
-export function TarjetaProducto({ producto }: { producto: ProductoCatalogo }) {
+// `origen` es la etiqueta a la que se vuelve desde el detalle del producto.
+export function TarjetaProducto({
+  producto,
+  origen,
+}: {
+  producto: ProductoCatalogo;
+  origen?: string;
+}) {
   const { session } = useAuth();
   const { anadir } = useSolicitud();
   const [cantidad, setCantidad] = React.useState(1);
@@ -46,7 +53,11 @@ export function TarjetaProducto({ producto }: { producto: ProductoCatalogo }) {
 
   return (
     <Pressable
-      onPress={() => router.push(`/catalogo/${producto.producto_id}`)}
+      onPress={() =>
+        router.push(
+          `/catalogo/${producto.producto_id}${origen ? '?origen=' + encodeURIComponent(origen) : ''}`
+        )
+      }
       className="max-w-[50%] flex-1 active:opacity-80"
     >
       <Card className="flex-1 justify-between gap-0 overflow-hidden rounded-[10px] border border-border bg-background p-0 shadow-sm">
@@ -99,42 +110,44 @@ export function TarjetaProducto({ producto }: { producto: ProductoCatalogo }) {
           </View>
         </View>
 
-        {/* Fila de acción: stepper + Añadir */}
-        <View className="flex-row items-center gap-1.5 p-2.5">
-          <View className="flex-1 flex-row items-center justify-between rounded-[10px] border border-border bg-muted px-1 py-0.5">
+        {/* Fila de acción: stepper + Añadir (solo con sesión) */}
+        {session && (
+          <View className="flex-row items-center gap-1.5 p-2.5">
+            <View className="flex-1 flex-row items-center justify-between rounded-[10px] border border-border bg-muted px-1 py-0.5">
+              <Pressable
+                accessibilityLabel="Reducir cantidad"
+                onPress={(e) => {
+                  e.stopPropagation();
+                  restar();
+                }}
+                className="h-6 w-6 items-center justify-center active:scale-90"
+              >
+                <Minus size={16} className="text-muted-foreground" />
+              </Pressable>
+              <Text className="text-xs font-semibold">{cantidad}</Text>
+              <Pressable
+                accessibilityLabel="Aumentar cantidad"
+                onPress={(e) => {
+                  e.stopPropagation();
+                  sumar();
+                }}
+                className="h-6 w-6 items-center justify-center active:scale-90"
+              >
+                <Plus size={16} className="text-muted-foreground" />
+              </Pressable>
+            </View>
             <Pressable
-              accessibilityLabel="Reducir cantidad"
+              accessibilityLabel={`Añadir ${producto.nombre} al pedido`}
               onPress={(e) => {
                 e.stopPropagation();
-                restar();
+                anadirAlPedido();
               }}
-              className="h-6 w-6 items-center justify-center active:scale-90"
+              className="rounded-[10px] bg-primary px-2.5 py-1.5 shadow-sm active:bg-primary/90"
             >
-              <Minus size={16} className="text-muted-foreground" />
-            </Pressable>
-            <Text className="text-xs font-semibold">{cantidad}</Text>
-            <Pressable
-              accessibilityLabel="Aumentar cantidad"
-              onPress={(e) => {
-                e.stopPropagation();
-                sumar();
-              }}
-              className="h-6 w-6 items-center justify-center active:scale-90"
-            >
-              <Plus size={16} className="text-muted-foreground" />
+              <Text className="text-xs font-medium text-primary-foreground">Añadir</Text>
             </Pressable>
           </View>
-          <Pressable
-            accessibilityLabel={`Añadir ${producto.nombre} al pedido`}
-            onPress={(e) => {
-              e.stopPropagation();
-              anadirAlPedido();
-            }}
-            className="rounded-[10px] bg-primary px-2.5 py-1.5 shadow-sm active:bg-primary/90"
-          >
-            <Text className="text-xs font-medium text-primary-foreground">Añadir</Text>
-          </Pressable>
-        </View>
+        )}
       </Card>
     </Pressable>
   );

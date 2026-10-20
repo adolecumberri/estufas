@@ -1,5 +1,5 @@
 import { RefreshCw } from 'lucide-react-native';
-import { ActivityIndicator, FlatList, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Buscador } from '@/components/catalogo/buscador';
@@ -9,34 +9,76 @@ import { TarjetaProducto } from '@/components/catalogo/tarjeta-producto';
 import { NavInferior } from '@/components/navegacion/nav-inferior';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
+import { COMBUSTIBLES } from '@/constants';
 import { useSolicitud } from '@/contexts/solicitud-context';
 import { useCatalogo } from '@/hooks/use-catalogo';
+import { cn } from '@/lib/utils';
 
 // Pantalla raíz de la app: catálogo público. Vive como componente compartido
 // para ser la ruta inicial (/) sin depender de un Redirect (que provoca el
 // aviso "GO_BACK was not handled" en Android). Compone los componentes
-// compartidos del catálogo (diseño Stitch): cabecera fija, buscador, chips de
-// categorías, rejilla de 2 columnas con paginación y barra de navegación.
+// compartidos del catálogo (diseño Stitch): cabecera fija, selector de
+// combustible, buscador, chips de categorías, rejilla de 2 columnas con
+// paginación y barra de navegación.
 export default function CatalogoScreen() {
   const insets = useSafeAreaInsets();
   const { clienteObjetivoId } = useSolicitud();
   const cat = useCatalogo(clienteObjetivoId);
+
+  // Chips del combustible activo, sin las categorías "comodín" pellet/leña.
+  const categoriasFiltradas = cat.categorias.filter(
+    (c) => c.combustible === cat.combustible && c.clave !== 'pellet' && c.clave !== 'lena'
+  );
+
+  // Etiqueta a la que se vuelve desde el detalle: categoría seleccionada o,
+  // si no la hay, el combustible activo.
+  const categoriaActiva = cat.categorias.find((c) => c.id === cat.categoria);
+  const origen =
+    categoriaActiva?.nombre ??
+    (COMBUSTIBLES.find((c) => c.id === cat.combustible)?.etiqueta ?? 'Catálogo');
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       {/* Cabecera */}
       <EncabezadoCatalogo />
 
+      {/* Selector de combustible */}
+      <View className="px-4 pt-2">
+        <View className="flex-row gap-1 rounded-[10px] border border-border bg-muted p-1">
+          {COMBUSTIBLES.map((c) => {
+            const activo = cat.combustible === c.id;
+            return (
+              <Pressable
+                key={c.id}
+                accessibilityRole="button"
+                accessibilityState={{ selected: activo }}
+                onPress={() => cat.setCombustible(c.id)}
+                className={cn('flex-1 items-center rounded-[8px] py-2', activo && 'bg-primary')}
+              >
+                <Text
+                  className={cn(
+                    'text-sm',
+                    activo ? 'font-medium text-primary-foreground' : 'text-muted-foreground'
+                  )}
+                >
+                  {c.etiqueta}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
       {/* Buscador */}
-      <View className="px-4 pb-2">
+      <View className="mt-2 px-4 pb-2">
         <Buscador valor={cat.busqueda} onChange={cat.setBusqueda} />
       </View>
 
-      {/* Chips de categorías */}
-      {cat.categorias.length > 0 && (
+      {/* Chips de categorías (solo las del combustible activo) */}
+      {categoriasFiltradas.length > 0 && (
         <View className="pb-2">
           <ChipsCategorias
-            categorias={cat.categorias}
+            categorias={categoriasFiltradas}
             seleccionada={cat.categoria}
             onSeleccionar={cat.setCategoria}
           />
@@ -57,7 +99,7 @@ export default function CatalogoScreen() {
         numColumns={2}
         columnWrapperStyle={{ gap: 12, paddingHorizontal: 16 }}
         contentContainerStyle={{ gap: 12, paddingBottom: 88 + insets.bottom }}
-        renderItem={({ item }) => <TarjetaProducto producto={item} />}
+        renderItem={({ item }) => <TarjetaProducto producto={item} origen={origen} />}
         ListEmptyComponent={
           cat.cargando ? (
             <View className="items-center py-16">

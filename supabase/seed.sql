@@ -75,17 +75,21 @@ INSERT INTO tipos_producto (id, nombre, clave) VALUES
 ('b1000000-0000-4000-8000-000000000002', 'Insertable', 'insertable');
 
 -- ---------------------------------------------------------------------------
--- Categorías agrupadas por dimensión (PRD §4.2).
+-- Categorías agrupadas por dimensión (PRD §4.2) + combustible (pellets/lena).
+-- ON CONFLICT: los ids de Hidro/Estufas ya los inserta la migración 0005.
 -- ---------------------------------------------------------------------------
-INSERT INTO categorias (id, nombre, clave, grupo, orden) VALUES
-('c1000000-0000-4000-8000-000000000001', 'Pellet',     'pellet',     'Combustible', 1),
-('c1000000-0000-4000-8000-000000000002', 'Leña',       'lena',       'Combustible', 2),
-('c1000000-0000-4000-8000-000000000003', 'Aire',       'aire',       'Combustible', 3),
-('c1000000-0000-4000-8000-000000000004', 'Insertable', 'insertable', 'Instalación', 1),
-('c1000000-0000-4000-8000-000000000005', 'Canalizada', 'canalizada', 'Instalación', 2),
-('c1000000-0000-4000-8000-000000000006', 'Ventilada',  'ventilada',  'Instalación', 3),
-('c1000000-0000-4000-8000-000000000007', 'Fundición',  'fundicion',  'Estilo',      1),
-('c1000000-0000-4000-8000-000000000008', 'Hogares',    'hogares',    'Estilo',      2);
+INSERT INTO categorias (id, nombre, clave, grupo, orden, combustible) VALUES
+('c1000000-0000-4000-8000-000000000001', 'Pellet',     'pellet',     'Combustible', 1, 'pellets'),
+('c1000000-0000-4000-8000-000000000002', 'Leña',       'lena',       'Combustible', 2, 'lena'),
+('c1000000-0000-4000-8000-000000000003', 'Aire',       'aire',       'Combustible', 3, 'pellets'),
+('c1000000-0000-4000-8000-000000000004', 'Insertable', 'insertable', 'Instalación', 1, 'pellets'),
+('c1000000-0000-4000-8000-000000000005', 'Canalizada', 'canalizada', 'Instalación', 2, 'pellets'),
+('c1000000-0000-4000-8000-000000000006', 'Ventilada',  'ventilada',  'Instalación', 3, 'lena'),
+('c1000000-0000-4000-8000-000000000007', 'Fundición',  'fundicion',  'Estilo',      1, 'lena'),
+('c1000000-0000-4000-8000-000000000008', 'Hogares',    'hogares',    'Estilo',      2, 'lena'),
+('c1000000-0000-4000-8000-000000000009', 'Hidro',      'hidro',      'Instalación', 4, 'pellets'),
+('c1000000-0000-4000-8000-000000000010', 'Estufas',    'estufas',    'Estilo',      3, 'lena')
+ON CONFLICT (id) DO NOTHING;
 
 -- ---------------------------------------------------------------------------
 -- Características (diccionario).

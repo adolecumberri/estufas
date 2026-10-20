@@ -129,7 +129,10 @@ export interface Categoria {
   clave: string;
   grupo: string;
   orden: number;
+  combustible: 'pellets' | 'lena' | null;
 }
+
+export type Combustible = 'pellets' | 'lena';
 
 export interface Marca {
   id: string;

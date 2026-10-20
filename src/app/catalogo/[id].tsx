@@ -18,7 +18,8 @@ import { useProducto } from '@/hooks/use-producto';
 import { formatEUR, formatPct } from '@/lib/format';
 
 export default function ProductoDetalle() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, origen: origenParam } = useLocalSearchParams<{ id: string; origen?: string }>();
+  const origen = origenParam ?? 'Catálogo';
   const insets = useSafeAreaInsets();
   const { session } = useAuth();
   const { clienteObjetivoId, anadir } = useSolicitud();
@@ -89,7 +90,7 @@ export default function ProductoDetalle() {
   return (
     <ScrollView className="flex-1 bg-background" contentContainerStyle={{ paddingBottom: 32 }}>
       <View style={{ paddingTop: insets.top + 8 }}>
-        {/* 1. Cabecera: volver + referencia + etiqueta energética */}
+        {/* 1. Cabecera: volver + origen */}
         <View className="flex-row items-center gap-1 px-2">
           <Pressable
             onPress={() => router.back()}
@@ -98,24 +99,19 @@ export default function ProductoDetalle() {
           >
             <ChevronLeft size={24} className="text-foreground" />
           </Pressable>
-          <Text className="flex-1 text-sm text-muted-foreground">
-            Ref: {producto.referencia}
-          </Text>
-          {producto.etiqueta_energetica && (
-            <Badge variant="outline" className="border-emerald-600">
-              <Text className="text-xs font-medium text-emerald-600">
-                {producto.etiqueta_energetica}
-              </Text>
-            </Badge>
-          )}
+          <Text className="flex-1 font-medium">{origen}</Text>
         </View>
 
-        {/* 2. Galería de imágenes */}
+        {/* 2. Nombre */}
+        <View className="p-4 pb-2">
+          <Text className="text-2xl font-bold tracking-tight">{producto.nombre}</Text>
+        </View>
+
+        {/* 3. Galería de imágenes */}
         <ScrollView
           horizontal
           pagingEnabled
           showsHorizontalScrollIndicator={false}
-          className="mt-2"
         >
           {imagenes.map((url, i) => (
             <Image
@@ -128,28 +124,62 @@ export default function ProductoDetalle() {
           ))}
         </ScrollView>
 
-        <View className="gap-4 p-4">
-          {/* 3. Título */}
-          <View className="gap-2">
-            <Text className="text-2xl font-bold tracking-tight">{producto.nombre}</Text>
-            <Text className="text-sm text-muted-foreground">
-              {producto.marca} · {producto.tipo}
-            </Text>
-            <View className="flex-row flex-wrap gap-1.5">
-              {producto.categorias.map((c) => (
-                <Badge key={c} variant="secondary">
-                  <Text>{c}</Text>
-                </Badge>
-              ))}
-              {producto.etiqueta_energetica && (
-                <Badge className="bg-emerald-600">
-                  <Text className="text-white">Energía {producto.etiqueta_energetica}</Text>
-                </Badge>
-              )}
-            </View>
-          </View>
+        {/* 4. Referencia y marca · tipo */}
+        <View className="mt-2 gap-0.5 px-4">
+          <Text className="text-sm text-muted-foreground">Ref: {producto.referencia}</Text>
+          <Text className="text-sm text-muted-foreground">
+            {producto.marca} · {producto.tipo}
+          </Text>
+        </View>
 
-          {/* 4. Precio */}
+        {/* 5. Chips de categoría + etiqueta energética */}
+        <View className="mt-2 flex-row flex-wrap gap-1.5 px-4">
+          {producto.categorias.map((c) => (
+            <Badge key={c} variant="secondary">
+              <Text>{c}</Text>
+            </Badge>
+          ))}
+          {producto.etiqueta_energetica && (
+            <Badge className="bg-emerald-600">
+              <Text className="text-white">Energía {producto.etiqueta_energetica}</Text>
+            </Badge>
+          )}
+        </View>
+
+        {/* 6. Cantidad y añadir (solo con sesión iniciada) */}
+        <View className="mt-4 px-4">
+          {session ? (
+            <View className="flex-row items-center gap-3">
+              <View className="flex-row items-center rounded-[10px] border border-input">
+                <Pressable
+                  onPress={() => setCantidad((c) => Math.max(1, c - 1))}
+                  className="p-3 active:bg-accent"
+                  accessibilityLabel="Restar"
+                >
+                  <Minus size={16} className="text-foreground" />
+                </Pressable>
+                <Text className="w-10 text-center text-base font-semibold">{cantidad}</Text>
+                <Pressable
+                  onPress={() => setCantidad((c) => Math.min(999, c + 1))}
+                  className="p-3 active:bg-accent"
+                  accessibilityLabel="Sumar"
+                >
+                  <Plus size={16} className="text-foreground" />
+                </Pressable>
+              </View>
+              <Button className="flex-1" onPress={anadirASolicitud}>
+                <Text>Añadir a la solicitud</Text>
+              </Button>
+            </View>
+          ) : (
+            <Button variant="outline" onPress={() => router.push('/acceso')}>
+              <Text>Inicia sesión para añadir</Text>
+            </Button>
+          )}
+        </View>
+
+        {/* 7. Precio + características + descripción + aviso de cliente */}
+        <View className="gap-4 p-4">
           <Card>
             <CardContent className="gap-1">
               <View className="flex-row items-baseline gap-2">
@@ -174,7 +204,7 @@ export default function ProductoDetalle() {
             </CardContent>
           </Card>
 
-          {/* 5. Características agrupadas (antes de la descripción) */}
+          {/* Características agrupadas */}
           {grupos.map(([grupo, caracteristicas]) => (
             <Card key={grupo}>
               <CardHeader>
@@ -201,7 +231,7 @@ export default function ProductoDetalle() {
             </Card>
           ))}
 
-          {/* 6. Descripción (debajo de las características) */}
+          {/* Descripción */}
           {producto.descripcion && (
             <Card>
               <CardHeader>
@@ -213,29 +243,6 @@ export default function ProductoDetalle() {
             </Card>
           )}
 
-          {/* 7. Cantidad y añadir */}
-          <View className="flex-row items-center gap-3">
-            <View className="flex-row items-center rounded-[10px] border border-input">
-              <Pressable
-                onPress={() => setCantidad((c) => Math.max(1, c - 1))}
-                className="p-3 active:bg-accent"
-                accessibilityLabel="Restar"
-              >
-                <Minus size={16} className="text-foreground" />
-              </Pressable>
-              <Text className="w-10 text-center text-base font-semibold">{cantidad}</Text>
-              <Pressable
-                onPress={() => setCantidad((c) => Math.min(999, c + 1))}
-                className="p-3 active:bg-accent"
-                accessibilityLabel="Sumar"
-              >
-                <Plus size={16} className="text-foreground" />
-              </Pressable>
-            </View>
-            <Button className="flex-1" onPress={anadirASolicitud}>
-              <Text>Añadir a la solicitud</Text>
-            </Button>
-          </View>
           {clienteObjetivoId && (
             <Text className="text-center text-xs text-muted-foreground">
               Estás añadiendo productos para un cliente asignado: los precios mostrados son los suyos.

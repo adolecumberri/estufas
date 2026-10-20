@@ -1,5 +1,5 @@
 import { router, type Href } from 'expo-router';
-import { FilePlus2, Flame, ReceiptText, Wallet, type LucideIcon } from 'lucide-react-native';
+import { FilePlus2, Flame, LogIn, ReceiptText, Wallet, type LucideIcon } from 'lucide-react-native';
 import * as React from 'react';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,29 +10,40 @@ import { useSolicitud } from '@/contexts/solicitud-context';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 
-type PestanaNav = 'catalogo' | 'solicitud' | 'pedidos' | 'cartera';
+type PestanaNav = 'catalogo' | 'solicitud' | 'pedidos' | 'cartera' | 'acceso';
 
-const PESTANAS: { id: PestanaNav; etiqueta: string; icono: LucideIcon; ruta: Href }[] = [
+type Pestana = { id: PestanaNav; etiqueta: string; icono: LucideIcon; ruta: Href };
+
+const PESTANAS: Pestana[] = [
   { id: 'catalogo', etiqueta: 'Catálogo', icono: Flame, ruta: RUTAS.catalogo },
   { id: 'solicitud', etiqueta: 'Solicitud', icono: FilePlus2, ruta: '/solicitud' },
   { id: 'pedidos', etiqueta: 'Pedidos', icono: ReceiptText, ruta: RUTAS.pedidos },
   { id: 'cartera', etiqueta: 'Cartera', icono: Wallet, ruta: RUTAS.cartera },
 ];
 
+// Sin sesión solo se ofrecen catálogo e inicio de sesión: añadir al pedido o
+// consultar pedidos requiere cuenta.
+const PESTANAS_ANONIMAS: Pestana[] = [
+  { id: 'catalogo', etiqueta: 'Catálogo', icono: Flame, ruta: RUTAS.catalogo },
+  { id: 'acceso', etiqueta: 'Iniciar sesión', icono: LogIn, ruta: RUTAS.login },
+];
+
 // Barra de pestañas inferior compartida (diseño Stitch): fondo semántico,
 // acento ámbar en la pestaña activa y punto indicador en "Solicitud" cuando
-// el carrito tiene líneas.
+// el carrito tiene líneas. Cartera solo se muestra a comercial/admin.
 export function NavInferior({ activa }: { activa: 'catalogo' | 'solicitud' | 'pedidos' | 'cartera' }) {
   const insets = useSafeAreaInsets();
   const { lineas } = useSolicitud();
-  const { perfil } = useAuth();
+  const { session, perfil } = useAuth();
 
   const pestanas = React.useMemo(
     () =>
-      PESTANAS.filter(
-        (p) => p.id !== 'cartera' || perfil?.rol === 'comercial' || perfil?.rol === 'admin'
-      ),
-    [perfil]
+      session
+        ? PESTANAS.filter(
+            (p) => p.id !== 'cartera' || perfil?.rol === 'comercial' || perfil?.rol === 'admin'
+          )
+        : PESTANAS_ANONIMAS,
+    [session, perfil]
   );
 
   return (
