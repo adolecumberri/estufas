@@ -33,13 +33,25 @@ $response = Invoke-WebRequest -Method Post -Uri "https://stitch.googleapis.com/m
 
 $contentType = [string]$response.Headers["Content-Type"]
 if ($contentType -like "text/event-stream*") {
-    # Respuesta SSE: extraer las líneas `data:`, descartar [DONE] y parsear el último payload JSON-RPC.
-    $json = $response.Content -split "`r?`n" |
-        Where-Object { $_ -like "data:*" } |
-        ForEach-Object { $_.Substring(5).TrimStart() } |
-        Where-Object { $_ -and $_ -ne "[DONE]" } |
-        Select-Object -Last 1 |
-        ConvertFrom-Json
+    # Respuesta SSE: un evento puede traer varias líneas `data:` (se unen con
+    # salto de línea), se descartan los marcadores [DONE] y se parsea el último
+    # evento JSON-RPC completo.
+    $eventos = [System.Collections.Generic.List[string]]::new()
+    $datas = [System.Collections.Generic.List[string]]::new()
+    foreach ($linea in ($response.Content -split "`r?`n")) {
+        if ($linea -like "data:*") {
+            $datas.Add($linea.Substring(5).TrimStart())
+        } elseif ([string]::IsNullOrWhiteSpace($linea)) {
+            if ($datas.Count -gt 0) {
+                $eventos.Add(($datas -join "`n"))
+                $datas.Clear()
+            }
+        }
+    }
+    if ($datas.Count -gt 0) { $eventos.Add(($datas -join "`n")) }
+    $ultimo = @($eventos | Where-Object { $_ -and $_ -ne "[DONE]" } | Select-Object -Last 1)
+    if ($ultimo.Count -eq 0) { throw "Respuesta SSE sin payload JSON-RPC." }
+    $json = $ultimo[0] | ConvertFrom-Json
 } else {
     $json = $response.Content | ConvertFrom-Json
 }
