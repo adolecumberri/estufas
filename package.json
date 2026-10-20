@@ -16,6 +16,7 @@
     "@react-native-async-storage/async-storage": "2.2.0",
     "@rn-primitives/label": "1.5.2",
     "@rn-primitives/portal": "1.5.2",
+    "@rn-primitives/separator": "1.5.2",
     "@rn-primitives/slot": "1.5.2",
     "@rn-primitives/types": "1.5.2",
     "@supabase/supabase-js": "^2.45.0",
