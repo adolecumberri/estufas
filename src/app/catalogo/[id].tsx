@@ -16,6 +16,7 @@ import { useSolicitud } from '@/contexts/solicitud-context';
 import { useAuth } from '@/hooks/use-auth';
 import { useProducto } from '@/hooks/use-producto';
 import { formatEUR, formatPct } from '@/lib/format';
+import { fuenteImagen } from '@/lib/imagenes';
 import { useColoresIcono } from '@/lib/theme';
 
 export default function ProductoDetalle() {
@@ -118,7 +119,7 @@ export default function ProductoDetalle() {
           {imagenes.map((url, i) => (
             <Image
               key={`${url}-${i}`}
-              source={{ uri: url }}
+              source={fuenteImagen(url) ?? undefined}
               className="h-80 w-screen bg-muted web:max-w-lg"
               contentFit="cover"
               transition={200}

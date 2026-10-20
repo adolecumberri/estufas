@@ -10,6 +10,7 @@ import { RUTAS } from '@/constants';
 import { useSolicitud } from '@/contexts/solicitud-context';
 import { useAuth } from '@/hooks/use-auth';
 import { formatEUR, formatPct } from '@/lib/format';
+import { fuenteImagen } from '@/lib/imagenes';
 import { useColoresIcono } from '@/lib/theme';
 import type { LineaSolicitud, ProductoCatalogo } from '@/lib/types';
 
@@ -68,7 +69,7 @@ export function TarjetaProducto({
           <View className="relative aspect-square w-full overflow-hidden bg-muted">
             <View className="h-full w-full p-2.5">
               <Image
-                source={{ uri: producto.imagen_url ?? undefined }}
+                source={fuenteImagen(producto.imagen_url) ?? undefined}
                 className="h-full w-full"
                 contentFit="cover"
                 transition={200}

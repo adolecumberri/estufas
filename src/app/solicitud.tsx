@@ -16,6 +16,7 @@ import { useSolicitud } from '@/contexts/solicitud-context';
 import { useAuth } from '@/hooks/use-auth';
 import { useAccionesPedido, usePedido } from '@/hooks/use-pedidos';
 import { formatEUR } from '@/lib/format';
+import { fuenteImagen } from '@/lib/imagenes';
 import { useColoresIcono } from '@/lib/theme';
 
 export default function Solicitud() {
@@ -150,7 +151,7 @@ export default function Solicitud() {
                 <Card key={l.producto_id} className="rounded-[10px] p-3">
                   <CardContent className="flex-row gap-3">
                     <Image
-                      source={{ uri: l.imagen_url ?? undefined }}
+                      source={fuenteImagen(l.imagen_url) ?? undefined}
                       className="h-14 w-14 rounded-md bg-muted"
                       contentFit="cover"
                     />
