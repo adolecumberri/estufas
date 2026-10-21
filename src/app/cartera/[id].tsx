@@ -10,7 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
-import { ESTADOS_PEDIDO, TIPOS_CLIENTE } from '@/constants';
+import { COMBUSTIBLES, ESTADOS_PEDIDO, TIPOS_CLIENTE } from '@/constants';
+import type { CombustibleId } from '@/constants';
 import { useSolicitud } from '@/contexts/solicitud-context';
 import { useAuth } from '@/hooks/use-auth';
 import { useCatalogo } from '@/hooks/use-catalogo';
@@ -24,8 +25,14 @@ export default function ClienteDetalle() {
   const insets = useSafeAreaInsets();
   const { session, perfil } = useAuth();
   const { setClienteObjetivoId } = useSolicitud();
-  const { cliente, descuentos, cargando, recargar } = useCliente(id);
-  const { asignarGeneral, asignarProducto, anularProducto } = useDescuentos();
+  const { cliente, descuentos, descuentosCombustible, cargando, recargar } = useCliente(id);
+  const {
+    asignarGeneral,
+    asignarProducto,
+    anularProducto,
+    asignarCombustible,
+    anularCombustible,
+  } = useDescuentos();
   const { pedidos } = usePedidos();
   const catalogo = useCatalogo(id);
   const colores = useColoresIcono();
@@ -33,6 +40,10 @@ export default function ClienteDetalle() {
   const [pctGeneral, setPctGeneral] = React.useState('');
   const [productoSeleccionado, setProductoSeleccionado] = React.useState<string | null>(null);
   const [pctProducto, setPctProducto] = React.useState('');
+  const [pctCombustibles, setPctCombustibles] = React.useState<{ pellets: string; lena: string }>({
+    pellets: '',
+    lena: '',
+  });
   const [mensaje, setMensaje] = React.useState<string | null>(null);
 
   if (!session) return <Redirect href="/acceso" />;
@@ -63,6 +74,23 @@ export default function ClienteDetalle() {
     const { error } = await asignarProducto(id!, productoSeleccionado, pct);
     setMensaje(error ?? 'Descuento específico guardado.');
     setProductoSeleccionado(null);
+    if (!error) await recargar();
+  };
+
+  const guardarCombustible = async (combustible: CombustibleId, valor: string) => {
+    const pct = Number(valor.replace(',', '.'));
+    if (Number.isNaN(pct) || pct < 0 || pct > 100) {
+      setMensaje('Porcentaje inválido (0-100).');
+      return;
+    }
+    const { error } = await asignarCombustible(id!, combustible, pct);
+    setMensaje(error ?? 'Descuento por combustible actualizado.');
+    if (!error) await recargar();
+  };
+
+  const anularCombustibleDescuento = async (combustible: CombustibleId) => {
+    const { error } = await anularCombustible(id!, combustible);
+    setMensaje(error ?? 'Descuento por combustible anulado.');
     if (!error) await recargar();
   };
 
@@ -168,6 +196,12 @@ export default function ClienteDetalle() {
             <Text className="text-xs text-muted-foreground">
               Nuevo descuento (sustituye al general para ese producto; 0% = excluirlo):
             </Text>
+            <Input
+              value={catalogo.busqueda}
+              onChangeText={catalogo.setBusqueda}
+              placeholder="Buscar producto…"
+              className="h-10 text-sm"
+            />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} className="max-h-16">
               <View className="flex-row gap-2">
                 {catalogo.productos.map((p) => (
@@ -207,6 +241,63 @@ export default function ClienteDetalle() {
                 </Button>
               </View>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Descuento por combustible */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Descuento por combustible</CardTitle>
+          </CardHeader>
+          <CardContent className="gap-3">
+            <Text className="text-xs text-muted-foreground">
+              El descuento por combustible aplica a todos los productos de esa sección (Pellets o
+              Leña); el específico de producto y la promoción siguen teniendo preferencia.
+            </Text>
+            {COMBUSTIBLES.map((c) => {
+              const descuento = descuentosCombustible.find((d) => d.combustible === c.id);
+              return (
+                <View key={c.id} className="gap-2">
+                  <View className="flex-row items-center justify-between">
+                    <Text className="text-sm font-medium">{c.etiqueta}</Text>
+                    <Text className="text-sm text-muted-foreground">
+                      {descuento ? formatPct(descuento.descuento_porcentaje) : 'Sin descuento'}
+                    </Text>
+                  </View>
+                  <View className="flex-row items-center gap-2">
+                    <Input
+                      keyboardType="decimal-pad"
+                      value={pctCombustibles[c.id]}
+                      onChangeText={(v) =>
+                        setPctCombustibles((prev) => {
+                          const siguiente = { ...prev };
+                          siguiente[c.id] = v;
+                          return siguiente;
+                        })
+                      }
+                      placeholder="%"
+                      className="h-10 w-24 text-sm"
+                    />
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onPress={() => void guardarCombustible(c.id, pctCombustibles[c.id])}
+                    >
+                      <Text>Guardar</Text>
+                    </Button>
+                    {descuento && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onPress={() => void anularCombustibleDescuento(c.id)}
+                      >
+                        <Text className="text-xs">Anular</Text>
+                      </Button>
+                    )}
+                  </View>
+                </View>
+              );
+            })}
           </CardContent>
         </Card>
 

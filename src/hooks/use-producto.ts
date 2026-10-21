@@ -1,7 +1,10 @@
 import * as React from 'react';
 
+import { cacheEscribir, cacheLeer } from '@/lib/cache';
 import { supabase } from '@/lib/supabase';
 import type { ProductoDetalle } from '@/lib/types';
+
+const claveProducto = (id: string) => `estufas.cache.producto.v1:${id}`;
 
 // Ficha de producto (RPC fn_producto_detalle: precio efectivo + características + galería).
 export function useProducto(id: string | undefined, clienteId?: string | null) {
@@ -15,8 +18,21 @@ export function useProducto(id: string | undefined, clienteId?: string | null) {
       return;
     }
     let cancelado = false;
-    setCargando(true);
     setError(null);
+
+    // Caché (stale-while-revalidate): si hay ficha guardada se pinta al
+    // instante sin spinner; la red se ejecuta siempre y revalida en segundo
+    // plano. Sin caché, se mantiene el comportamiento actual (spinner).
+    void (async () => {
+      const enCache = await cacheLeer<ProductoDetalle>(claveProducto(id));
+      if (cancelado) return;
+      if (enCache) {
+        setProducto(enCache);
+        setCargando(false);
+      } else {
+        setCargando(true);
+      }
+    })();
 
     void (async () => {
       const { data, error } = await supabase.rpc('fn_producto_detalle', {
@@ -32,6 +48,7 @@ export function useProducto(id: string | undefined, clienteId?: string | null) {
       const fila = (data ?? [])[0] as ProductoDetalle | undefined;
       setProducto(fila ?? null);
       setCargando(false);
+      if (fila) void cacheEscribir(claveProducto(id), fila);
     })();
 
     return () => {

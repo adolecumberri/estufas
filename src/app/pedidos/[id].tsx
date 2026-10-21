@@ -105,6 +105,24 @@ export default function PedidoDetalle() {
           </CardContent>
         </Card>
 
+        {/* Cliente (visible para comercial/admin) */}
+        {puedeGestionar && pedido.cliente && (
+          <Card className="rounded-[10px]">
+            <CardContent className="gap-1">
+              <Text className="text-xs text-muted-foreground">Cliente</Text>
+              <Text className="text-sm font-medium">
+                {pedido.cliente.razon_social ??
+                  `${pedido.cliente.nombre} ${pedido.cliente.apellidos ?? ''}`.trim()}
+              </Text>
+              <Text className="text-sm">{pedido.cliente.email}</Text>
+              {pedido.cliente.telefono && <Text className="text-sm">{pedido.cliente.telefono}</Text>}
+              {pedido.cliente.nif_cif && (
+                <Text className="text-xs text-muted-foreground">{pedido.cliente.nif_cif}</Text>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Líneas */}
         <Card className="rounded-[10px] p-3">
           <CardHeader className="px-3 pt-1">

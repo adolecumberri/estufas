@@ -252,3 +252,7 @@ INSERT INTO promociones_tienda (nombre, descripcion, descuento_porcentaje, activ
 -- ---------------------------------------------------------------------------
 INSERT INTO descuentos_cliente_producto (cliente_id, producto_id, descuento_porcentaje, creado_por) VALUES
 ('44444444-4444-4444-8444-444444444444', 'f1000000-0000-4000-8000-000000000001', 0.00, '22222222-2222-4222-8222-222222222222');
+
+-- Sin ejemplos de descuento por combustible (descuentos_cliente_combustible):
+-- un ejemplo aquí alteraría los resultados de los tests 03; los tests 06 crean
+-- y anulan sus filas dentro de sus propias transacciones.

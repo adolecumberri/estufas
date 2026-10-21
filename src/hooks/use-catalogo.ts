@@ -1,10 +1,27 @@
 import * as React from 'react';
 
 import { PAGINACION } from '@/constants';
+import { cacheEdad, cacheEscribir, cacheLeer } from '@/lib/cache';
 import { supabase } from '@/lib/supabase';
 import type { Categoria, Combustible, Marca, ProductoCatalogo } from '@/lib/types';
 
 const DEBOUNCE_MS = 300;
+
+// Caché local (stale-while-revalidate): los filtros cambian poco (24 h) y las
+// páginas del catálogo se pintan desde caché mientras la red revalida.
+const CLAVE_CATEGORIAS = 'estufas.cache.categorias.v1';
+const CLAVE_MARCAS = 'estufas.cache.marcas.v1';
+const TTL_FILTROS_MS = 24 * 60 * 60 * 1000;
+
+const claveProductos = (
+  clienteId: string | null | undefined,
+  busqueda: string,
+  combustible: Combustible,
+  categoria: string | null,
+  marca: string | null,
+  pagina: number
+) =>
+  `estufas.cache.productos.v1:${clienteId ?? 'anon'}:${busqueda}|${combustible}|${categoria ?? ''}|${marca ?? ''}|${pagina}`;
 
 // Catálogo con búsqueda y filtros. Todas las llamadas al backend viven aquí.
 // `clienteId`: cuando un comercial crea un pedido para un cliente asignado,
@@ -30,23 +47,83 @@ export function useCatalogo(clienteId?: string | null) {
   const [error, setError] = React.useState<string | null>(null);
   const [hayMas, setHayMas] = React.useState(false);
 
-  // Filtros disponibles (una sola carga).
-  React.useEffect(() => {
-    void (async () => {
-      const [resCat, resMar] = await Promise.all([
-        supabase.from('categorias').select('id,nombre,clave,grupo,orden,combustible').eq('activo', true).eq('borrado', false).order('orden'),
-        supabase.from('marcas').select('id,nombre').eq('activo', true).eq('borrado', false).order('nombre'),
-      ]);
-      if (!resCat.error) setCategorias((resCat.data as Categoria[]) ?? []);
-      if (!resMar.error) setMarcas((resMar.data as Marca[]) ?? []);
-    })();
-  }, []);
-
-  // Consulta con debounce.
+  // Filtros disponibles: se sirven desde caché (24 h). La red solo se consulta
+  // cuando no hay dato o la entrada está caducada.
   React.useEffect(() => {
     let cancelado = false;
-    setCargando(true);
+
+    void (async () => {
+      const [cCat, cMar] = await Promise.all([
+        cacheLeer<Categoria[]>(CLAVE_CATEGORIAS),
+        cacheLeer<Marca[]>(CLAVE_MARCAS),
+      ]);
+      if (cancelado) return;
+      if (cCat) setCategorias(cCat);
+      if (cMar) setMarcas(cMar);
+
+      const [edadCat, edadMar] = await Promise.all([
+        cacheEdad(CLAVE_CATEGORIAS),
+        cacheEdad(CLAVE_MARCAS),
+      ]);
+      if (cancelado) return;
+      const catCaducada = cCat === null || edadCat === null || edadCat > TTL_FILTROS_MS;
+      const marCaducada = cMar === null || edadMar === null || edadMar > TTL_FILTROS_MS;
+
+      const [resCat, resMar] = await Promise.all([
+        catCaducada
+          ? supabase
+              .from('categorias')
+              .select('id,nombre,clave,grupo,orden,combustible')
+              .eq('activo', true)
+              .eq('borrado', false)
+              .order('orden')
+          : Promise.resolve(null),
+        marCaducada
+          ? supabase
+              .from('marcas')
+              .select('id,nombre')
+              .eq('activo', true)
+              .eq('borrado', false)
+              .order('nombre')
+          : Promise.resolve(null),
+      ]);
+      if (cancelado) return;
+      if (resCat && !resCat.error) {
+        const filas = (resCat.data as Categoria[]) ?? [];
+        setCategorias(filas);
+        void cacheEscribir(CLAVE_CATEGORIAS, filas);
+      }
+      if (resMar && !resMar.error) {
+        const filas = (resMar.data as Marca[]) ?? [];
+        setMarcas(filas);
+        void cacheEscribir(CLAVE_MARCAS, filas);
+      }
+    })();
+
+    return () => {
+      cancelado = true;
+    };
+  }, []);
+
+  // Consulta con debounce y caché (stale-while-revalidate): si existe entrada
+  // para estos filtros se pinta al instante sin spinner; la red se ejecuta
+  // siempre y actualiza estado + caché al llegar.
+  React.useEffect(() => {
+    let cancelado = false;
     setError(null);
+
+    const clave = claveProductos(clienteId, busqueda, combustible, categoria, marca, pagina);
+
+    void (async () => {
+      const enCache = await cacheLeer<ProductoCatalogo[]>(clave);
+      if (cancelado) return;
+      if (enCache) {
+        setProductos(enCache);
+        setCargando(false);
+      } else {
+        setCargando(true);
+      }
+    })();
 
     const t = setTimeout(() => {
       void (async () => {
@@ -68,8 +145,10 @@ export function useCatalogo(clienteId?: string | null) {
         }
         const filas = (data ?? []) as ProductoCatalogo[];
         setHayMas(filas.length > PAGINACION.catalogo);
-        setProductos(filas.slice(0, PAGINACION.catalogo));
+        const paginaFilas = filas.slice(0, PAGINACION.catalogo);
+        setProductos(paginaFilas);
         setCargando(false);
+        void cacheEscribir(clave, paginaFilas);
       })();
     }, DEBOUNCE_MS);
 

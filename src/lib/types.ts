@@ -122,6 +122,15 @@ export interface DescuentoClienteProducto {
   fecha_fin: string | null;
 }
 
+export interface DescuentoClienteCombustible {
+  id: string;
+  cliente_id: string;
+  combustible: Combustible;
+  descuento_porcentaje: number;
+  fecha_inicio: string;
+  fecha_fin: string | null;
+}
+
 // Línea que el usuario añade a la solicitud en curso (antes de crearse).
 export interface Categoria {
   id: string;

@@ -7,10 +7,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NavInferior } from '@/components/navegacion/nav-inferior';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
 import { ESTADOS_PEDIDO, ROLES } from '@/constants';
 import { useAuth } from '@/hooks/use-auth';
+import { useCartera } from '@/hooks/use-comercial';
 import { usePedidos } from '@/hooks/use-pedidos';
 import { formatEUR, formatFecha } from '@/lib/format';
 import { useColoresIcono } from '@/lib/theme';
@@ -18,10 +20,14 @@ import { useColoresIcono } from '@/lib/theme';
 export default function Pedidos() {
   const insets = useSafeAreaInsets();
   const { session, perfil, cerrarSesion } = useAuth();
-  const { pedidos, cargando, error } = usePedidos();
+  const { pedidos, cargando: cargandoPedidos, error: errorPedidos } = usePedidos();
+  const { clientes } = useCartera();
   const colores = useColoresIcono();
 
   if (!session) return <Redirect href="/acceso" />;
+
+  const esComercialOAdmin = perfil?.rol === 'comercial' || perfil?.rol === 'admin';
+  const pendientes = pedidos.filter((p) => p.estado === 'solicitado');
 
   const varianteEstado = (estado: keyof typeof ESTADOS_PEDIDO) => {
     switch (estado) {
@@ -56,13 +62,56 @@ export default function Pedidos() {
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1, paddingBottom: 96 + insets.bottom }}
       >
-        {cargando ? (
+        {/* Pedidos pendientes de confirmar (visibles para este comercial vía RLS) */}
+        {esComercialOAdmin && (
+          <Card className="mx-4 mb-3 gap-2 rounded-[10px] p-3">
+            <CardHeader className="px-3 pt-1">
+              <CardTitle className="text-base">Pedidos pendientes de confirmar</CardTitle>
+            </CardHeader>
+            <CardContent className="gap-3 px-3">
+              {cargandoPedidos ? (
+                <ActivityIndicator color="hsl(24.6 95% 53.1%)" />
+              ) : errorPedidos ? (
+                <Text className="text-muted-foreground">{errorPedidos}</Text>
+              ) : pendientes.length === 0 ? (
+                <Text className="text-muted-foreground">No hay pedidos pendientes de confirmar.</Text>
+              ) : (
+                pendientes.map((p, indice) => {
+                  const total = (p.pedido_lineas ?? []).reduce((acc, l) => acc + l.total_linea, 0);
+                  const cliente = clientes.find((c) => c.id === p.cliente_id);
+                  const nombreCliente = cliente
+                    ? (cliente.razon_social ?? `${cliente.nombre} ${cliente.apellidos ?? ''}`.trim())
+                    : null;
+                  return (
+                    <View key={p.id} className="gap-3">
+                      {indice > 0 && <Separator />}
+                      <View className="flex-row items-center justify-between gap-3">
+                        <View className="flex-1 gap-0.5">
+                          <Text className="text-sm font-medium">Pedido nº {p.numero_pedido}</Text>
+                          {nombreCliente && (
+                            <Text className="text-xs text-muted-foreground">{nombreCliente}</Text>
+                          )}
+                          <Text className="text-sm font-semibold">{formatEUR(total)}</Text>
+                        </View>
+                        <Button size="sm" onPress={() => router.push(`/pedidos/${p.id}`)}>
+                          <Text>Confirmar</Text>
+                        </Button>
+                      </View>
+                    </View>
+                  );
+                })
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {cargandoPedidos ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator color="hsl(24.6 95% 53.1%)" />
           </View>
-        ) : error ? (
+        ) : errorPedidos ? (
           <View className="flex-1 items-center justify-center gap-3 px-8">
-            <Text className="text-center text-muted-foreground">{error}</Text>
+            <Text className="text-center text-muted-foreground">{errorPedidos}</Text>
           </View>
         ) : pedidos.length === 0 ? (
           <View className="flex-1 items-center justify-center gap-4 px-8">

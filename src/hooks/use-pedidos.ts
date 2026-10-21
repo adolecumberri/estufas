@@ -47,7 +47,11 @@ export function usePedido(id: string | undefined) {
     setCargando(true);
     setError(null);
     const [resPedido, resLineas, resHistorial] = await Promise.all([
-      supabase.from('pedidos').select('*').eq('id', id).single(),
+      supabase
+        .from('pedidos')
+        .select('*, cliente:usuarios!pedidos_cliente_id_fkey(id,nombre,apellidos,razon_social,email,telefono,nif_cif)')
+        .eq('id', id)
+        .single(),
       supabase.from('pedido_lineas').select('*').eq('pedido_id', id).eq('borrado', false).order('created_at'),
       supabase.from('pedido_historial_estados').select('*').eq('pedido_id', id).order('fecha_cambio', { ascending: false }),
     ]);

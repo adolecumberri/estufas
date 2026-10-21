@@ -9,11 +9,13 @@ import banner from '../../assets/images/banner.jpg';
 import { Buscador } from '@/components/catalogo/buscador';
 import { EncabezadoCatalogo } from '@/components/catalogo/encabezado';
 import { TarjetaProducto } from '@/components/catalogo/tarjeta-producto';
+import { NavInferior } from '@/components/navegacion/nav-inferior';
 import { NavLateral } from '@/components/navegacion/nav-lateral';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { COMBUSTIBLES } from '@/constants';
 import { useSolicitud } from '@/contexts/solicitud-context';
+import { useAuth } from '@/hooks/use-auth';
 import { useCatalogo } from '@/hooks/use-catalogo';
 import { useColoresIcono } from '@/lib/theme';
 
@@ -25,6 +27,7 @@ import { useColoresIcono } from '@/lib/theme';
 // columnas con paginación y barra de navegación.
 export default function CatalogoScreen() {
   const insets = useSafeAreaInsets();
+  const { session } = useAuth();
   const { clienteObjetivoId } = useSolicitud();
   const cat = useCatalogo(clienteObjetivoId);
   const [menuAbierto, setMenuAbierto] = React.useState(false);
@@ -67,7 +70,7 @@ export default function CatalogoScreen() {
         keyExtractor={(p) => p.producto_id}
         numColumns={2}
         columnWrapperStyle={{ gap: 12, paddingHorizontal: 16 }}
-        contentContainerStyle={{ gap: 12, paddingBottom: 24 + insets.bottom }}
+        contentContainerStyle={{ gap: 12, paddingBottom: (session ? 88 : 24) + insets.bottom }}
         renderItem={({ item }) => <TarjetaProducto producto={item} origen={origen} />}
         ListEmptyComponent={
           cat.cargando ? (
@@ -113,6 +116,9 @@ export default function CatalogoScreen() {
         categoria={cat.categoria}
         setCategoria={cat.setCategoria}
       />
+
+      {/* Barra inferior persistente: solo con sesión (los anónimos no la ven). */}
+      {session && <NavInferior activa="catalogo" />}
     </View>
   );
 }

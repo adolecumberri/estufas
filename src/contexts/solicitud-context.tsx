@@ -18,63 +18,143 @@ interface SolicitudContextValue {
 
 const SolicitudContext = React.createContext<SolicitudContextValue | null>(null);
 
-// Solicitud en curso (carrito de pedido). Se persiste en el dispositivo para
-// tolerar reinicios de la app; el pedido real se crea con el RPC crear_pedido.
+// Clave del cubo que guarda el carrito del PROPIO usuario (clientes, o un
+// comercial pidiendo para sí mismo cuando no tiene cliente seleccionado).
+// El resto de claves del mapa son clienteId (UUID): un borrador por cliente.
+const CLAVE_PROPIA = 'propia';
+
+// Forma persistida en AsyncStorage (STORAGE_KEYS.carritos).
+interface EstadoPersistido {
+  carritos: Record<string, LineaSolicitud[]>;
+  clienteObjetivoId: string | null;
+}
+
+// Solicitudes en curso (carritos de pedido). Se mantiene UN BORRADOR POR
+// CUBO para que un comercial no mezcle pedidos de distintos clientes:
+//   - cubo 'propia': carrito del usuario autenticado;
+//   - cubo <clienteId>: borrador del pedido que el comercial prepara para
+//     ese cliente. Cambiar de cliente solo cambia el cubo activo (no toca
+//     los datos de los demás). Se persiste en el dispositivo para tolerar
+//     reinicios de la app; el pedido real se crea con el RPC crear_pedido.
 export function SolicitudProvider({ children }: { children: React.ReactNode }) {
-  const [lineas, setLineas] = React.useState<LineaSolicitud[]>([]);
+  const [carritos, setCarritos] = React.useState<Record<string, LineaSolicitud[]>>({});
   const [clienteObjetivoId, setClienteObjetivoId] = React.useState<string | null>(null);
   const [hidratado, setHidratado] = React.useState(false);
 
+  // Líneas VISIBLES: derivadas del cubo activo (cliente seleccionado o propio).
+  // No hay useState para `lineas`: el cubo activo manda y así el cambio de
+  // cliente muestra inmediatamente su borrador (vacío si no tiene).
+  const claveActiva = clienteObjetivoId ?? CLAVE_PROPIA;
+  const lineas = carritos[claveActiva] ?? [];
+
+  // Hidratación desde el almacenamiento. Si existe el formato nuevo
+  // (carritos por cliente) se usa; si solo existe el dato legado
+  // (STORAGE_KEYS.solicitud, carrito plano) se migra al cubo propio.
   React.useEffect(() => {
     void (async () => {
       try {
-        const guardado = await AsyncStorage.getItem(STORAGE_KEYS.solicitud);
-        if (guardado) setLineas(JSON.parse(guardado) as LineaSolicitud[]);
+        const guardado = await AsyncStorage.getItem(STORAGE_KEYS.carritos);
+        if (guardado) {
+          const datos = JSON.parse(guardado) as Partial<EstadoPersistido>;
+          setCarritos(datos.carritos ?? {});
+          setClienteObjetivoId(datos.clienteObjetivoId ?? null);
+        } else {
+          const legado = await AsyncStorage.getItem(STORAGE_KEYS.solicitud);
+          if (legado) {
+            const lineasLegado = JSON.parse(legado) as LineaSolicitud[];
+            if (Array.isArray(lineasLegado)) {
+              setCarritos({ [CLAVE_PROPIA]: lineasLegado });
+            }
+            await AsyncStorage.removeItem(STORAGE_KEYS.solicitud);
+          }
+        }
       } catch {
-        // almacenamiento no disponible: se empieza vacío
+        // almacenamiento no disponible: se empieza con los cubos vacíos
       }
       setHidratado(true);
     })();
   }, []);
 
+  // Persistencia en cada cambio (todos los cubos + cliente activo).
   React.useEffect(() => {
     if (!hidratado) return;
-    void AsyncStorage.setItem(STORAGE_KEYS.solicitud, JSON.stringify(lineas));
-  }, [lineas, hidratado]);
-
-  const anadir = React.useCallback((linea: LineaSolicitud) => {
-    setLineas((previas) => {
-      const existente = previas.find((l) => l.producto_id === linea.producto_id);
-      if (existente) {
-        return previas.map((l) =>
-          l.producto_id === linea.producto_id
-            ? { ...l, cantidad: Math.min(l.cantidad + linea.cantidad, 999) }
-            : l
-        );
-      }
-      return [...previas, linea];
-    });
-  }, []);
-
-  const quitar = React.useCallback((productoId: string) => {
-    setLineas((previas) => previas.filter((l) => l.producto_id !== productoId));
-  }, []);
-
-  const cambiarCantidad = React.useCallback((productoId: string, delta: number) => {
-    setLineas((previas) =>
-      previas
-        .map((l) =>
-          l.producto_id === productoId
-            ? { ...l, cantidad: Math.min(999, Math.max(0, l.cantidad + delta)) }
-            : l
-        )
-        .filter((l) => l.cantidad > 0)
+    void AsyncStorage.setItem(
+      STORAGE_KEYS.carritos,
+      JSON.stringify({ carritos, clienteObjetivoId } satisfies EstadoPersistido)
     );
-  }, []);
+  }, [carritos, clienteObjetivoId, hidratado]);
 
-  const vaciar = React.useCallback(() => setLineas([]), []);
+  // Todas las mutaciones operan SOLO sobre el cubo activo (cliente
+  // seleccionado o carrito propio), nunca sobre los demás borradores.
+  const anadir = React.useCallback(
+    (linea: LineaSolicitud) => {
+      setCarritos((previos) => {
+        const clave = clienteObjetivoId ?? CLAVE_PROPIA;
+        const actuales = previos[clave] ?? [];
+        const existente = actuales.find((l) => l.producto_id === linea.producto_id);
+        const nuevas = existente
+          ? actuales.map((l) =>
+              l.producto_id === linea.producto_id
+                ? { ...l, cantidad: Math.min(l.cantidad + linea.cantidad, 999) }
+                : l
+            )
+          : [...actuales, linea];
+        return { ...previos, [clave]: nuevas };
+      });
+    },
+    [clienteObjetivoId]
+  );
 
-  const reemplazar = React.useCallback((nuevas: LineaSolicitud[]) => setLineas(nuevas), []);
+  const quitar = React.useCallback(
+    (productoId: string) => {
+      setCarritos((previos) => {
+        const clave = clienteObjetivoId ?? CLAVE_PROPIA;
+        return {
+          ...previos,
+          [clave]: (previos[clave] ?? []).filter((l) => l.producto_id !== productoId),
+        };
+      });
+    },
+    [clienteObjetivoId]
+  );
+
+  const cambiarCantidad = React.useCallback(
+    (productoId: string, delta: number) => {
+      setCarritos((previos) => {
+        const clave = clienteObjetivoId ?? CLAVE_PROPIA;
+        return {
+          ...previos,
+          [clave]: (previos[clave] ?? [])
+            .map((l) =>
+              l.producto_id === productoId
+                ? { ...l, cantidad: Math.min(999, Math.max(0, l.cantidad + delta)) }
+                : l
+            )
+            .filter((l) => l.cantidad > 0),
+        };
+      });
+    },
+    [clienteObjetivoId]
+  );
+
+  const reemplazar = React.useCallback(
+    (nuevas: LineaSolicitud[]) => {
+      setCarritos((previos) => {
+        const clave = clienteObjetivoId ?? CLAVE_PROPIA;
+        return { ...previos, [clave]: nuevas };
+      });
+    },
+    [clienteObjetivoId]
+  );
+
+  // Limpia SOLO el cubo activo: tras enviar un pedido se vacía el borrador de
+  // ese cliente (o el carrito propio) y los demás borradores se conservan.
+  const vaciar = React.useCallback(() => {
+    setCarritos((previos) => {
+      const clave = clienteObjetivoId ?? CLAVE_PROPIA;
+      return { ...previos, [clave]: [] };
+    });
+  }, [clienteObjetivoId]);
 
   const total = React.useMemo(
     () => lineas.reduce((acc, l) => acc + l.precio_final * l.cantidad, 0),

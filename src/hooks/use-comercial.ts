@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import { supabase } from '@/lib/supabase';
-import type { DescuentoClienteProducto, PerfilUsuario, Promocion } from '@/lib/types';
+import type { Combustible, DescuentoClienteCombustible, DescuentoClienteProducto, PerfilUsuario, Promocion } from '@/lib/types';
 
 // Cartera comercial: clientes asignados (RLS lo garantiza) y sus pedidos.
 export function useCartera() {
@@ -36,27 +36,32 @@ export function useCartera() {
 export function useCliente(id: string | undefined) {
   const [cliente, setCliente] = React.useState<PerfilUsuario | null>(null);
   const [descuentos, setDescuentos] = React.useState<DescuentoClienteProducto[]>([]);
+  const [descuentosCombustible, setDescuentosCombustible] = React.useState<DescuentoClienteCombustible[]>([]);
   const [cargando, setCargando] = React.useState(true);
 
   const recargar = React.useCallback(async () => {
     if (!id) return;
     setCargando(true);
-    const [resCliente, resDescuentos] = await Promise.all([
+    const [resCliente, resDescuentos, resDescuentosCombustible] = await Promise.all([
       supabase.from('usuarios').select('*').eq('id', id).single(),
       supabase.from('descuentos_cliente_producto').select('*').eq('cliente_id', id).eq('borrado', false),
+      supabase.from('descuentos_cliente_combustible').select('*').eq('cliente_id', id).eq('borrado', false),
     ]);
     setCargando(false);
     if (!resCliente.error) setCliente(resCliente.data as PerfilUsuario);
     if (!resDescuentos.error) setDescuentos((resDescuentos.data ?? []) as DescuentoClienteProducto[]);
+    if (!resDescuentosCombustible.error)
+      setDescuentosCombustible((resDescuentosCombustible.data ?? []) as DescuentoClienteCombustible[]);
   }, [id]);
 
   React.useEffect(() => {
     setCliente(null);
     setDescuentos([]);
+    setDescuentosCombustible([]);
     void recargar();
   }, [recargar]);
 
-  return { cliente, descuentos, cargando, recargar };
+  return { cliente, descuentos, descuentosCombustible, cargando, recargar };
 }
 
 // Descuentos: los aplica el comercial de la cartera o el admin (RPC).
@@ -90,7 +95,28 @@ export function useDescuentos() {
     return { error: error?.message ?? null };
   }, []);
 
-  return { asignarGeneral, asignarProducto, anularProducto };
+  const asignarCombustible = React.useCallback(
+    async (clienteId: string, combustible: Combustible, descuentoPct: number, fechaFin?: string | null) => {
+      const { error } = await supabase.rpc('asignar_descuento_cliente_combustible', {
+        p_cliente_id: clienteId,
+        p_combustible: combustible,
+        p_descuento_pct: descuentoPct,
+        p_fecha_fin: fechaFin ?? null,
+      });
+      return { error: error?.message ?? null };
+    },
+    []
+  );
+
+  const anularCombustible = React.useCallback(async (clienteId: string, combustible: Combustible) => {
+    const { error } = await supabase.rpc('anular_descuento_cliente_combustible', {
+      p_cliente_id: clienteId,
+      p_combustible: combustible,
+    });
+    return { error: error?.message ?? null };
+  }, []);
+
+  return { asignarGeneral, asignarProducto, anularProducto, asignarCombustible, anularCombustible };
 }
 
 // Promociones de tienda (visibles para usuarios autenticados).

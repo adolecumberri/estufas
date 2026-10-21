@@ -69,6 +69,7 @@ export const ORIGENES_DESCUENTO = {
   ninguno: { etiqueta: 'Sin descuento' },
   cliente_general: { etiqueta: 'Descuento de cliente' },
   cliente_producto: { etiqueta: 'Descuento específico' },
+  cliente_combustible: { etiqueta: 'Descuento por combustible' },
   promocion_tienda: { etiqueta: 'Promoción de tienda' },
   ajuste_comercial: { etiqueta: 'Ajuste comercial' },
 } as const;
@@ -91,7 +92,8 @@ export const LIMITES = {
 } as const;
 
 export const STORAGE_KEYS = {
-  solicitud: 'estufas.solicitud', // líneas de la solicitud en curso
+  solicitud: 'estufas.solicitud', // (obsoleto) líneas planas de la solicitud
+  carritos: 'estufas.carritos.v2', // borradores por cliente + carrito propio
 } as const;
 
 export const RUTAS = {
