@@ -87,6 +87,8 @@ export default function ProductoDetalle() {
       descuento_pct: producto.descuento_pct,
       descuento_origen: producto.descuento_origen,
       imagen_url: producto.imagen_url,
+      proveedor_id: producto.proveedor_id,
+      proveedor_nombre: producto.proveedor_nombre,
     });
   };
 
@@ -130,6 +132,11 @@ export default function ProductoDetalle() {
         {/* 4. Referencia y marca · tipo */}
         <View className="mt-2 gap-0.5 px-4">
           <Text className="text-sm text-muted-foreground">Ref: {producto.referencia}</Text>
+          {producto.proveedor_nombre && (
+            <Text className="text-xs text-muted-foreground">
+              Proveedor: {producto.proveedor_nombre}
+            </Text>
+          )}
           {(producto.marca || producto.tipo) && (
             <Text className="text-sm text-muted-foreground">
               {[producto.marca, producto.tipo].filter(Boolean).join(' · ')}

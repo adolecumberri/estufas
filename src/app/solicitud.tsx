@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
-import { Minus, Plus, Trash2, UserRound } from 'lucide-react-native';
+import { Minus, Plus, Trash2, UserRound, X } from 'lucide-react-native';
 import * as React from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -22,8 +22,19 @@ import { useColoresIcono } from '@/lib/theme';
 export default function Solicitud() {
   const insets = useSafeAreaInsets();
   const { session, perfil } = useAuth();
-  const { lineas, clienteObjetivoId, setClienteObjetivoId, cambiarCantidad, quitar, reemplazar, vaciar, total } =
-    useSolicitud();
+  const {
+    lineas,
+    clienteObjetivoId,
+    setClienteObjetivoId,
+    cambiarCantidad,
+    quitar,
+    reemplazar,
+    vaciar,
+    total,
+    proveedorDelCarrito,
+    aviso,
+    limpiarAviso,
+  } = useSolicitud();
   const { crear, editar } = useAccionesPedido();
   const params = useLocalSearchParams<{ editar?: string }>();
   const { detalle } = usePedido(params.editar);
@@ -101,13 +112,34 @@ export default function Solicitud() {
       <ScrollView className="flex-1 bg-background" contentContainerStyle={{ paddingBottom: 96 + insets.bottom }}>
         <View style={{ paddingTop: insets.top + 8 }} className="gap-4 p-4">
           <View className="flex-row items-center justify-between">
-            <Text className="text-xl font-bold tracking-tight">
-              {params.editar ? 'Editar solicitud' : 'Tu solicitud'}
-            </Text>
+            <View className="flex-1 gap-0.5">
+              <Text className="text-xl font-bold tracking-tight">
+                {params.editar ? 'Editar solicitud' : 'Tu solicitud'}
+              </Text>
+              {proveedorDelCarrito && (
+                <Text className="text-xs text-muted-foreground">
+                  Proveedor: {proveedorDelCarrito.nombre}
+                </Text>
+              )}
+            </View>
             <Button variant="ghost" size="sm" onPress={() => router.back()}>
               <Text className="text-sm text-muted-foreground">Volver</Text>
             </Button>
           </View>
+
+          {/* Aviso global del carrito (p. ej. intento de mezclar proveedores) */}
+          {aviso && (
+            <View className="flex-row items-start gap-2 rounded-[10px] border border-primary/40 bg-primary/10 p-3">
+              <Text className="flex-1 text-sm">{aviso}</Text>
+              <Pressable
+                onPress={limpiarAviso}
+                className="rounded-md p-0.5 active:bg-accent"
+                accessibilityLabel="Cerrar aviso"
+              >
+                <X size={16} color={colores.tenue} />
+              </Pressable>
+            </View>
+          )}
 
           {perfil?.rol === 'comercial' && !params.editar && (
             <Card className="rounded-[10px] border-primary/40 bg-primary/10">

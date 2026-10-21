@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import { supabase } from '@/lib/supabase';
-import type { Combustible, DescuentoClienteCombustible, DescuentoClienteProducto, PerfilUsuario, Promocion } from '@/lib/types';
+import type { Combustible, ComercialProveedor, DescuentoClienteCombustible, DescuentoClienteProducto, PerfilUsuario, Promocion, Proveedor } from '@/lib/types';
 
 // Cartera comercial: clientes asignados (RLS lo garantiza) y sus pedidos.
 export function useCartera() {
@@ -140,4 +140,29 @@ export function usePromociones() {
   }, [recargar]);
 
   return { promociones, cargando, recargar };
+}
+
+// Proveedores del comercial autenticado (RLS: sus propias filas) y catálogo
+// de proveedores activos (para mostrar cuáles tiene habilitados).
+export function useProveedoresComercial() {
+  const [asignaciones, setAsignaciones] = React.useState<ComercialProveedor[]>([]);
+  const [proveedores, setProveedores] = React.useState<Proveedor[]>([]);
+  const [cargando, setCargando] = React.useState(true);
+
+  const recargar = React.useCallback(async () => {
+    setCargando(true);
+    const [resAsig, resProv] = await Promise.all([
+      supabase.from('comercial_proveedor').select('*').eq('habilitado', true),
+      supabase.from('proveedores').select('*').eq('activo', true).eq('borrado', false).order('nombre'),
+    ]);
+    setCargando(false);
+    if (!resAsig.error) setAsignaciones((resAsig.data ?? []) as ComercialProveedor[]);
+    if (!resProv.error) setProveedores((resProv.data ?? []) as Proveedor[]);
+  }, []);
+
+  React.useEffect(() => {
+    void recargar();
+  }, [recargar]);
+
+  return { asignaciones, proveedores, cargando, recargar };
 }

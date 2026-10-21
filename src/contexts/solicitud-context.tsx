@@ -15,6 +15,11 @@ interface SolicitudContextValue {
   reemplazar: (lineas: LineaSolicitud[]) => void;
   vaciar: () => void;
   total: number;
+  // Proveedor del carrito activo (derivado de su primera línea).
+  proveedorDelCarrito: { id: string; nombre: string } | null;
+  // Aviso global (p. ej. intento de mezclar proveedores) y su cierre manual.
+  aviso: string | null;
+  limpiarAviso: () => void;
 }
 
 const SolicitudContext = React.createContext<SolicitudContextValue | null>(null);
@@ -54,6 +59,41 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
   // cliente muestra inmediatamente su borrador (vacío si no tiene).
   const claveActiva = clienteObjetivoId ?? CLAVE_PROPIA;
   const lineas = carritos[claveActiva] ?? [];
+
+  // Proveedor del carrito activo: se DERIVA de la primera línea del cubo.
+  // Un pedido no puede mezclar proveedores, así que con la primera basta.
+  const proveedorDelCarrito = React.useMemo(() => {
+    const primera = lineas[0];
+    if (!primera?.proveedor_id) return null;
+    return { id: primera.proveedor_id, nombre: primera.proveedor_nombre ?? 'Proveedor' };
+  }, [lineas]);
+
+  // Aviso global del carrito (p. ej. "no mezclar proveedores"). Se auto-limpia
+  // a los ~5s; el timer vive en un ref y se reinicia en cada nuevo aviso.
+  const [aviso, setAviso] = React.useState<string | null>(null);
+  const avisoTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const limpiarAviso = React.useCallback(() => {
+    setAviso(null);
+    if (avisoTimer.current) {
+      clearTimeout(avisoTimer.current);
+      avisoTimer.current = null;
+    }
+  }, []);
+
+  const mostrarAviso = React.useCallback((texto: string) => {
+    setAviso(texto);
+    if (avisoTimer.current) clearTimeout(avisoTimer.current);
+    avisoTimer.current = setTimeout(() => setAviso(null), 5000);
+  }, []);
+
+  // Limpieza del timer al desmontar el proveedor.
+  React.useEffect(
+    () => () => {
+      if (avisoTimer.current) clearTimeout(avisoTimer.current);
+    },
+    []
+  );
 
   // Generación de hidratación: invalida lecturas asíncronas obsoletas cuando
   // cambia la cuenta (un cambio de sesión rápido no debe restaurar el estado
@@ -148,6 +188,25 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
         lecturaFallida.current = false;
         setHidratado(true);
       }
+      // Proveedor único por carrito: si el cubo activo ya tiene líneas de OTRO
+      // proveedor, la adición se rechaza y se muestra un aviso visible (el
+      // servidor valida la misma regla al crear el pedido). Si el cubo está
+      // vacío, el proveedor coincide o la línea no trae proveedor, se añade
+      // con normalidad y se limpia cualquier aviso previo.
+      const primera = lineas[0];
+      if (
+        primera?.proveedor_id &&
+        linea.proveedor_id &&
+        linea.proveedor_id !== primera.proveedor_id
+      ) {
+        mostrarAviso(
+          `No puedes mezclar proveedores en un pedido (carrito actual: ${
+            primera.proveedor_nombre ?? 'Proveedor'
+          }). Vacía el carrito o crea un pedido para este cliente.`
+        );
+        return;
+      }
+      limpiarAviso();
       setCarritos((previos) => {
         const clave = clienteObjetivoId ?? CLAVE_PROPIA;
         const actuales = previos[clave] ?? [];
@@ -162,7 +221,7 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
         return { ...previos, [clave]: nuevas };
       });
     },
-    [clienteObjetivoId]
+    [clienteObjetivoId, lineas, mostrarAviso, limpiarAviso]
   );
 
   const quitar = React.useCallback(
@@ -222,8 +281,21 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
   );
 
   const value = React.useMemo(
-    () => ({ lineas, clienteObjetivoId, setClienteObjetivoId, anadir, quitar, cambiarCantidad, reemplazar, vaciar, total }),
-    [lineas, clienteObjetivoId, anadir, quitar, cambiarCantidad, reemplazar, vaciar, total]
+    () => ({
+      lineas,
+      clienteObjetivoId,
+      setClienteObjetivoId,
+      anadir,
+      quitar,
+      cambiarCantidad,
+      reemplazar,
+      vaciar,
+      total,
+      proveedorDelCarrito,
+      aviso,
+      limpiarAviso,
+    }),
+    [lineas, clienteObjetivoId, anadir, quitar, cambiarCantidad, reemplazar, vaciar, total, proveedorDelCarrito, aviso, limpiarAviso]
   );
 
   return <SolicitudContext.Provider value={value}>{children}</SolicitudContext.Provider>;

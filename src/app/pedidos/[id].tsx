@@ -102,6 +102,14 @@ export default function PedidoDetalle() {
                 <Text className="text-sm">{pedido.observaciones}</Text>
               </>
             )}
+            {/* El detalle trae proveedor_id en el pedido; el NOMBRE llega (si
+                llega) en las líneas. Sin nombre se muestra el id como texto. */}
+            {puedeGestionar && pedido.proveedor_id && (
+              <>
+                <Text className="mt-2 text-xs text-muted-foreground">Proveedor</Text>
+                <Text className="text-sm">{lineas[0]?.proveedor_nombre ?? pedido.proveedor_id}</Text>
+              </>
+            )}
           </CardContent>
         </Card>
 

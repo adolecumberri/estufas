@@ -51,6 +51,8 @@ export function TarjetaProducto({
       descuento_pct: producto.descuento_pct,
       descuento_origen: producto.descuento_origen,
       imagen_url: producto.imagen_url,
+      proveedor_id: producto.proveedor_id,
+      proveedor_nombre: producto.proveedor_nombre,
     };
     anadir(linea);
   };
@@ -105,6 +107,13 @@ export function TarjetaProducto({
           <Text numberOfLines={1} className="text-xs text-muted-foreground">
             Ref: {producto.referencia}
           </Text>
+
+          {/* Proveedor (visible para saber si el carrito puede mezclarlo) */}
+          {producto.proveedor_nombre && (
+            <Text numberOfLines={1} className="text-[10px] text-muted-foreground">
+              {producto.proveedor_nombre}
+            </Text>
+          )}
 
           {/* Fila de precio con estado fiscal, con ajuste de línea */}
           <View className="flex-row flex-wrap items-baseline gap-x-1.5">

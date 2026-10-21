@@ -73,6 +73,9 @@ export default function AdminProductos() {
                     <View className="flex-1">
                       <Text className="font-medium">{p.nombre}</Text>
                       <Text className="text-xs text-muted-foreground">{p.referencia}</Text>
+                      {p.proveedor && (
+                        <Text className="text-xs text-muted-foreground">{p.proveedor.nombre}</Text>
+                      )}
                     </View>
                     <Badge variant={p.activo ? 'default' : 'outline'}>
                       <Text>{p.activo ? 'Publicado' : 'Borrador'}</Text>

@@ -165,6 +165,28 @@ VALUES
  'b1000000-0000-4000-8000-000000000001', 'a1000000-0000-4000-8000-000000000002', NULL,
  'e1000000-0000-4000-8000-000000000002', FALSE);
 
+-- ---------------------------------------------------------------------------
+-- Proveedores (multi-empresa) y asociaciones producto → proveedor.
+-- (Prefijo "91..." porque los UUID solo admiten hex; p1000000 no es válido.)
+-- El comercial 2222 tiene habilitados los proveedores 1 y 2; el 3 NO: LA-5
+-- queda oculto para sus clientes hasta que el admin lo asigne/habilite.
+-- ---------------------------------------------------------------------------
+INSERT INTO proveedores (id, nombre, nif, email, telefono) VALUES
+('91000000-0000-4000-8000-000000000001', 'Estufas Norte S.L.', 'B11111111', 'norte@proveedores.local', NULL),
+('91000000-0000-4000-8000-000000000002', 'Calor Hogar S.L.',   'B22222222', NULL, NULL),
+('91000000-0000-4000-8000-000000000003', 'EcoCalor Global',    'B33333333', NULL, NULL);
+
+UPDATE productos SET proveedor_id = '91000000-0000-4000-8000-000000000001'
+WHERE referencia IN ('LP-9', 'TF-12', 'TF-70', 'TF-X');
+UPDATE productos SET proveedor_id = '91000000-0000-4000-8000-000000000002'
+WHERE referencia IN ('LL-7', 'EF-8');
+UPDATE productos SET proveedor_id = '91000000-0000-4000-8000-000000000003'
+WHERE referencia = 'LA-5';
+
+INSERT INTO comercial_proveedor (comercial_id, proveedor_id, habilitado, creado_por) VALUES
+('22222222-2222-4222-8222-222222222222', '91000000-0000-4000-8000-000000000001', TRUE, '11111111-1111-4111-8111-111111111111'),
+('22222222-2222-4222-8222-222222222222', '91000000-0000-4000-8000-000000000002', TRUE, '11111111-1111-4111-8111-111111111111');
+
 -- Galerías.
 INSERT INTO producto_recurso (producto_id, recurso_id, tipo_en_producto, orden) VALUES
 ('f1000000-0000-4000-8000-000000000001', 'e1000000-0000-4000-8000-000000000007', 'galeria', 2),

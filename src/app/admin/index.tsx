@@ -1,5 +1,5 @@
 import { Redirect, router } from 'expo-router';
-import { Boxes, LogOut, Percent, Users } from 'lucide-react-native';
+import { Boxes, Factory, LogOut, Percent, Users } from 'lucide-react-native';
 import * as React from 'react';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,6 +11,7 @@ import { useColoresIcono } from '@/lib/theme';
 
 const SECCIONES = [
   { titulo: 'Productos', descripcion: 'Publicación y precios', icono: Boxes, ruta: '/admin/productos' },
+  { titulo: 'Proveedores', descripcion: 'Catálogo multi-empresa y comerciales', icono: Factory, ruta: '/admin/proveedores' },
   { titulo: 'Promociones', descripcion: 'Descuentos generales de tienda', icono: Percent, ruta: '/admin/promociones' },
   { titulo: 'Usuarios', descripcion: 'Roles, comerciales y descuentos', icono: Users, ruta: '/admin/usuarios' },
 ] as const;
