@@ -1,7 +1,10 @@
+import { Image } from 'expo-image';
 import { RefreshCw } from 'lucide-react-native';
 import * as React from 'react';
 import { ActivityIndicator, FlatList, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import banner from '../../assets/images/banner.jpg';
 
 import { Buscador } from '@/components/catalogo/buscador';
 import { EncabezadoCatalogo } from '@/components/catalogo/encabezado';
@@ -42,6 +45,9 @@ export default function CatalogoScreen() {
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       {/* Cabecera */}
       <EncabezadoCatalogo onAbrirMenu={() => setMenuAbierto(true)} />
+
+      {/* Banner decorativo */}
+      <Image source={banner} className="h-[60px] w-full" contentFit="cover" transition={200} />
 
       {/* Buscador */}
       <View className="mt-2 px-4 pb-2">

@@ -17,9 +17,10 @@ import type { LineaSolicitud, ProductoCatalogo } from '@/lib/types';
 const CANTIDAD_MIN = 1;
 const CANTIDAD_MAX = 999;
 
-// Tarjeta de producto del catálogo (diseño Stitch): imagen con insignias de
-// energía/descuento, datos y fila de acción con stepper + botón "Añadir".
-// `origen` es la etiqueta a la que se vuelve desde el detalle del producto.
+// Tarjeta de producto del catálogo (diseño Stitch): cabecera con imagen y
+// nombre, bloque central con referencia/precio y stepper, y botón "Añadir" a
+// ancho completo (solo con sesión). `origen` es la etiqueta a la que se
+// vuelve desde el detalle del producto.
 export function TarjetaProducto({
   producto,
   origen,
@@ -64,8 +65,8 @@ export function TarjetaProducto({
       className="max-w-[50%] flex-1 active:opacity-80"
     >
       <Card className="flex-1 justify-between gap-0 overflow-hidden rounded-[10px] border border-border bg-background p-0 shadow-sm">
+        {/* Bloque de cabecera: imagen con insignias + nombre */}
         <View>
-          {/* Zona de imagen con insignias superpuestas */}
           <View className="relative aspect-square w-full overflow-hidden bg-muted">
             <View className="h-full w-full p-2.5">
               <Image
@@ -88,35 +89,35 @@ export function TarjetaProducto({
               </View>
             )}
           </View>
-
-          {/* Datos del producto */}
           <View className="p-2.5">
-            <Text numberOfLines={1} className="text-xs text-muted-foreground">
-              {producto.marca ? `${producto.marca} · ` : ''}Ref: {producto.referencia}
-            </Text>
-            <Text numberOfLines={2} className="mt-0.5 text-[13px] font-semibold leading-tight">
+            <Text numberOfLines={2} className="text-[13px] font-semibold leading-tight">
               {producto.nombre}
             </Text>
-            <View className="mt-2">
-              <View className="flex-row items-baseline gap-1.5">
-                <Text className="text-base font-bold">{formatEUR(producto.precio_final)}</Text>
-              </View>
-              <View className="flex-row items-center gap-1.5">
-                {producto.descuento_pct > 0 && (
-                  <Text className="text-[11px] text-muted-foreground line-through">
-                    {formatEUR(producto.precio_base)}
-                  </Text>
-                )}
-                <Text className="text-[10px] font-medium text-muted-foreground">Sin IVA</Text>
-              </View>
-            </View>
           </View>
         </View>
 
-        {/* Fila de acción: stepper + Añadir (solo con sesión) */}
-        {session && (
-          <View className="flex-row items-center gap-1.5 p-2.5">
-            <View className="flex-1 flex-row items-center justify-between rounded-[10px] border border-border bg-muted px-1 py-0.5">
+        {/* Divisor */}
+        <View className="h-px bg-border" />
+
+        {/* Bloque central: referencia + precio y stepper */}
+        <View className="p-2.5">
+          <View className="flex-row items-baseline justify-between gap-2">
+            <View className="flex-1 flex-row items-baseline gap-1.5">
+              <Text numberOfLines={1} className="flex-1 text-xs text-muted-foreground">
+                Ref: {producto.referencia}
+              </Text>
+              {producto.descuento_pct > 0 && (
+                <Text className="text-[11px] text-muted-foreground line-through">
+                  {formatEUR(producto.precio_base)}
+                </Text>
+              )}
+            </View>
+            <Text className="text-sm font-bold">{formatEUR(producto.precio_final)}</Text>
+          </View>
+
+          {/* Stepper de cantidad (cantidad que se añadirá) */}
+          <View className="mt-2 flex-row">
+            <View className="flex-row items-center justify-between rounded-[10px] border border-border bg-muted px-1 py-0.5">
               <Pressable
                 accessibilityLabel="Reducir cantidad"
                 onPress={(e) => {
@@ -139,17 +140,22 @@ export function TarjetaProducto({
                 <Plus size={16} color={colores.tenue} />
               </Pressable>
             </View>
-            <Pressable
-              accessibilityLabel={`Añadir ${producto.nombre} al pedido`}
-              onPress={(e) => {
-                e.stopPropagation();
-                anadirAlPedido();
-              }}
-              className="rounded-[10px] bg-primary px-2.5 py-1.5 shadow-sm active:bg-primary/90"
-            >
-              <Text className="text-xs font-medium text-primary-foreground">Añadir</Text>
-            </Pressable>
           </View>
+        </View>
+
+        {/* Botón "Añadir" a ancho completo (solo con sesión) */}
+        {session && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Añadir ${producto.nombre} al pedido`}
+            onPress={(e) => {
+              e.stopPropagation();
+              anadirAlPedido();
+            }}
+            className="m-2.5 mt-0 items-center rounded-[10px] bg-primary py-2"
+          >
+            <Text className="text-xs font-medium text-primary-foreground">Añadir</Text>
+          </Pressable>
         )}
       </Card>
     </Pressable>

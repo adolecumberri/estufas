@@ -31,7 +31,7 @@ export function EncabezadoCatalogo({ onAbrirMenu }: { onAbrirMenu?: () => void }
   };
 
   return (
-    <View className="h-14 flex-row items-center justify-between border-b border-border bg-background px-4">
+    <View className="h-16 flex-row items-center justify-between border-b border-border bg-background px-4">
       <View className="flex-row items-center gap-2">
         {onAbrirMenu && (
           <Pressable

@@ -87,10 +87,14 @@ export function NavLateral({
                   <Pressable
                     accessibilityRole="button"
                     accessibilityState={{ selected: activo }}
-                    onPress={() => setCombustible(c.id)}
-                    className="px-4 py-1.5 active:bg-accent"
+                    // Elegir combustible aplica el filtro y cierra el cajón.
+                    onPress={() => {
+                      setCombustible(c.id);
+                      onCerrar();
+                    }}
+                    className="px-4 py-1.5"
                   >
-                    <View className={cn('rounded-[8px] px-3 py-2.5', activo && 'bg-primary')}>
+                    <View className={cn('rounded-[10px] px-3 py-2.5', activo && 'bg-primary')}>
                       <Text
                         className={cn(
                           'text-sm font-semibold',
