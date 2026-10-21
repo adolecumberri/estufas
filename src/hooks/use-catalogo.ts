@@ -48,12 +48,28 @@ export function useCatalogo(clienteId?: string | null) {
     setPagina(0);
   };
 
-  const [productos, setProductos] = React.useState<ProductoCatalogo[]>([]);
+  const [productosBruto, setProductos] = React.useState<ProductoCatalogo[]>([]);
+  // Clave (cuenta/cliente/filtros/página) a la que pertenece el resultado
+  // mostrado. Mientras no coincida con la petición actual no se muestra nada:
+  // evita pintar precios de la identidad anterior durante una transición.
+  const [claveMostrada, setClaveMostrada] = React.useState<string | null>(null);
   const [categorias, setCategorias] = React.useState<Categoria[]>([]);
   const [marcas, setMarcas] = React.useState<Marca[]>([]);
   const [cargando, setCargando] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const [hayMas, setHayMas] = React.useState(false);
+
+  const claveProductosActual = claveProductos(
+    uid,
+    clienteId,
+    busqueda,
+    combustible,
+    categoria,
+    marca,
+    pagina
+  );
+  const productos = claveMostrada === claveProductosActual ? productosBruto : [];
+  const mostrandoCarga = cargando || claveMostrada !== claveProductosActual;
 
   // Filtros disponibles: se sirven desde caché (24 h). La red solo se consulta
   // cuando no hay dato o la entrada está caducada.
@@ -122,17 +138,17 @@ export function useCatalogo(clienteId?: string | null) {
     // datos frescos (carrera caché-vs-red).
     let aplicadoRed = false;
     setError(null);
+    setCargando(true);
 
-    const clave = claveProductos(uid, clienteId, busqueda, combustible, categoria, marca, pagina);
+    const clave = claveProductosActual;
 
     void (async () => {
       const enCache = await cacheLeer<ProductoCatalogo[]>(clave);
       if (cancelado || aplicadoRed) return;
       if (enCache) {
         setProductos(enCache);
+        setClaveMostrada(clave);
         setCargando(false);
-      } else {
-        setCargando(true);
       }
     })();
 
@@ -151,6 +167,8 @@ export function useCatalogo(clienteId?: string | null) {
         if (cancelado) return;
         if (error) {
           setError(error.message);
+          setProductos([]);
+          setClaveMostrada(clave);
           setCargando(false);
           return;
         }
@@ -159,6 +177,7 @@ export function useCatalogo(clienteId?: string | null) {
         const paginaFilas = filas.slice(0, PAGINACION.catalogo);
         aplicadoRed = true;
         setProductos(paginaFilas);
+        setClaveMostrada(clave);
         setCargando(false);
         void cacheEscribir(clave, paginaFilas);
       })();
@@ -192,7 +211,7 @@ export function useCatalogo(clienteId?: string | null) {
     pagina,
     setPagina,
     hayMas,
-    cargando,
+    cargando: mostrandoCarga,
     error,
     limpiarFiltros,
   };

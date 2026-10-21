@@ -61,6 +61,10 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
   // estado cargado, para que la persistencia no escriba datos ajenos.
   const hidratacionId = React.useRef(0);
   const uidHidratado = React.useRef<string | null>(null);
+  // Si la LECTURA falla, la persistencia queda deshabilitada: escribir el
+  // carrito vacío en memoria sobrescribiría los borradores guardados. Se
+  // rehabilita cuando el usuario inicia explícitamente un carrito nuevo.
+  const lecturaFallida = React.useRef(false);
 
   // Hidratación desde el almacenamiento de LA CUENTA ACTIVA. Al cambiar de
   // usuario se parte de cubos vacíos (sin mezclar borradores entre cuentas).
@@ -81,6 +85,7 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     void (async () => {
+      let falloLectura = false;
       try {
         const guardado = await AsyncStorage.getItem(claveDeLectura);
         if (idActual !== hidratacionId.current) return;
@@ -102,20 +107,25 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
           setClienteObjetivoId(typeof idObjetivo === 'string' ? idObjetivo : null);
         }
       } catch {
-        // almacenamiento no disponible: se empieza con los cubos vacíos
+        // Lectura fallida: NO se marca como hidratado; la persistencia queda
+        // deshabilitada para no sobrescribir los borradores guardados.
+        falloLectura = true;
       }
       if (idActual !== hidratacionId.current) return;
+      lecturaFallida.current = falloLectura;
       uidHidratado.current = uidDeLectura;
-      setHidratado(true);
+      setHidratado(!falloLectura);
     })();
   }, [uid, claveAlmacen]);
 
   // Persistencia en cada cambio (todos los cubos + cliente activo) en la
   // clave de la cuenta activa. Solo escribe cuando el estado hidratado
   // pertenece a la cuenta actual (evita guardar el carrito de la cuenta
-  // anterior bajo la clave de la nueva).
+  // anterior bajo la clave de la nueva) y cuando la lectura inicial no falló.
   React.useEffect(() => {
-    if (!hidratado || !claveAlmacen || uidHidratado.current !== uid) return;
+    if (!hidratado || !claveAlmacen || uidHidratado.current !== uid || lecturaFallida.current) {
+      return;
+    }
     void (async () => {
       try {
         await AsyncStorage.setItem(
@@ -132,6 +142,12 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
   // seleccionado o carrito propio), nunca sobre los demás borradores.
   const anadir = React.useCallback(
     (linea: LineaSolicitud) => {
+      // Acción explícita de nuevo carrito: rehabilita la persistencia si la
+      // lectura inicial había fallado.
+      if (lecturaFallida.current) {
+        lecturaFallida.current = false;
+        setHidratado(true);
+      }
       setCarritos((previos) => {
         const clave = clienteObjetivoId ?? CLAVE_PROPIA;
         const actuales = previos[clave] ?? [];
