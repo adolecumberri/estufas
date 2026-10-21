@@ -50,23 +50,27 @@ export function EncabezadoCatalogo({ onAbrirMenu }: { onAbrirMenu?: () => void }
       </View>
 
       <View className="flex-row items-center gap-1.5">
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={
-            totalLineas > 0 ? `Ver carrito de compras, ${totalLineas} artículos` : 'Ver carrito de compras'
-          }
-          onPress={() => router.push('/solicitud')}
-          className="relative rounded-lg p-2 active:bg-muted"
-        >
-          <ShoppingCart size={20} color={colores.primerPlano} />
-          {totalLineas > 0 && (
-            <View className="absolute -right-0.5 -top-0.5 h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1">
-              <Text className="text-[10px] font-bold leading-tight text-primary-foreground">
-                {totalLineas}
-              </Text>
-            </View>
-          )}
-        </Pressable>
+        {/* El carrito solo existe con sesión: sin login no se puede poblar
+            (los botones "Añadir" no se muestran) y no debe confundir. */}
+        {session && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={
+              totalLineas > 0 ? `Ver carrito de compras, ${totalLineas} artículos` : 'Ver carrito de compras'
+            }
+            onPress={() => router.push('/solicitud')}
+            className="relative rounded-lg p-2 active:bg-muted"
+          >
+            <ShoppingCart size={20} color={colores.primerPlano} />
+            {totalLineas > 0 && (
+              <View className="absolute -right-0.5 -top-0.5 h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1">
+                <Text className="text-[10px] font-bold leading-tight text-primary-foreground">
+                  {totalLineas}
+                </Text>
+              </View>
+            )}
+          </Pressable>
+        )}
 
         {clienteObjetivoId && (
           <Badge variant="outline">
