@@ -25,13 +25,15 @@ UPDATE categorias SET combustible = 'lena'
 WHERE clave IN ('lena', 'fundicion', 'ventilada', 'hogares');
 
 -- ---------------------------------------------------------------------------
--- 3. Nuevas categorías (mismos IDs que en seed.sql; ON CONFLICT para que un
---    `db reset` no duplique las filas que inserta el seed).
+-- 3. Nuevas categorías (mismos IDs que en seed.sql). ON CONFLICT sobre la
+--    clave (índice único parcial con borrado = FALSE): si un despliegue ya
+--    tiene una categoría activa 'hidro'/'estufas' con otro UUID, se omite en
+--    lugar de abortar la migración; el seed ya cubre el conflicto por id.
 -- ---------------------------------------------------------------------------
 INSERT INTO categorias (id, nombre, clave, grupo, orden, combustible) VALUES
 ('c1000000-0000-4000-8000-000000000009', 'Hidro',   'hidro',   'Instalación', 4, 'pellets'),
 ('c1000000-0000-4000-8000-000000000010', 'Estufas', 'estufas', 'Estilo',      3, 'lena')
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (clave) WHERE borrado = FALSE DO NOTHING;
 
 -- ---------------------------------------------------------------------------
 -- 4. fn_catalogo_usuario_v2: catálogo con filtro por combustible.
