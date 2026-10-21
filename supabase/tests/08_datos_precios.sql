@@ -12,7 +12,7 @@ SET LOCAL ROLE anon;
 --      tanto en pellets como en leña (agnósticos).
 SELECT results_eq(
     $q$ SELECT referencia::text
-        FROM fn_catalogo_usuario_v2(NULL, 'pellets', NULL, NULL, 200, 0, NULL)
+        FROM fn_catalogo_usuario_v2(NULL, 'pellets', NULL, NULL, 5000, 0, NULL)
         WHERE referencia = 'EID-001' $q$,
     ARRAY['EID-001'],
     'el producto agnóstico aparece en pellets'
@@ -20,7 +20,7 @@ SELECT results_eq(
 
 SELECT results_eq(
     $q$ SELECT referencia::text
-        FROM fn_catalogo_usuario_v2(NULL, 'lena', NULL, NULL, 200, 0, NULL)
+        FROM fn_catalogo_usuario_v2(NULL, 'lena', NULL, NULL, 5000, 0, NULL)
         WHERE referencia = 'EID-001' $q$,
     ARRAY['EID-001'],
     'el producto agnóstico aparece en leña'
@@ -29,7 +29,7 @@ SELECT results_eq(
 -- 3. El catálogo devuelve los precios por transporte del producto.
 SELECT results_eq(
     $q$ SELECT (precios_transporte->>'camion')::numeric
-        FROM fn_catalogo_usuario_v2(NULL, 'pellets', NULL, NULL, 200, 0, NULL)
+        FROM fn_catalogo_usuario_v2(NULL, 'pellets', NULL, NULL, 5000, 0, NULL)
         WHERE referencia = 'EID-001' $q$,
     ARRAY[3.75::numeric],
     'el catálogo incluye el precio camión del transporte'

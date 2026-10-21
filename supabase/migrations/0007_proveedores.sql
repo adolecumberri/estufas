@@ -386,7 +386,7 @@ BEGIN
         v_comercial := NULL;
     END IF;
 
-    IF p_limite IS NULL OR p_limite <= 0 OR p_limite > 200 THEN p_limite := 200; END IF;
+    IF p_limite IS NULL OR p_limite <= 0 OR p_limite > 2000 THEN p_limite := 2000; END IF;
     IF p_offset IS NULL OR p_offset < 0 THEN p_offset := 0; END IF;
 
     RETURN QUERY

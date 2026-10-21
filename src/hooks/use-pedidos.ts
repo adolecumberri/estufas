@@ -49,9 +49,7 @@ export function usePedido(id: string | undefined) {
     const [resPedido, resLineas, resHistorial] = await Promise.all([
       supabase
         .from('pedidos')
-        .select(
-          '*, cliente:usuarios!pedidos_cliente_id_fkey(id,nombre,apellidos,razon_social,email,telefono,nif_cif), proveedor:proveedores!pedidos_proveedor_id_fkey(nombre)'
-        )
+        .select('*, cliente:usuarios!pedidos_cliente_id_fkey(id,nombre,apellidos,razon_social,email,telefono,nif_cif)')
         .eq('id', id)
         .single(),
       supabase.from('pedido_lineas').select('*').eq('pedido_id', id).eq('borrado', false).order('created_at'),
@@ -62,8 +60,19 @@ export function usePedido(id: string | undefined) {
       setError(resPedido.error.message);
       return;
     }
+    const pedido = resPedido.data as Pedido;
+    // El nombre del proveedor ya no puede leerse vía embed (RLS de 0011:
+    // la tabla proveedores solo la lee el admin); se resuelve por el RPC de
+    // nombres visibles (SECURITY DEFINER) según el rol del llamante.
+    if (pedido.proveedor_id) {
+      const { data: visibles } = await supabase.rpc('fn_proveedores_visibles');
+      const fila = ((visibles ?? []) as { id: string; nombre: string }[]).find(
+        (p) => p.id === pedido.proveedor_id
+      );
+      if (fila) pedido.proveedor = { nombre: fila.nombre };
+    }
     setDetalle({
-      pedido: resPedido.data as Pedido,
+      pedido,
       lineas: (resLineas.data ?? []) as LineaPedido[],
       historial: (resHistorial.data ?? []) as HistorialEstado[],
     });

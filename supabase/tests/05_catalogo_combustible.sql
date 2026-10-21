@@ -12,7 +12,7 @@ SET LOCAL ROLE anon;
 --    por su categoría 'aire').
 SELECT results_eq(
     $q$ SELECT referencia::text
-        FROM fn_catalogo_usuario_v2(NULL, 'pellets', NULL, NULL, 200, 0, NULL)
+        FROM fn_catalogo_usuario_v2(NULL, 'pellets', NULL, NULL, 5000, 0, NULL)
         WHERE referencia IN ('LA-5', 'LP-9', 'TF-12', 'TF-70')
         ORDER BY referencia $q$,
     ARRAY['LA-5', 'LP-9', 'TF-12', 'TF-70'],
@@ -23,7 +23,7 @@ SELECT results_eq(
 --    categoría 'ventilada').
 SELECT results_eq(
     $q$ SELECT referencia::text
-        FROM fn_catalogo_usuario_v2(NULL, 'lena', NULL, NULL, 200, 0, NULL)
+        FROM fn_catalogo_usuario_v2(NULL, 'lena', NULL, NULL, 5000, 0, NULL)
         WHERE referencia IN ('EF-8', 'LA-5', 'LL-7')
         ORDER BY referencia $q$,
     ARRAY['EF-8', 'LA-5', 'LL-7'],
@@ -34,7 +34,7 @@ SELECT results_eq(
 --    coincide con LP-9 (pellets), LL-7 (lena) y LA-5 (ambas).
 SELECT results_eq(
     $q$ SELECT referencia::text
-        FROM fn_catalogo_usuario_v2('Lume', NULL, NULL, NULL, 200, 0, NULL)
+        FROM fn_catalogo_usuario_v2('Lume', NULL, NULL, NULL, 5000, 0, NULL)
         ORDER BY referencia $q$,
     ARRAY['LA-5', 'LL-7', 'LP-9'],
     'la búsqueda sin combustible cruza pellets y leña'
@@ -46,7 +46,7 @@ SELECT results_eq(
     $q$ SELECT referencia::text
         FROM fn_catalogo_usuario_v2(
                  NULL, 'pellets', 'c1000000-0000-4000-8000-000000000004',
-                 NULL, 200, 0, NULL)
+                 NULL, 5000, 0, NULL)
         ORDER BY referencia $q$,
     ARRAY['TF-70'],
     'p_categoria filtra dentro del combustible'

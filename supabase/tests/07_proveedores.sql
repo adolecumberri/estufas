@@ -41,7 +41,7 @@ SELECT throws_ok(
 --    muestra los habilitados 1 y 2.
 SELECT results_eq(
     $q$ SELECT referencia::text
-        FROM fn_catalogo_usuario_v2(NULL, NULL, NULL, NULL, 200, 0, NULL)
+        FROM fn_catalogo_usuario_v2(NULL, NULL, NULL, NULL, 5000, 0, NULL)
         WHERE referencia IN ('EF-8', 'LL-7', 'LP-9', 'TF-12', 'TF-70')
         ORDER BY referencia $q$,
     ARRAY['EF-8', 'LL-7', 'LP-9', 'TF-12', 'TF-70'],
@@ -57,7 +57,7 @@ SELECT asignar_proveedor_comercial(
 SELECT tests.authenticate_as('33333333-3333-4333-8333-333333333333');
 SELECT results_eq(
     $q$ SELECT referencia::text
-        FROM fn_catalogo_usuario_v2(NULL, NULL, NULL, NULL, 200, 0, NULL)
+        FROM fn_catalogo_usuario_v2(NULL, NULL, NULL, NULL, 5000, 0, NULL)
         WHERE referencia IN ('EF-8', 'LA-5', 'LL-7', 'LP-9', 'TF-12', 'TF-70')
         ORDER BY referencia $q$,
     ARRAY['EF-8', 'LA-5', 'LL-7', 'LP-9', 'TF-12', 'TF-70'],
@@ -85,7 +85,7 @@ SELECT actualizar_proveedor(
 SELECT tests.authenticate_as('33333333-3333-4333-8333-333333333333');
 SELECT results_eq(
     $q$ SELECT referencia::text
-        FROM fn_catalogo_usuario_v2(NULL, NULL, NULL, NULL, 200, 0, NULL)
+        FROM fn_catalogo_usuario_v2(NULL, NULL, NULL, NULL, 5000, 0, NULL)
         WHERE referencia IN ('LA-5', 'LP-9', 'TF-12', 'TF-70')
         ORDER BY referencia $q$,
     ARRAY['LA-5', 'LP-9', 'TF-12', 'TF-70'],
@@ -118,7 +118,7 @@ SET LOCAL ROLE authenticated;
 SELECT tests.authenticate_as('55555555-5555-4555-8555-555555555555');
 SELECT results_eq(
     $q$ SELECT referencia::text
-        FROM fn_catalogo_usuario_v2(NULL, NULL, NULL, NULL, 200, 0, NULL)
+        FROM fn_catalogo_usuario_v2(NULL, NULL, NULL, NULL, 5000, 0, NULL)
         ORDER BY referencia $q$,
     ARRAY[]::text[],
     'un cliente sin comercial no ve productos con proveedor asignado'

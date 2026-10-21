@@ -17,11 +17,11 @@ $$;
 
 SET LOCAL ROLE anon;
 
--- 1. El visitante ve los productos publicados (6 estufas + 95 gama Eider = 101;
+-- 1. El visitante ve los productos publicados (6 estufas + 95 Eider + 969 Fansa activos = 1070;
 --    el borrador TF-X queda oculto).
 SELECT results_eq(
     'SELECT count(*)::int FROM productos',
-    ARRAY[101],
+    ARRAY[1070],
     'anon ve solo los productos publicados'
 );
 
@@ -40,11 +40,11 @@ SELECT results_eq(
 );
 
 -- 4. La vista pública de precios expone UNA FILA POR PRODUCTO publicado
---    (6 estufas + 95 Eider = 101; los 17 sin precio base muestran precio nulo).
+--    (6 estufas + 95 Eider + 969 Fansa = 1070).
 SELECT results_eq(
     'SELECT count(*)::int FROM v_productos_precio_vigente',
-    ARRAY[101],
-    'la vista pública expone 101 productos'
+    ARRAY[1070],
+    'la vista pública expone 1070 productos'
 );
 
 -- 5. No puede insertar pedidos directamente (RLS lo rechaza).
