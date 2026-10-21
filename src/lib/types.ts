@@ -25,6 +25,11 @@ export interface ProductoCatalogo {
   imagen_url: string | null;
   proveedor_id: string | null;
   proveedor_nombre: string | null;
+  precios_transporte: {
+    camion: number | null;
+    palet: number | null;
+    franquicia: number | null;
+  } | null;
 }
 
 export interface ValorCaracteristica {
@@ -47,6 +52,20 @@ export interface ProductoDetalle extends ProductoCatalogo {
   plano_url: string | null;
   caracteristicas: ValorCaracteristica[];
   galeria: ItemGaleria[];
+  // Datos técnicos flexibles (JSONB productos.datos): grupos con filas.
+  datos: GrupoDatos[];
+}
+
+export interface FilaDato {
+  clave: string;
+  nombre: string;
+  valor: string | number | boolean | null;
+  unidad: string | null;
+}
+
+export interface GrupoDatos {
+  grupo: string;
+  filas: FilaDato[];
 }
 
 export interface LineaPedido {
