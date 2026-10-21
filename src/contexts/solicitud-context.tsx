@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as React from 'react';
 
 import { STORAGE_KEYS } from '@/constants';
+import { useAuth } from '@/hooks/use-auth';
 import type { LineaSolicitud } from '@/lib/types';
 
 interface SolicitudContextValue {
@@ -41,6 +42,13 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
   const [clienteObjetivoId, setClienteObjetivoId] = React.useState<string | null>(null);
   const [hidratado, setHidratado] = React.useState(false);
 
+  // Los borradores se aíslan por CUENTA: cada usuario autenticado tiene su
+  // propia clave de almacenamiento, para que en un dispositivo compartido un
+  // cliente no vea (ni envíe) el carrito o los borradores de otro usuario.
+  const { session } = useAuth();
+  const uid = session?.user?.id ?? null;
+  const claveAlmacen = uid ? `${STORAGE_KEYS.carritos}.${uid}` : null;
+
   // Líneas VISIBLES: derivadas del cubo activo (cliente seleccionado o propio).
   // No hay useState para `lineas`: el cubo activo manda y así el cambio de
   // cliente muestra inmediatamente su borrador (vacío si no tiene).
@@ -51,14 +59,22 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
   // del formato nuevo (si el arranque se interrumpe, el dato no se pierde).
   const legadoPendiente = React.useRef(false);
 
-  // Hidratación desde el almacenamiento. Si existe el formato nuevo
-  // (carritos por cliente) se usa, saneando la forma persistida; si solo
-  // existe el dato legado (STORAGE_KEYS.solicitud, carrito plano) se migra
-  // al cubo propio.
+  // Hidratación desde el almacenamiento de LA CUENTA ACTIVA. Al cambiar de
+  // usuario se parte de cubos vacíos (sin mezclar borradores entre cuentas).
+  // Si existe el formato nuevo (carritos por cliente) se usa, saneando la
+  // forma persistida; si solo existe el dato legado (STORAGE_KEYS.solicitud,
+  // carrito plano) se migra al cubo propio de esta cuenta.
   React.useEffect(() => {
+    setHidratado(false);
+    setCarritos({});
+    setClienteObjetivoId(null);
+    if (!uid || !claveAlmacen) {
+      setHidratado(true);
+      return;
+    }
     void (async () => {
       try {
-        const guardado = await AsyncStorage.getItem(STORAGE_KEYS.carritos);
+        const guardado = await AsyncStorage.getItem(claveAlmacen);
         if (guardado) {
           const datos: unknown = JSON.parse(guardado);
           const esObjeto = typeof datos === 'object' && datos !== null && !Array.isArray(datos);
@@ -90,15 +106,16 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
       }
       setHidratado(true);
     })();
-  }, []);
+  }, [uid, claveAlmacen]);
 
-  // Persistencia en cada cambio (todos los cubos + cliente activo).
+  // Persistencia en cada cambio (todos los cubos + cliente activo) en la
+  // clave de la cuenta activa.
   React.useEffect(() => {
-    if (!hidratado) return;
+    if (!hidratado || !claveAlmacen) return;
     void (async () => {
       try {
         await AsyncStorage.setItem(
-          STORAGE_KEYS.carritos,
+          claveAlmacen,
           JSON.stringify({ carritos, clienteObjetivoId } satisfies EstadoPersistido)
         );
         // Tras la primera escritura exitosa del formato nuevo se retira la
@@ -111,7 +128,7 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
         console.warn('No se pudo persistir la solicitud en el dispositivo', error);
       }
     })();
-  }, [carritos, clienteObjetivoId, hidratado]);
+  }, [carritos, clienteObjetivoId, hidratado, claveAlmacen]);
 
   // Todas las mutaciones operan SOLO sobre el cubo activo (cliente
   // seleccionado o carrito propio), nunca sobre los demás borradores.
