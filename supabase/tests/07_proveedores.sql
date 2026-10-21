@@ -2,7 +2,7 @@
 -- Test 07: multi-empresa — proveedores, visibilidad y pedidos sin mezcla
 -- ============================================================================
 BEGIN;
-SELECT plan(5);
+SELECT plan(9);
 
 CREATE SCHEMA IF NOT EXISTS tests;
 
@@ -72,6 +72,59 @@ SELECT results_eq(
         WHERE id = (SELECT pedido_id FROM tmp_pedido) $q$,
     ARRAY['91000000-0000-4000-8000-000000000001'],
     'el pedido guarda el proveedor de sus líneas'
+);
+
+-- 6. Un proveedor inactivo oculta sus productos (actualizar_proveedor).
+SELECT tests.authenticate_as('11111111-1111-4111-8111-111111111111');
+SELECT actualizar_proveedor(
+    '91000000-0000-4000-8000-000000000002',
+    NULL, NULL, NULL, NULL, FALSE
+);
+SELECT tests.authenticate_as('33333333-3333-4333-8333-333333333333');
+SELECT results_eq(
+    $q$ SELECT referencia::text
+        FROM fn_catalogo_usuario_v2(NULL, NULL, NULL, NULL, 200, 0, NULL)
+        ORDER BY referencia $q$,
+    ARRAY['LA-5', 'LP-9', 'TF-12', 'TF-70'],
+    'un proveedor inactivo oculta sus productos'
+);
+
+-- 7. El proveedor de un pedido queda congelado al editarlo (p1 → p3).
+SELECT tests.authenticate_as('33333333-3333-4333-8333-333333333333');
+SELECT throws_ok(
+    $q$ SELECT editar_pedido((SELECT pedido_id FROM tmp_pedido),
+        '[{"producto_id":"f1000000-0000-4000-8000-000000000006","cantidad":1}]'::jsonb) $q$,
+    'No se puede cambiar el proveedor del pedido',
+    'no se cambia el proveedor congelado del pedido'
+);
+
+-- 8. Un cliente sin comercial no ve productos con proveedor ni puede pedirlos.
+RESET ROLE;
+INSERT INTO auth.users (
+    instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+    created_at, updated_at, raw_app_meta_data, raw_user_meta_data,
+    confirmation_token, recovery_token, email_change_token_new, email_change
+) VALUES
+('00000000-0000-0000-0000-000000000000', '55555555-5555-4555-8555-555555555555',
+ 'authenticated', 'authenticated', 'suelto@estufas.local',
+ crypt('Suelto123!', gen_salt('bf')), now(), now(), now(),
+ '{"provider":"email","providers":["email"]}',
+ '{"rol":"cliente","tipo_cliente":"particular","nombre":"Cliente","apellidos":"Suelto"}', '', '', '', '');
+
+SET LOCAL ROLE authenticated;
+SELECT tests.authenticate_as('55555555-5555-4555-8555-555555555555');
+SELECT results_eq(
+    $q$ SELECT referencia::text
+        FROM fn_catalogo_usuario_v2(NULL, NULL, NULL, NULL, 200, 0, NULL)
+        ORDER BY referencia $q$,
+    ARRAY[]::text[],
+    'un cliente sin comercial no ve productos con proveedor asignado'
+);
+SELECT throws_ok(
+    $q$ SELECT * FROM crear_pedido(NULL,
+        '[{"producto_id":"f1000000-0000-4000-8000-000000000002","cantidad":1}]'::jsonb, NULL) $q$,
+    'El cliente no tiene comercial asignado',
+    'un cliente sin comercial no puede pedir productos con proveedor'
 );
 
 SELECT * FROM finish();

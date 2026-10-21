@@ -79,6 +79,11 @@ export default function PedidoDetalle() {
   const { pedido, lineas, historial } = detalle;
   const total = lineas.reduce((acc, l) => acc + l.total_linea, 0);
 
+  // El embed `pedido.proveedor` lo añade el worker backend (types.ts +
+  // use-pedidos.ts). Cast seguro mientras el campo no esté en el tipo Pedido;
+  // cuando llegue, basta con usar `pedido.proveedor?.nombre` directamente.
+  const proveedorPedido = (pedido as typeof pedido & { proveedor?: { nombre: string } | null }).proveedor;
+
   return (
     <ScrollView className="flex-1 bg-background" contentContainerStyle={{ paddingBottom: 32 }}>
       <View style={{ paddingTop: insets.top + 8 }} className="gap-4 p-4">
@@ -102,12 +107,12 @@ export default function PedidoDetalle() {
                 <Text className="text-sm">{pedido.observaciones}</Text>
               </>
             )}
-            {/* El detalle trae proveedor_id en el pedido; el NOMBRE llega (si
-                llega) en las líneas. Sin nombre se muestra el id como texto. */}
+            {/* El detalle trae proveedor_id; el NOMBRE llega con el embed
+                pedido.proveedor (backend). Sin nombre se muestra el id. */}
             {puedeGestionar && pedido.proveedor_id && (
               <>
                 <Text className="mt-2 text-xs text-muted-foreground">Proveedor</Text>
-                <Text className="text-sm">{lineas[0]?.proveedor_nombre ?? pedido.proveedor_id}</Text>
+                <Text className="text-sm">{proveedorPedido?.nombre ?? pedido.proveedor_id}</Text>
               </>
             )}
           </CardContent>

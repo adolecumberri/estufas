@@ -49,7 +49,9 @@ export function usePedido(id: string | undefined) {
     const [resPedido, resLineas, resHistorial] = await Promise.all([
       supabase
         .from('pedidos')
-        .select('*, cliente:usuarios!pedidos_cliente_id_fkey(id,nombre,apellidos,razon_social,email,telefono,nif_cif)')
+        .select(
+          '*, cliente:usuarios!pedidos_cliente_id_fkey(id,nombre,apellidos,razon_social,email,telefono,nif_cif), proveedor:proveedores!pedidos_proveedor_id_fkey(nombre)'
+        )
         .eq('id', id)
         .single(),
       supabase.from('pedido_lineas').select('*').eq('pedido_id', id).eq('borrado', false).order('created_at'),

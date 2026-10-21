@@ -213,8 +213,10 @@ BEGIN
     ) THEN
         RAISE EXCEPTION 'El usuario no es un comercial activo';
     END IF;
-    IF NOT EXISTS (SELECT 1 FROM proveedores WHERE id = p_proveedor AND borrado = FALSE) THEN
-        RAISE EXCEPTION 'Proveedor no encontrado';
+    IF NOT EXISTS (
+        SELECT 1 FROM proveedores WHERE id = p_proveedor AND activo = TRUE AND borrado = FALSE
+    ) THEN
+        RAISE EXCEPTION 'El proveedor no existe o no está activo';
     END IF;
 
     INSERT INTO comercial_proveedor (comercial_id, proveedor_id, creado_por)
@@ -274,6 +276,11 @@ DECLARE
 BEGIN
     IF NOT fn_es_admin() THEN
         RAISE EXCEPTION 'Solo un administrador puede habilitar proveedores';
+    END IF;
+    IF NOT EXISTS (
+        SELECT 1 FROM proveedores WHERE id = p_proveedor AND activo = TRUE AND borrado = FALSE
+    ) THEN
+        RAISE EXCEPTION 'El proveedor no existe o no está activo';
     END IF;
 
     SELECT id, to_jsonb(cp) INTO v_row, v_antes
@@ -343,6 +350,7 @@ AS $$
 DECLARE
     v_cliente   UUID;
     v_comercial UUID;
+    v_todo      BOOLEAN := FALSE;
 BEGIN
     -- Un comercial puede consultar el catálogo con las condiciones de un
     -- cliente asignado (para crear pedidos en su nombre).
@@ -361,9 +369,12 @@ BEGIN
         END IF;
     END IF;
 
-    -- Visibilidad por proveedor: admin y anónimo ven todo (v_comercial NULL
-    -- desactiva el filtro); cliente → el comercial asignado; comercial → él.
-    IF fn_es_admin() THEN
+    -- Visibilidad por proveedor: anónimo y admin sin cliente objetivo ven
+    -- todo (v_todo); cliente → su id_comercial; comercial → él mismo;
+    -- admin con p_cliente → el id_comercial de ese cliente. Si el comercial
+    -- efectivo es NULL, solo se ven productos sin proveedor asignado.
+    IF auth.uid() IS NULL OR (fn_es_admin() AND v_cliente IS NULL) THEN
+        v_todo := TRUE;
         v_comercial := NULL;
     ELSIF v_cliente IS NOT NULL THEN
         SELECT id_comercial INTO v_comercial FROM usuarios WHERE id = v_cliente;
@@ -406,7 +417,7 @@ BEGIN
     JOIN productos p ON p.id = v.producto_id
     LEFT JOIN marcas m ON m.id = p.marca_id
     LEFT JOIN tipos_producto t ON t.id = v.tipo_producto_id
-    LEFT JOIN proveedores pr ON pr.id = p.proveedor_id
+    LEFT JOIN proveedores pr ON pr.id = p.proveedor_id AND pr.activo = TRUE AND pr.borrado = FALSE
     LEFT JOIN LATERAL fn_calcular_precio(v.producto_id, v_cliente) d ON TRUE
     WHERE v.precio IS NOT NULL
       AND (p_busqueda IS NULL
@@ -427,12 +438,22 @@ BEGIN
           ))
       AND (p_marca IS NULL OR p.marca_id = p_marca)
       AND (p.proveedor_id IS NULL
-           OR v_comercial IS NULL
-           OR EXISTS (
-               SELECT 1 FROM comercial_proveedor cp
-               WHERE cp.comercial_id = v_comercial
-                 AND cp.proveedor_id = p.proveedor_id
-                 AND cp.habilitado
+           OR (
+               EXISTS (
+                   SELECT 1 FROM proveedores prv
+                   WHERE prv.id = p.proveedor_id
+                     AND prv.activo = TRUE
+                     AND prv.borrado = FALSE
+               )
+               AND (
+                   v_todo
+                   OR (v_comercial IS NOT NULL AND EXISTS (
+                       SELECT 1 FROM comercial_proveedor cp
+                       WHERE cp.comercial_id = v_comercial
+                         AND cp.proveedor_id = p.proveedor_id
+                         AND cp.habilitado
+                   ))
+               )
            ))
     ORDER BY p.destacado DESC, v.nombre ASC
     LIMIT p_limite OFFSET p_offset;
@@ -481,6 +502,7 @@ DECLARE
     v_cliente   UUID;
     v_comercial UUID;
     v_proveedor UUID;
+    v_todo      BOOLEAN := FALSE;
 BEGIN
     IF NOT (fn_es_admin() OR EXISTS (
         SELECT 1 FROM productos WHERE id = p_producto AND borrado = FALSE AND activo = TRUE
@@ -499,21 +521,36 @@ BEGIN
         v_cliente := auth.uid();
     END IF;
 
-    -- Visibilidad por proveedor: anónimo y admin ven todo; cliente → el
-    -- comercial asignado; comercial → él mismo.
+    -- Visibilidad por proveedor: anónimo y admin sin cliente objetivo ven
+    -- todo; cliente → su id_comercial; comercial → él mismo; admin con
+    -- p_cliente → el id_comercial de ese cliente. El proveedor debe estar
+    -- activo y no borrado; si el comercial efectivo es NULL o no lo tiene
+    -- habilitado, el producto no está disponible.
     SELECT pr.proveedor_id INTO v_proveedor FROM productos pr WHERE pr.id = p_producto;
-    IF v_proveedor IS NOT NULL AND NOT fn_es_admin() AND auth.uid() IS NOT NULL THEN
-        IF fn_es_comercial() THEN
+    IF v_proveedor IS NOT NULL THEN
+        IF NOT EXISTS (
+            SELECT 1 FROM proveedores prv
+            WHERE prv.id = v_proveedor AND prv.activo = TRUE AND prv.borrado = FALSE
+        ) THEN
+            RAISE EXCEPTION 'Producto no disponible';
+        END IF;
+
+        IF auth.uid() IS NULL OR (fn_es_admin() AND v_cliente IS NULL) THEN
+            v_todo := TRUE;
+        ELSIF v_cliente IS NOT NULL THEN
+            SELECT id_comercial INTO v_comercial FROM usuarios WHERE id = v_cliente;
+        ELSIF fn_es_comercial() THEN
             v_comercial := auth.uid();
         ELSE
-            SELECT id_comercial INTO v_comercial FROM usuarios WHERE id = auth.uid();
+            v_comercial := NULL;
         END IF;
-        IF v_comercial IS NOT NULL AND NOT EXISTS (
+
+        IF NOT v_todo AND (v_comercial IS NULL OR NOT EXISTS (
             SELECT 1 FROM comercial_proveedor cp
             WHERE cp.comercial_id = v_comercial
               AND cp.proveedor_id = v_proveedor
               AND cp.habilitado
-        ) THEN
+        )) THEN
             RAISE EXCEPTION 'Producto no disponible';
         END IF;
     END IF;
@@ -657,10 +694,21 @@ BEGIN
           AND pr.proveedor_id IS NOT NULL;
     END IF;
 
-    -- El proveedor debe estar habilitado para el comercial del cliente.
+    -- El proveedor debe existir, estar activo y habilitado para el comercial
+    -- del cliente; sin comercial asignado no se admiten líneas con proveedor.
     IF v_proveedor IS NOT NULL THEN
+        IF NOT EXISTS (
+            SELECT 1 FROM proveedores prv
+            WHERE prv.id = v_proveedor AND prv.activo = TRUE AND prv.borrado = FALSE
+        ) THEN
+            RAISE EXCEPTION 'El proveedor no está disponible';
+        END IF;
+
         SELECT id_comercial INTO v_comercial FROM usuarios WHERE id = v_cliente;
-        IF v_comercial IS NULL OR NOT EXISTS (
+        IF v_comercial IS NULL THEN
+            RAISE EXCEPTION 'El cliente no tiene comercial asignado';
+        END IF;
+        IF NOT EXISTS (
             SELECT 1 FROM comercial_proveedor cp
             WHERE cp.comercial_id = v_comercial
               AND cp.proveedor_id = v_proveedor
@@ -718,7 +766,7 @@ BEGIN
         RAISE EXCEPTION 'Se requiere autenticación';
     END IF;
 
-    SELECT cliente_id, estado, creado_por, comercial_id
+    SELECT cliente_id, estado, creado_por, comercial_id, proveedor_id
     INTO v_pedido
     FROM pedidos WHERE id = p_pedido AND borrado = FALSE
     FOR UPDATE;
@@ -754,8 +802,18 @@ BEGIN
     END IF;
 
     IF v_proveedor IS NOT NULL THEN
+        IF NOT EXISTS (
+            SELECT 1 FROM proveedores prv
+            WHERE prv.id = v_proveedor AND prv.activo = TRUE AND prv.borrado = FALSE
+        ) THEN
+            RAISE EXCEPTION 'El proveedor no está disponible';
+        END IF;
+
         SELECT id_comercial INTO v_comercial FROM usuarios WHERE id = v_pedido.cliente_id;
-        IF v_comercial IS NULL OR NOT EXISTS (
+        IF v_comercial IS NULL THEN
+            RAISE EXCEPTION 'El cliente no tiene comercial asignado';
+        END IF;
+        IF NOT EXISTS (
             SELECT 1 FROM comercial_proveedor cp
             WHERE cp.comercial_id = v_comercial
               AND cp.proveedor_id = v_proveedor
@@ -763,6 +821,15 @@ BEGIN
         ) THEN
             RAISE EXCEPTION 'El proveedor no está habilitado para este comercial';
         END IF;
+    END IF;
+
+    -- El proveedor del pedido queda congelado: las líneas nuevas no pueden
+    -- cambiarlo (solo rellenarlo si el pedido aún no lo tenía).
+    IF v_pedido.proveedor_id IS NOT NULL AND v_proveedor IS DISTINCT FROM v_pedido.proveedor_id THEN
+        RAISE EXCEPTION 'No se puede cambiar el proveedor del pedido';
+    END IF;
+    IF v_pedido.proveedor_id IS NULL AND v_proveedor IS NOT NULL THEN
+        UPDATE pedidos SET proveedor_id = v_proveedor WHERE id = p_pedido;
     END IF;
 
     PERFORM set_config('app.nota_estado', 'Pedido editado', true);

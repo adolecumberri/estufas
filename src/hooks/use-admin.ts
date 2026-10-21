@@ -196,15 +196,21 @@ export function useProveedores() {
 export function useAsignacionesProveedores(comercialId: string | undefined) {
   const [asignaciones, setAsignaciones] = React.useState<ComercialProveedor[]>([]);
   const [cargando, setCargando] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
   const recargar = React.useCallback(async () => {
     if (!comercialId) return;
     setCargando(true);
-    const { data } = await supabase
+    setError(null);
+    const { data, error } = await supabase
       .from('comercial_proveedor')
       .select('*')
       .eq('comercial_id', comercialId);
     setCargando(false);
+    if (error) {
+      setError(error.message);
+      return;
+    }
     setAsignaciones((data ?? []) as ComercialProveedor[]);
   }, [comercialId]);
 
@@ -249,5 +255,5 @@ export function useAsignacionesProveedores(comercialId: string | undefined) {
     [comercialId]
   );
 
-  return { asignaciones, cargando, recargar, asignar, desasignar, habilitar };
+  return { asignaciones, cargando, error, recargar, asignar, desasignar, habilitar };
 }

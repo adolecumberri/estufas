@@ -79,6 +79,7 @@ export interface Pedido {
   observaciones: string | null;
   moneda: string;
   proveedor_id: string | null;
+  proveedor?: { nombre: string } | null;
   pedido_lineas?: LineaPedido[];
   cliente?: PerfilUsuario;
 }

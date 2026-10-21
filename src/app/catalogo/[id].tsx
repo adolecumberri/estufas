@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ChevronLeft, Minus, Plus } from 'lucide-react-native';
+import { ChevronLeft, Minus, Plus, X } from 'lucide-react-native';
 import * as React from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -24,7 +24,7 @@ export default function ProductoDetalle() {
   const origen = origenParam ?? 'Catálogo';
   const insets = useSafeAreaInsets();
   const { session } = useAuth();
-  const { clienteObjetivoId, anadir } = useSolicitud();
+  const { clienteObjetivoId, anadir, aviso, limpiarAviso } = useSolicitud();
   const { producto, cargando, error } = useProducto(id, clienteObjetivoId);
   const colores = useColoresIcono();
 
@@ -106,6 +106,22 @@ export default function ProductoDetalle() {
           </Pressable>
           <Text className="flex-1 font-medium">{origen}</Text>
         </View>
+
+        {/* Aviso global del carrito (p. ej. no mezclar proveedores): mismo
+            banner que en /solicitud y el catálogo, para que el rechazo al
+            añadir se vea también desde la ficha. */}
+        {aviso && (
+          <View className="mx-4 mt-2 flex-row items-start gap-2 rounded-[10px] border border-primary/40 bg-primary/10 p-3">
+            <Text className="flex-1 text-sm">{aviso}</Text>
+            <Pressable
+              onPress={limpiarAviso}
+              className="rounded-md p-0.5 active:bg-accent"
+              accessibilityLabel="Cerrar aviso"
+            >
+              <X size={16} color={colores.tenue} />
+            </Pressable>
+          </View>
+        )}
 
         {/* 2. Nombre */}
         <View className="p-4 pb-2">

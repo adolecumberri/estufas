@@ -60,12 +60,16 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
   const claveActiva = clienteObjetivoId ?? CLAVE_PROPIA;
   const lineas = carritos[claveActiva] ?? [];
 
-  // Proveedor del carrito activo: se DERIVA de la primera línea del cubo.
-  // Un pedido no puede mezclar proveedores, así que con la primera basta.
+  // Proveedor del carrito activo: se DERIVA de CUALQUIER línea con proveedor
+  // del cubo (no solo de la primera: los borradores antiguos pueden empezar
+  // con líneas sin proveedor). Un pedido no puede mezclar proveedores, así
+  // que una sola línea con proveedor define el proveedor efectivo.
   const proveedorDelCarrito = React.useMemo(() => {
-    const primera = lineas[0];
-    if (!primera?.proveedor_id) return null;
-    return { id: primera.proveedor_id, nombre: primera.proveedor_nombre ?? 'Proveedor' };
+    const lineaConProveedor = lineas.find(
+      (l): l is LineaSolicitud & { proveedor_id: string } => Boolean(l.proveedor_id)
+    );
+    if (!lineaConProveedor) return null;
+    return { id: lineaConProveedor.proveedor_id, nombre: lineaConProveedor.proveedor_nombre ?? 'Proveedor' };
   }, [lineas]);
 
   // Aviso global del carrito (p. ej. "no mezclar proveedores"). Se auto-limpia
@@ -188,20 +192,21 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
         lecturaFallida.current = false;
         setHidratado(true);
       }
-      // Proveedor único por carrito: si el cubo activo ya tiene líneas de OTRO
-      // proveedor, la adición se rechaza y se muestra un aviso visible (el
-      // servidor valida la misma regla al crear el pedido). Si el cubo está
-      // vacío, el proveedor coincide o la línea no trae proveedor, se añade
-      // con normalidad y se limpia cualquier aviso previo.
-      const primera = lineas[0];
+      // Proveedor único por carrito: si CUALQUIER línea del cubo activo tiene
+      // proveedor y la nueva trae OTRO proveedor, la adición se rechaza y se
+      // muestra un aviso visible (el servidor valida la misma regla al crear
+      // el pedido). Casos permitidos: cubo vacío, nueva línea sin proveedor
+      // (no desempareja), o proveedor coincidente → se añade y se limpia el
+      // aviso previo.
+      const lineaConProveedor = lineas.find((l) => Boolean(l.proveedor_id));
       if (
-        primera?.proveedor_id &&
+        lineaConProveedor?.proveedor_id &&
         linea.proveedor_id &&
-        linea.proveedor_id !== primera.proveedor_id
+        linea.proveedor_id !== lineaConProveedor.proveedor_id
       ) {
         mostrarAviso(
           `No puedes mezclar proveedores en un pedido (carrito actual: ${
-            primera.proveedor_nombre ?? 'Proveedor'
+            lineaConProveedor.proveedor_nombre ?? 'Proveedor'
           }). Vacía el carrito o crea un pedido para este cliente.`
         );
         return;
