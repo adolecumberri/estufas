@@ -110,13 +110,16 @@ export function useCatalogo(clienteId?: string | null) {
   // siempre y actualiza estado + caché al llegar.
   React.useEffect(() => {
     let cancelado = false;
+    // Si la red responde antes que la caché, la caché NO debe pisar los
+    // datos frescos (carrera caché-vs-red).
+    let aplicadoRed = false;
     setError(null);
 
     const clave = claveProductos(clienteId, busqueda, combustible, categoria, marca, pagina);
 
     void (async () => {
       const enCache = await cacheLeer<ProductoCatalogo[]>(clave);
-      if (cancelado) return;
+      if (cancelado || aplicadoRed) return;
       if (enCache) {
         setProductos(enCache);
         setCargando(false);
@@ -146,6 +149,7 @@ export function useCatalogo(clienteId?: string | null) {
         const filas = (data ?? []) as ProductoCatalogo[];
         setHayMas(filas.length > PAGINACION.catalogo);
         const paginaFilas = filas.slice(0, PAGINACION.catalogo);
+        aplicadoRed = true;
         setProductos(paginaFilas);
         setCargando(false);
         void cacheEscribir(clave, paginaFilas);

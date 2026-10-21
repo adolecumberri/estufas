@@ -78,8 +78,9 @@ export default function ClienteDetalle() {
   };
 
   const guardarCombustible = async (combustible: CombustibleId, valor: string) => {
-    const pct = Number(valor.replace(',', '.'));
-    if (Number.isNaN(pct) || pct < 0 || pct > 100) {
+    const texto = valor.trim().replace(',', '.');
+    const pct = Number(texto);
+    if (texto === '' || Number.isNaN(pct) || pct < 0 || pct > 100) {
       setMensaje('Porcentaje inválido (0-100).');
       return;
     }

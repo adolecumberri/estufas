@@ -18,6 +18,9 @@ export function useProducto(id: string | undefined, clienteId?: string | null) {
       return;
     }
     let cancelado = false;
+    // Si la red responde antes que la caché, la caché NO debe pisar la ficha
+    // fresca (carrera caché-vs-red).
+    let aplicadoRed = false;
     setError(null);
 
     // Caché (stale-while-revalidate): si hay ficha guardada se pinta al
@@ -25,7 +28,7 @@ export function useProducto(id: string | undefined, clienteId?: string | null) {
     // plano. Sin caché, se mantiene el comportamiento actual (spinner).
     void (async () => {
       const enCache = await cacheLeer<ProductoDetalle>(claveProducto(id));
-      if (cancelado) return;
+      if (cancelado || aplicadoRed) return;
       if (enCache) {
         setProducto(enCache);
         setCargando(false);
@@ -46,6 +49,7 @@ export function useProducto(id: string | undefined, clienteId?: string | null) {
         return;
       }
       const fila = (data ?? [])[0] as ProductoDetalle | undefined;
+      aplicadoRed = true;
       setProducto(fila ?? null);
       setCargando(false);
       if (fila) void cacheEscribir(claveProducto(id), fila);

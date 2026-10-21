@@ -14,8 +14,9 @@ export async function cacheLeer<T>(clave: string): Promise<T | null> {
   try {
     const raw = await AsyncStorage.getItem(clave);
     if (!raw) return null;
-    const e = JSON.parse(raw) as EntradaCache;
-    return e.dato as T;
+    const e: unknown = JSON.parse(raw);
+    if (typeof e !== 'object' || e === null || Array.isArray(e) || !('dato' in e)) return null;
+    return (e as EntradaCache).dato as T;
   } catch {
     return null;
   }

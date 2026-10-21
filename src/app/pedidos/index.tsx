@@ -1,6 +1,6 @@
-import { Redirect, router } from 'expo-router';
+import { Redirect, router, useFocusEffect } from 'expo-router';
 import { LogOut } from 'lucide-react-native';
-import * as React from 'react';
+import { useCallback, useRef } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -20,9 +20,22 @@ import { useColoresIcono } from '@/lib/theme';
 export default function Pedidos() {
   const insets = useSafeAreaInsets();
   const { session, perfil, cerrarSesion } = useAuth();
-  const { pedidos, cargando: cargandoPedidos, error: errorPedidos } = usePedidos();
+  const { pedidos, cargando: cargandoPedidos, error: errorPedidos, recargar } = usePedidos();
   const { clientes } = useCartera();
   const colores = useColoresIcono();
+
+  // La primera carga ya la hace el hook al montar; en los siguientes enfoques
+  // se refresca (la lista de pendientes queda al día al volver de confirmar).
+  const primerEnfoque = useRef(true);
+  useFocusEffect(
+    useCallback(() => {
+      if (primerEnfoque.current) {
+        primerEnfoque.current = false;
+        return;
+      }
+      void recargar();
+    }, [recargar])
+  );
 
   if (!session) return <Redirect href="/acceso" />;
 

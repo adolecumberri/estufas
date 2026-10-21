@@ -47,25 +47,42 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
   const claveActiva = clienteObjetivoId ?? CLAVE_PROPIA;
   const lineas = carritos[claveActiva] ?? [];
 
+  // La clave legada solo se elimina después de la primera escritura exitosa
+  // del formato nuevo (si el arranque se interrumpe, el dato no se pierde).
+  const legadoPendiente = React.useRef(false);
+
   // Hidratación desde el almacenamiento. Si existe el formato nuevo
-  // (carritos por cliente) se usa; si solo existe el dato legado
-  // (STORAGE_KEYS.solicitud, carrito plano) se migra al cubo propio.
+  // (carritos por cliente) se usa, saneando la forma persistida; si solo
+  // existe el dato legado (STORAGE_KEYS.solicitud, carrito plano) se migra
+  // al cubo propio.
   React.useEffect(() => {
     void (async () => {
       try {
         const guardado = await AsyncStorage.getItem(STORAGE_KEYS.carritos);
         if (guardado) {
-          const datos = JSON.parse(guardado) as Partial<EstadoPersistido>;
-          setCarritos(datos.carritos ?? {});
-          setClienteObjetivoId(datos.clienteObjetivoId ?? null);
+          const datos: unknown = JSON.parse(guardado);
+          const esObjeto = typeof datos === 'object' && datos !== null && !Array.isArray(datos);
+          const crudos = esObjeto ? (datos as { carritos?: unknown }).carritos : null;
+          // Solo se conservan los cubos cuyo valor es un array de líneas.
+          const saneados: Record<string, LineaSolicitud[]> = {};
+          if (typeof crudos === 'object' && crudos !== null && !Array.isArray(crudos)) {
+            for (const [cubo, lineas] of Object.entries(crudos)) {
+              if (Array.isArray(lineas)) saneados[cubo] = lineas;
+            }
+          }
+          setCarritos(saneados);
+          const idObjetivo = esObjeto
+            ? (datos as { clienteObjetivoId?: unknown }).clienteObjetivoId
+            : null;
+          setClienteObjetivoId(typeof idObjetivo === 'string' ? idObjetivo : null);
         } else {
           const legado = await AsyncStorage.getItem(STORAGE_KEYS.solicitud);
           if (legado) {
-            const lineasLegado = JSON.parse(legado) as LineaSolicitud[];
-            if (Array.isArray(lineasLegado)) {
-              setCarritos({ [CLAVE_PROPIA]: lineasLegado });
+            const parseado: unknown = JSON.parse(legado);
+            if (Array.isArray(parseado)) {
+              setCarritos({ [CLAVE_PROPIA]: parseado });
+              legadoPendiente.current = true;
             }
-            await AsyncStorage.removeItem(STORAGE_KEYS.solicitud);
           }
         }
       } catch {
@@ -78,10 +95,22 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
   // Persistencia en cada cambio (todos los cubos + cliente activo).
   React.useEffect(() => {
     if (!hidratado) return;
-    void AsyncStorage.setItem(
-      STORAGE_KEYS.carritos,
-      JSON.stringify({ carritos, clienteObjetivoId } satisfies EstadoPersistido)
-    );
+    void (async () => {
+      try {
+        await AsyncStorage.setItem(
+          STORAGE_KEYS.carritos,
+          JSON.stringify({ carritos, clienteObjetivoId } satisfies EstadoPersistido)
+        );
+        // Tras la primera escritura exitosa del formato nuevo se retira la
+        // clave legada (una única vez).
+        if (legadoPendiente.current) {
+          legadoPendiente.current = false;
+          await AsyncStorage.removeItem(STORAGE_KEYS.solicitud);
+        }
+      } catch (error) {
+        console.warn('No se pudo persistir la solicitud en el dispositivo', error);
+      }
+    })();
   }, [carritos, clienteObjetivoId, hidratado]);
 
   // Todas las mutaciones operan SOLO sobre el cubo activo (cliente

@@ -108,16 +108,35 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
+DECLARE
+    v_fila RECORD;
 BEGIN
+    IF p_combustible IS NULL OR p_combustible NOT IN ('pellets', 'lena') THEN
+        RAISE EXCEPTION 'Combustible inválido';
+    END IF;
     IF NOT (fn_es_admin() OR fn_comercial_responsable(p_cliente_id)) THEN
         RAISE EXCEPTION 'Sin permiso para modificar descuentos de este cliente';
     END IF;
 
-    UPDATE descuentos_cliente_combustible
-    SET borrado = TRUE, deleted_at = now(), deleted_by = auth.uid()
-    WHERE cliente_id = p_cliente_id
-      AND combustible = p_combustible
-      AND borrado = FALSE;
+    -- Borrado lógico con trazabilidad: una entrada de auditoría por fila
+    -- anulada, con el mismo formato que el RPC de asignar.
+    FOR v_fila IN
+        UPDATE descuentos_cliente_combustible
+        SET borrado = TRUE, deleted_at = now(), deleted_by = auth.uid()
+        WHERE cliente_id = p_cliente_id
+          AND combustible = p_combustible
+          AND borrado = FALSE
+        RETURNING id, cliente_id, descuento_porcentaje
+    LOOP
+        INSERT INTO auditoria (tabla, registro_id, accion, realizado_por, datos_anteriores, datos_nuevos)
+        VALUES ('descuentos_cliente_combustible', v_fila.id, 'DELETE', auth.uid(),
+                jsonb_build_object(
+                    'cliente_id', v_fila.cliente_id,
+                    'combustible', p_combustible,
+                    'descuento_porcentaje', v_fila.descuento_porcentaje
+                ),
+                (SELECT to_jsonb(d) FROM descuentos_cliente_combustible d WHERE id = v_fila.id));
+    END LOOP;
 END;
 $$;
 
@@ -187,6 +206,7 @@ BEGIN
               WHERE pc.producto_id = p_producto
                 AND pc.borrado = FALSE
                 AND c.combustible IS NOT NULL
+              ORDER BY c.orden, c.id
               LIMIT 1
           );
 
