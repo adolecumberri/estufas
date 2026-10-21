@@ -100,23 +100,25 @@ export function TarjetaProducto({
         <View className="h-px bg-border" />
 
         {/* Bloque central: referencia + precio y stepper */}
-        <View className="p-2.5">
-          <View className="flex-row items-baseline justify-between gap-2">
-            <View className="flex-1 flex-row items-baseline gap-1.5">
-              <Text numberOfLines={1} className="flex-1 text-xs text-muted-foreground">
-                Ref: {producto.referencia}
-              </Text>
-              {producto.descuento_pct > 0 && (
-                <Text className="text-[11px] text-muted-foreground line-through">
-                  {formatEUR(producto.precio_base)}
-                </Text>
-              )}
-            </View>
+        <View className="gap-1.5 p-2.5">
+          {/* Referencia en su propia fila (no se corta en tarjetas estrechas) */}
+          <Text numberOfLines={1} className="text-xs text-muted-foreground">
+            Ref: {producto.referencia}
+          </Text>
+
+          {/* Fila de precio con estado fiscal, con ajuste de línea */}
+          <View className="flex-row flex-wrap items-baseline gap-x-1.5">
             <Text className="text-sm font-bold">{formatEUR(producto.precio_final)}</Text>
+            {producto.descuento_pct > 0 && (
+              <Text className="text-[11px] text-muted-foreground line-through">
+                {formatEUR(producto.precio_base)}
+              </Text>
+            )}
+            <Text className="text-[10px] font-medium text-muted-foreground">Sin IVA</Text>
           </View>
 
           {/* Stepper de cantidad (cantidad que se añadirá) */}
-          <View className="mt-2 flex-row">
+          <View className="mt-1 flex-row">
             <View className="flex-row items-center justify-between rounded-[10px] border border-border bg-muted px-1 py-0.5">
               <Pressable
                 accessibilityLabel="Reducir cantidad"
