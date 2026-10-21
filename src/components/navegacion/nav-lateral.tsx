@@ -36,6 +36,10 @@ export function NavLateral({
   const { session, perfil } = useAuth();
   const colores = useColoresIcono();
 
+  // Categorías sin combustible asignado (agnósticas): se muestran siempre,
+  // independientemente de la sección de combustible seleccionada.
+  const agnosticas = categorias.filter((x) => x.combustible === null);
+
   const destinoCuenta = () => {
     if (perfil?.rol === 'admin') return RUTAS.admin;
     if (perfil?.rol === 'comercial') return RUTAS.cartera;
@@ -137,6 +141,45 @@ export function NavLateral({
                 </View>
               );
             })}
+
+            {/* Categorías agnósticas (sin combustible): se listan bajo
+                "General" y no dependen del combustible activo; el RPC filtra
+                por p_categoria de forma independiente. */}
+            {agnosticas.length > 0 && (
+              <View className="pt-1">
+                <View className="px-4 py-1.5">
+                  <View className="rounded-[10px] px-3 py-2.5">
+                    <Text className="text-sm font-semibold text-foreground">General</Text>
+                  </View>
+                </View>
+                {agnosticas.map((x) => {
+                  const activa = x.id === categoria;
+                  return (
+                    <Pressable
+                      key={x.id}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: activa }}
+                      onPress={() => {
+                        // La categoría agnóstica no depende del combustible:
+                        // solo se fija la categoría y se cierra el cajón.
+                        setCategoria(x.id);
+                        onCerrar();
+                      }}
+                      className="rounded-[8px] py-2 pl-8 pr-4 active:bg-accent"
+                    >
+                      <Text
+                        className={cn(
+                          'text-sm',
+                          activa ? 'font-medium text-primary' : 'text-muted-foreground'
+                        )}
+                      >
+                        {x.nombre}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            )}
           </ScrollView>
 
           {/* Pie del panel: acceso a la cuenta */}
