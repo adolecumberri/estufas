@@ -1,6 +1,7 @@
 import * as React from 'react';
 
 import { PAGINACION } from '@/constants';
+import { useAuth } from '@/hooks/use-auth';
 import { cacheEdad, cacheEscribir, cacheLeer } from '@/lib/cache';
 import { supabase } from '@/lib/supabase';
 import type { Categoria, Combustible, Marca, ProductoCatalogo } from '@/lib/types';
@@ -13,7 +14,11 @@ const CLAVE_CATEGORIAS = 'estufas.cache.categorias.v1';
 const CLAVE_MARCAS = 'estufas.cache.marcas.v1';
 const TTL_FILTROS_MS = 24 * 60 * 60 * 1000;
 
+// La clave de productos incluye la CUENTA autenticada: los precios se
+// personalizan por usuario en el servidor, y sin esto un visitante anónimo u
+// otro cliente podría ver precios de una cuenta previa desde la caché.
 const claveProductos = (
+  uid: string | null,
   clienteId: string | null | undefined,
   busqueda: string,
   combustible: Combustible,
@@ -21,12 +26,15 @@ const claveProductos = (
   marca: string | null,
   pagina: number
 ) =>
-  `estufas.cache.productos.v1:${clienteId ?? 'anon'}:${busqueda}|${combustible}|${categoria ?? ''}|${marca ?? ''}|${pagina}`;
+  `estufas.cache.productos.v1:${uid ?? 'anon'}:${clienteId ?? 'anon'}:${busqueda}|${combustible}|${categoria ?? ''}|${marca ?? ''}|${pagina}`;
 
 // Catálogo con búsqueda y filtros. Todas las llamadas al backend viven aquí.
 // `clienteId`: cuando un comercial crea un pedido para un cliente asignado,
 // el catálogo muestra las condiciones de ESE cliente (validado en el RPC).
 export function useCatalogo(clienteId?: string | null) {
+  const { session } = useAuth();
+  const uid = session?.user?.id ?? null;
+
   const [busqueda, setBusqueda] = React.useState('');
   const [combustible, setCombustibleState] = React.useState<Combustible>('pellets');
   const [categoria, setCategoria] = React.useState<string | null>(null);
@@ -115,7 +123,7 @@ export function useCatalogo(clienteId?: string | null) {
     let aplicadoRed = false;
     setError(null);
 
-    const clave = claveProductos(clienteId, busqueda, combustible, categoria, marca, pagina);
+    const clave = claveProductos(uid, clienteId, busqueda, combustible, categoria, marca, pagina);
 
     void (async () => {
       const enCache = await cacheLeer<ProductoCatalogo[]>(clave);
@@ -160,7 +168,7 @@ export function useCatalogo(clienteId?: string | null) {
       cancelado = true;
       clearTimeout(t);
     };
-  }, [busqueda, categoria, marca, pagina, clienteId, combustible]);
+  }, [busqueda, categoria, marca, pagina, clienteId, combustible, uid]);
 
   const limpiarFiltros = () => {
     setBusqueda('');

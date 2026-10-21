@@ -1,13 +1,20 @@
 import * as React from 'react';
 
+import { useAuth } from '@/hooks/use-auth';
 import { cacheEscribir, cacheLeer } from '@/lib/cache';
 import { supabase } from '@/lib/supabase';
 import type { ProductoDetalle } from '@/lib/types';
 
-const claveProducto = (id: string) => `estufas.cache.producto.v1:${id}`;
+// La clave incluye la cuenta (y el cliente objetivo): el precio de la ficha
+// se personaliza por usuario en el servidor.
+const claveProducto = (uid: string | null, clienteId: string | null | undefined, id: string) =>
+  `estufas.cache.producto.v1:${uid ?? 'anon'}:${clienteId ?? 'anon'}:${id}`;
 
 // Ficha de producto (RPC fn_producto_detalle: precio efectivo + características + galería).
 export function useProducto(id: string | undefined, clienteId?: string | null) {
+  const { session } = useAuth();
+  const uid = session?.user?.id ?? null;
+
   const [producto, setProducto] = React.useState<ProductoDetalle | null>(null);
   const [cargando, setCargando] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -27,7 +34,7 @@ export function useProducto(id: string | undefined, clienteId?: string | null) {
     // instante sin spinner; la red se ejecuta siempre y revalida en segundo
     // plano. Sin caché, se mantiene el comportamiento actual (spinner).
     void (async () => {
-      const enCache = await cacheLeer<ProductoDetalle>(claveProducto(id));
+      const enCache = await cacheLeer<ProductoDetalle>(claveProducto(uid, clienteId, id));
       if (cancelado || aplicadoRed) return;
       if (enCache) {
         setProducto(enCache);
@@ -52,13 +59,13 @@ export function useProducto(id: string | undefined, clienteId?: string | null) {
       aplicadoRed = true;
       setProducto(fila ?? null);
       setCargando(false);
-      if (fila) void cacheEscribir(claveProducto(id), fila);
+      if (fila) void cacheEscribir(claveProducto(uid, clienteId, id), fila);
     })();
 
     return () => {
       cancelado = true;
     };
-  }, [id, clienteId]);
+  }, [id, clienteId, uid]);
 
   return { producto, cargando, error };
 }

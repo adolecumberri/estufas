@@ -55,26 +55,35 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
   const claveActiva = clienteObjetivoId ?? CLAVE_PROPIA;
   const lineas = carritos[claveActiva] ?? [];
 
-  // La clave legada solo se elimina después de la primera escritura exitosa
-  // del formato nuevo (si el arranque se interrumpe, el dato no se pierde).
-  const legadoPendiente = React.useRef(false);
+  // Generación de hidratación: invalida lecturas asíncronas obsoletas cuando
+  // cambia la cuenta (un cambio de sesión rápido no debe restaurar el estado
+  // de la cuenta anterior). uidHidratado registra a qué cuenta corresponde el
+  // estado cargado, para que la persistencia no escriba datos ajenos.
+  const hidratacionId = React.useRef(0);
+  const uidHidratado = React.useRef<string | null>(null);
 
   // Hidratación desde el almacenamiento de LA CUENTA ACTIVA. Al cambiar de
   // usuario se parte de cubos vacíos (sin mezclar borradores entre cuentas).
-  // Si existe el formato nuevo (carritos por cliente) se usa, saneando la
-  // forma persistida; si solo existe el dato legado (STORAGE_KEYS.solicitud,
-  // carrito plano) se migra al cubo propio de esta cuenta.
+  // El dato legado plano (STORAGE_KEYS.solicitud) NO se migra automáticamente:
+  // no tiene dueño verificable y adoptarlo podría entregar un carrito ajeno a
+  // la primera cuenta que inicie sesión en un dispositivo compartido.
   React.useEffect(() => {
+    const idActual = ++hidratacionId.current;
+    const uidDeLectura = uid;
+    const claveDeLectura = claveAlmacen;
+    uidHidratado.current = null;
     setHidratado(false);
     setCarritos({});
     setClienteObjetivoId(null);
-    if (!uid || !claveAlmacen) {
+    if (!uidDeLectura || !claveDeLectura) {
+      uidHidratado.current = uidDeLectura;
       setHidratado(true);
       return;
     }
     void (async () => {
       try {
-        const guardado = await AsyncStorage.getItem(claveAlmacen);
+        const guardado = await AsyncStorage.getItem(claveDeLectura);
+        if (idActual !== hidratacionId.current) return;
         if (guardado) {
           const datos: unknown = JSON.parse(guardado);
           const esObjeto = typeof datos === 'object' && datos !== null && !Array.isArray(datos);
@@ -91,44 +100,33 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
             ? (datos as { clienteObjetivoId?: unknown }).clienteObjetivoId
             : null;
           setClienteObjetivoId(typeof idObjetivo === 'string' ? idObjetivo : null);
-        } else {
-          const legado = await AsyncStorage.getItem(STORAGE_KEYS.solicitud);
-          if (legado) {
-            const parseado: unknown = JSON.parse(legado);
-            if (Array.isArray(parseado)) {
-              setCarritos({ [CLAVE_PROPIA]: parseado });
-              legadoPendiente.current = true;
-            }
-          }
         }
       } catch {
         // almacenamiento no disponible: se empieza con los cubos vacíos
       }
+      if (idActual !== hidratacionId.current) return;
+      uidHidratado.current = uidDeLectura;
       setHidratado(true);
     })();
   }, [uid, claveAlmacen]);
 
   // Persistencia en cada cambio (todos los cubos + cliente activo) en la
-  // clave de la cuenta activa.
+  // clave de la cuenta activa. Solo escribe cuando el estado hidratado
+  // pertenece a la cuenta actual (evita guardar el carrito de la cuenta
+  // anterior bajo la clave de la nueva).
   React.useEffect(() => {
-    if (!hidratado || !claveAlmacen) return;
+    if (!hidratado || !claveAlmacen || uidHidratado.current !== uid) return;
     void (async () => {
       try {
         await AsyncStorage.setItem(
           claveAlmacen,
           JSON.stringify({ carritos, clienteObjetivoId } satisfies EstadoPersistido)
         );
-        // Tras la primera escritura exitosa del formato nuevo se retira la
-        // clave legada (una única vez).
-        if (legadoPendiente.current) {
-          legadoPendiente.current = false;
-          await AsyncStorage.removeItem(STORAGE_KEYS.solicitud);
-        }
       } catch (error) {
         console.warn('No se pudo persistir la solicitud en el dispositivo', error);
       }
     })();
-  }, [carritos, clienteObjetivoId, hidratado, claveAlmacen]);
+  }, [carritos, clienteObjetivoId, hidratado, claveAlmacen, uid]);
 
   // Todas las mutaciones operan SOLO sobre el cubo activo (cliente
   // seleccionado o carrito propio), nunca sobre los demás borradores.
