@@ -42,6 +42,19 @@ INSERT INTO auth.users (
  '{"rol":"cliente","tipo_cliente":"empresa","nombre":"Contacto","apellidos":"Empresa","razon_social":"Calor Hogar S.L.","nif_cif":"B12345678"}', '', '', '', '')
 ON CONFLICT (id) DO NOTHING;
 
+-- Con la migración 0010 el trigger de registro SIEMPRE crea perfiles 'cliente'
+-- (el rol de los metadatos se ignora por seguridad). Los perfiles elevados del
+-- seed se ascienden aquí explícitamente, como hace el flujo de administración.
+INSERT INTO usuarios (id, nombre, apellidos, email, rol, tipo_cliente, pais_facturacion)
+VALUES
+('11111111-1111-4111-8111-111111111111', 'Administrador', NULL,
+ 'admin@estufas.local', 'admin', NULL, 'ES'),
+('22222222-2222-4222-8222-222222222222', 'Comercial', 'Prueba',
+ 'comercial@estufas.local', 'comercial', NULL, 'ES')
+ON CONFLICT (id) DO UPDATE
+SET rol = EXCLUDED.rol,
+    tipo_cliente = EXCLUDED.tipo_cliente;
+
 INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at)
 SELECT
     gen_random_uuid(),

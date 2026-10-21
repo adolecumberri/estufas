@@ -270,18 +270,15 @@ BEGIN
         p.proveedor_id,
         pr.nombre,
         p.datos,
-        (
-            SELECT COALESCE(
-                jsonb_build_object(
+        COALESCE((
+            SELECT jsonb_build_object(
                     'camion',     to_jsonb(pt.camion),
                     'palet',      to_jsonb(pt.palet),
                     'franquicia', to_jsonb(pt.franquicia)
-                ),
-                '{}'::jsonb
-            )
-            FROM v_precios_transporte pt
-            WHERE pt.producto_id = v.producto_id
-        )
+                )
+                FROM v_precios_transporte pt
+                WHERE pt.producto_id = v.producto_id
+            ), '{}'::jsonb)
     FROM v_productos_precio_vigente v
     JOIN productos p ON p.id = v.producto_id
     LEFT JOIN marcas m ON m.id = p.marca_id
@@ -401,18 +398,15 @@ BEGIN
         (SELECT r.url FROM recursos r WHERE r.id = v.imagen_principal_id),
         p.proveedor_id,
         pr.nombre,
-        (
-            SELECT COALESCE(
-                jsonb_build_object(
+        COALESCE((
+            SELECT jsonb_build_object(
                     'camion',     to_jsonb(pt.camion),
                     'palet',      to_jsonb(pt.palet),
                     'franquicia', to_jsonb(pt.franquicia)
-                ),
-                '{}'::jsonb
-            )
-            FROM v_precios_transporte pt
-            WHERE pt.producto_id = v.producto_id
-        )
+                )
+                FROM v_precios_transporte pt
+                WHERE pt.producto_id = v.producto_id
+            ), '{}'::jsonb)
     FROM v_productos_precio_vigente v
     JOIN productos p ON p.id = v.producto_id
     LEFT JOIN marcas m ON m.id = p.marca_id

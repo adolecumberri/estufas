@@ -20,7 +20,7 @@ import type { PerfilUsuario, Proveedor } from '@/lib/types';
 // componente propio, así que puede llamar al hook de asignaciones (una
 // instancia por comercial) sin romper las reglas de hooks.
 function FilaComercial({ comercial, proveedorId }: { comercial: PerfilUsuario; proveedorId: string }) {
-  const { asignaciones, cargando, recargar, asignar, desasignar, habilitar } =
+  const { asignaciones, cargando, error: errorCarga, recargar, asignar, desasignar, habilitar } =
     useAsignacionesProveedores(comercial.id);
   const [errorAccion, setErrorAccion] = React.useState<string | null>(null);
 
@@ -50,6 +50,8 @@ function FilaComercial({ comercial, proveedorId }: { comercial: PerfilUsuario; p
         </View>
         {cargando ? (
           <ActivityIndicator size="small" color="hsl(24.6 95% 53.1%)" />
+        ) : errorCarga ? (
+          <Text className="text-xs text-destructive">No se pudo cargar la asignación</Text>
         ) : asignacion ? (
           <View className="flex-row items-center gap-2">
             <Pressable
@@ -147,11 +149,14 @@ export default function AdminProveedores() {
       setMensaje('El nombre no puede quedar vacío.');
       return;
     }
+    // Los campos opcionales se envían tal cual (recortados): una cadena vacía
+    // significa "limpiar el campo" en el servidor (actualizar_proveedor usa
+    // NULLIF(btrim(...))), mientras que null significaría "sin cambios".
     const { error } = await actualizarProveedor(id, {
       nombre: nombreTrim,
-      nif: editNif.trim() || null,
-      email: editEmail.trim() || null,
-      telefono: editTelefono.trim() || null,
+      nif: editNif.trim(),
+      email: editEmail.trim(),
+      telefono: editTelefono.trim(),
     });
     setMensaje(error ?? 'Proveedor actualizado.');
     if (!error) {

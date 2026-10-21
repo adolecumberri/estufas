@@ -182,11 +182,13 @@ BEGIN
 
     SELECT to_jsonb(p) INTO v_antes FROM proveedores p WHERE id = p_proveedor;
 
+    -- NULL = sin cambio; cadena vacía = limpiar el campo (el nombre no puede
+    -- vaciarse, ya validado, y mantiene COALESCE).
     UPDATE proveedores
     SET nombre    = COALESCE(p_nombre, nombre),
-        nif       = COALESCE(p_nif, nif),
-        email     = COALESCE(p_email, email),
-        telefono  = COALESCE(p_telefono, telefono),
+        nif       = CASE WHEN p_nif IS NULL THEN nif ELSE NULLIF(btrim(p_nif), '') END,
+        email     = CASE WHEN p_email IS NULL THEN email ELSE NULLIF(btrim(p_email), '') END,
+        telefono  = CASE WHEN p_telefono IS NULL THEN telefono ELSE NULLIF(btrim(p_telefono), '') END,
         activo    = COALESCE(p_activo, activo)
     WHERE id = p_proveedor;
 
@@ -625,6 +627,8 @@ BEGIN
     WHERE v.producto_id = p_producto;
 END;
 $$;
+
+GRANT EXECUTE ON FUNCTION fn_producto_detalle(UUID, UUID) TO anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- 9. Crear pedido: sin mezcla de proveedores y con el proveedor habilitado
