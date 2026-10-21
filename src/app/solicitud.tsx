@@ -160,7 +160,14 @@ export default function Solicitud() {
                         {l.nombre}
                       </Text>
                       <Text className="text-xs text-muted-foreground">{l.referencia}</Text>
-                      <Text className="text-sm font-semibold">{formatEUR(l.precio_final)}</Text>
+                      <View className="flex-row flex-wrap items-baseline gap-x-1.5">
+                        <Text className="text-sm font-semibold">{formatEUR(l.precio_final)}</Text>
+                        {l.descuento_pct > 0 && (
+                          <Text className="text-xs text-muted-foreground line-through">
+                            {formatEUR(l.precio_base)}
+                          </Text>
+                        )}
+                      </View>
                       {l.descuento_pct > 0 && (
                         <Text className="text-xs text-muted-foreground">
                           Incluye {l.descuento_pct.toLocaleString('es-ES')}% de descuento

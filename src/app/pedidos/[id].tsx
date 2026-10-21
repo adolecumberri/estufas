@@ -142,7 +142,18 @@ export default function PedidoDetalle() {
                 </View>
                 <View className="flex-row flex-wrap items-center gap-2">
                   <Text className="text-xs text-muted-foreground">
-                    {formatEUR(l.precio_unitario)}/ud
+                    {l.descuento_porcentaje > 0 ? (
+                      <>
+                        <Text className="text-xs text-muted-foreground line-through">
+                          {formatEUR(l.precio_unitario)}/ud
+                        </Text>{' '}
+                        <Text className="text-xs font-semibold text-foreground">
+                          {formatEUR(l.total_linea / l.cantidad)}/ud
+                        </Text>
+                      </>
+                    ) : (
+                      <>{formatEUR(l.precio_unitario)}/ud</>
+                    )}
                     {l.descuento_porcentaje > 0 &&
                       ` · ${ORIGENES_DESCUENTO[l.descuento_origen].etiqueta} ${l.descuento_porcentaje}%`}
                   </Text>
