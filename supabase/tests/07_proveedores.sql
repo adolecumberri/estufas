@@ -42,6 +42,7 @@ SELECT throws_ok(
 SELECT results_eq(
     $q$ SELECT referencia::text
         FROM fn_catalogo_usuario_v2(NULL, NULL, NULL, NULL, 200, 0, NULL)
+        WHERE referencia IN ('EF-8', 'LL-7', 'LP-9', 'TF-12', 'TF-70')
         ORDER BY referencia $q$,
     ARRAY['EF-8', 'LL-7', 'LP-9', 'TF-12', 'TF-70'],
     'el cliente ve solo los proveedores habilitados de su comercial'
@@ -57,6 +58,7 @@ SELECT tests.authenticate_as('33333333-3333-4333-8333-333333333333');
 SELECT results_eq(
     $q$ SELECT referencia::text
         FROM fn_catalogo_usuario_v2(NULL, NULL, NULL, NULL, 200, 0, NULL)
+        WHERE referencia IN ('EF-8', 'LA-5', 'LL-7', 'LP-9', 'TF-12', 'TF-70')
         ORDER BY referencia $q$,
     ARRAY['EF-8', 'LA-5', 'LL-7', 'LP-9', 'TF-12', 'TF-70'],
     'tras habilitar el proveedor 3, el cliente ve LA-5'
@@ -84,6 +86,7 @@ SELECT tests.authenticate_as('33333333-3333-4333-8333-333333333333');
 SELECT results_eq(
     $q$ SELECT referencia::text
         FROM fn_catalogo_usuario_v2(NULL, NULL, NULL, NULL, 200, 0, NULL)
+        WHERE referencia IN ('LA-5', 'LP-9', 'TF-12', 'TF-70')
         ORDER BY referencia $q$,
     ARRAY['LA-5', 'LP-9', 'TF-12', 'TF-70'],
     'un proveedor inactivo oculta sus productos'

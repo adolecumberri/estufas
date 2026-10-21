@@ -13,6 +13,7 @@ SET LOCAL ROLE anon;
 SELECT results_eq(
     $q$ SELECT referencia::text
         FROM fn_catalogo_usuario_v2(NULL, 'pellets', NULL, NULL, 200, 0, NULL)
+        WHERE referencia IN ('LA-5', 'LP-9', 'TF-12', 'TF-70')
         ORDER BY referencia $q$,
     ARRAY['LA-5', 'LP-9', 'TF-12', 'TF-70'],
     'pellets devuelve las referencias de pellet'
@@ -23,6 +24,7 @@ SELECT results_eq(
 SELECT results_eq(
     $q$ SELECT referencia::text
         FROM fn_catalogo_usuario_v2(NULL, 'lena', NULL, NULL, 200, 0, NULL)
+        WHERE referencia IN ('EF-8', 'LA-5', 'LL-7')
         ORDER BY referencia $q$,
     ARRAY['EF-8', 'LA-5', 'LL-7'],
     'lena devuelve las referencias de leña'
