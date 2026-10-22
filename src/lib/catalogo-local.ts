@@ -7,6 +7,7 @@ import type {
   Categoria,
   Combustible,
   GrupoDatos,
+  ItemGaleria,
   Marca,
   ProductoCatalogo,
   ProductoDetalle,
@@ -68,6 +69,7 @@ CREATE TABLE IF NOT EXISTS productos (
   categorias_pipe TEXT NOT NULL DEFAULT '|',
   categorias_nombres TEXT NOT NULL DEFAULT '[]',
   datos TEXT NOT NULL DEFAULT '[]',
+  galeria TEXT NOT NULL DEFAULT '[]',
   busqueda_normalizado TEXT NOT NULL DEFAULT '',
   activo INTEGER NOT NULL DEFAULT 1
 );
@@ -84,6 +86,13 @@ export function inicializarBd(): void {
     bd = openDatabaseSync(NOMBRE_BD);
     bd.execSync('PRAGMA journal_mode = WAL;');
     bd.execSync(SQL_ESQUEMA);
+    // Migración defensiva: BDs creadas con el esquema anterior no tienen la
+    // columna galeria. Si ya existe, ALTER lanza y se ignora.
+    try {
+      bd.execSync("ALTER TABLE productos ADD COLUMN galeria TEXT NOT NULL DEFAULT '[]';");
+    } catch {
+      // la columna ya existe
+    }
   } catch (error) {
     bd = null;
     throw new Error(
@@ -161,8 +170,9 @@ export function reemplazarSnapshot(snapshot: SnapshotCatalogo): void {
       marca_nombre, proveedor_id, proveedor_nombre, destacado,
       etiqueta_energetica, imagen_url, plano_url, precio_base,
       precios_transporte, combustibles, combustibles_pipe, categorias,
-      categorias_pipe, categorias_nombres, datos, busqueda_normalizado, activo
-    ) VALUES (${Array.from({ length: 24 }, () => '?').join(', ')})`;
+      categorias_pipe, categorias_nombres, datos, galeria,
+      busqueda_normalizado, activo
+    ) VALUES (${Array.from({ length: 25 }, () => '?').join(', ')})`;
 
     for (const pr of snapshot.productos) {
       const nombresCategorias = pr.categorias
@@ -191,6 +201,7 @@ export function reemplazarSnapshot(snapshot: SnapshotCatalogo): void {
         aPipe(pr.categorias ?? []),
         JSON.stringify(nombresCategorias),
         JSON.stringify(pr.datos ?? []),
+        JSON.stringify(pr.galeria ?? []),
         normalizarTexto(`${pr.nombre} ${pr.referencia}`),
         pr.activo ? 1 : 0,
       ]);
@@ -221,7 +232,14 @@ export async function sincronizarCatalogo(): Promise<{ version: number; desdeRed
       throw new Error('No se pudo descargar el catálogo.');
     }
     const snapshot = datos as unknown as SnapshotCatalogo;
-    reemplazarSnapshot(snapshot);
+    try {
+      reemplazarSnapshot(snapshot);
+    } catch {
+      // La transacción hace rollback y el catálogo viejo sigue intacto: se
+      // sirve el local (offline). Sin copia local no hay nada que servir.
+      if (local !== null) return { version: local, desdeRed: false };
+      throw new Error('No se pudo guardar el catálogo local.');
+    }
     return { version: snapshot.version, desdeRed: true };
   }
   return { version: local, desdeRed: false };
@@ -249,6 +267,7 @@ export interface FilaProductoLocal {
   categorias: string;
   categorias_nombres: string;
   datos: string;
+  galeria: string;
   activo: number;
 }
 
@@ -379,9 +398,10 @@ export function filaAProductoCatalogo(fila: FilaProductoLocal, reglas: ReglasCue
   };
 }
 
-// Fila local → ProductoDetalle. El snapshot no trae galería ni características
-// (vienen vacías); las características se reconstruyen desde `datos` para que
-// la ficha siga mostrando los datos técnicos con el render actual.
+// Fila local → ProductoDetalle. El snapshot no trae características (se
+// reconstruyen desde `datos` para que la ficha siga mostrando los datos
+// técnicos); la galería sí llega en el snapshot (misma forma que
+// fn_producto_detalle) y se devuelve tal cual.
 export function filaAProductoDetalle(fila: FilaProductoLocal, reglas: ReglasCuenta | null): ProductoDetalle {
   const base = filaAProductoCatalogo(fila, reglas);
   const datos = parseJson<GrupoDatos[]>(fila.datos) ?? [];
@@ -395,5 +415,15 @@ export function filaAProductoDetalle(fila: FilaProductoLocal, reglas: ReglasCuen
       valor: f.valor ?? '',
     }))
   );
-  return { ...base, plano_url: fila.plano_url, caracteristicas, galeria: [], datos };
+  const crudas =
+    parseJson<{ url: string; alt: string | null; tipo: string | null; orden: number | null }[]>(
+      fila.galeria
+    ) ?? [];
+  const galeria: ItemGaleria[] = crudas.map((g) => ({
+    url: g.url,
+    alt: g.alt ?? null,
+    tipo: g.tipo ?? '',
+    orden: g.orden ?? 0,
+  }));
+  return { ...base, plano_url: fila.plano_url, caracteristicas, galeria, datos };
 }

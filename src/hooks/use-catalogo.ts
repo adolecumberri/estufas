@@ -134,8 +134,15 @@ export function useCatalogo(clienteId?: string | null) {
           return;
         }
         if (cancelado) return;
-        setCategorias(obtenerCategorias());
-        setMarcas(obtenerMarcas());
+        try {
+          setCategorias(obtenerCategorias());
+          setMarcas(obtenerMarcas());
+        } catch (e) {
+          if (cancelado) return;
+          setError(e instanceof Error ? e.message : 'No se pudo leer el catálogo local.');
+          setCargando(false);
+          return;
+        }
         setDatosBase({ modoLocal: true, reglas });
         return;
       }
@@ -198,21 +205,30 @@ export function useCatalogo(clienteId?: string | null) {
     if (datosBase.modoLocal) {
       const t = setTimeout(() => {
         if (cancelado) return;
-        const visibles = proveedoresVisibles(uid, perfil?.rol === 'admin', clienteId, datosBase.reglas);
-        const { filas, hayMas: mas } = consultarCatalogo({
-          busqueda,
-          combustible: busqueda.trim() ? null : combustible,
-          categoria,
-          marca,
-          pagina,
-          limite: PAGINACION.catalogo,
-          proveedoresVisibles: visibles,
-        });
-        if (cancelado) return;
-        setProductos(filas.map((f) => filaAProductoCatalogo(f, datosBase.reglas)));
-        setHayMas(mas);
-        setClaveMostrada(clave);
-        setCargando(false);
+        try {
+          const visibles = proveedoresVisibles(uid, perfil?.rol === 'admin', clienteId, datosBase.reglas);
+          const { filas, hayMas: mas } = consultarCatalogo({
+            busqueda,
+            combustible: busqueda.trim() ? null : combustible,
+            categoria,
+            marca,
+            pagina,
+            limite: PAGINACION.catalogo,
+            proveedoresVisibles: visibles,
+          });
+          if (cancelado) return;
+          setProductos(filas.map((f) => filaAProductoCatalogo(f, datosBase.reglas)));
+          setHayMas(mas);
+        } catch (e) {
+          if (cancelado) return;
+          setError(e instanceof Error ? e.message : 'No se pudo consultar el catálogo local.');
+          setProductos([]);
+        } finally {
+          if (!cancelado) {
+            setClaveMostrada(clave);
+            setCargando(false);
+          }
+        }
       }, DEBOUNCE_MS);
 
       return () => {

@@ -31,7 +31,11 @@ STABLE
 SECURITY DEFINER
 SET search_path = public
 AS $$
-    SELECT version FROM catalogo_version WHERE id = 1;
+    -- Clave de frescura diaria: los precios vigentes dependen de la fecha de
+    -- negocio (fn_hoy/fecha_fin), así que la versión efectiva incluye los
+    -- días desde epoch para invalidar cachés al cambiar de día.
+    SELECT version + (SELECT (EXTRACT(EPOCH FROM now())::bigint / 86400)::int)
+    FROM catalogo_version WHERE id = 1;
 $$;
 
 GRANT EXECUTE ON FUNCTION fn_catalogo_version() TO anon, authenticated;
@@ -47,7 +51,8 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 SELECT jsonb_build_object(
-    'version', (SELECT version FROM catalogo_version WHERE id = 1),
+    'version', (SELECT version + (SELECT (EXTRACT(EPOCH FROM now())::bigint / 86400)::int)
+                FROM catalogo_version WHERE id = 1),
     'categorias', (
         SELECT COALESCE(jsonb_agg(
             jsonb_build_object(
@@ -122,7 +127,19 @@ SELECT jsonb_build_object(
                         JOIN categorias c ON c.id = pc.categoria_id AND c.borrado = FALSE
                         WHERE pc.producto_id = v.producto_id AND pc.borrado = FALSE
                     ),
-                    'datos', p.datos
+                    'datos', p.datos,
+                    'galeria', (
+                        SELECT COALESCE(jsonb_agg(
+                            jsonb_build_object(
+                                'url', r.url, 'alt', r.texto_alternativo,
+                                'tipo', pr.tipo_en_producto, 'orden', pr.orden
+                            ) ORDER BY pr.orden
+                        ), '[]'::jsonb)
+                        FROM producto_recurso pr
+                        JOIN recursos r ON r.id = pr.recurso_id
+                        WHERE pr.producto_id = v.producto_id
+                          AND pr.borrado = FALSE AND r.borrado = FALSE
+                    )
                 ) AS prod_obj,
                 p.destacado AS ord1,
                 v.nombre    AS ord2
@@ -289,4 +306,10 @@ FOR EACH STATEMENT EXECUTE FUNCTION fn_bump_catalogo_version();
 DROP TRIGGER IF EXISTS trg_catalogo_version_proveedores ON proveedores;
 CREATE TRIGGER trg_catalogo_version_proveedores
 AFTER INSERT OR UPDATE OR DELETE ON proveedores
+FOR EACH STATEMENT EXECUTE FUNCTION fn_bump_catalogo_version();
+
+-- Las URLs de imagen/plano del snapshot salen de recursos: también versiona.
+DROP TRIGGER IF EXISTS trg_catalogo_version_recursos ON recursos;
+CREATE TRIGGER trg_catalogo_version_recursos
+AFTER INSERT OR UPDATE OR DELETE ON recursos
 FOR EACH STATEMENT EXECUTE FUNCTION fn_bump_catalogo_version();

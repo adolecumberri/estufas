@@ -236,6 +236,9 @@ export interface ProductoSnapshot {
   categorias: string[];
   // Datos técnicos flexibles (JSONB productos.datos).
   datos: GrupoDatos[];
+  // Galería (misma forma que fn_producto_detalle). Opcional: los snapshots
+  // de la versión anterior no la traían.
+  galeria?: { url: string; alt: string | null; tipo: string | null; orden: number | null }[];
 }
 
 export interface SnapshotCatalogo {

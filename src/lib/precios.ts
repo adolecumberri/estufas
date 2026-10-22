@@ -137,12 +137,17 @@ export function aplicarReglas(
 }
 
 // Precio final replicando round(precio_base * (1 - pct/100), 2) del servidor.
+// El cálculo se hace en enteros (céntimos y puntos básicos) para evitar
+// desviaciones de 1 céntimo del redondeo en coma flotante frente al tipo
+// numeric de Postgres.
 export function calcularPrecioFinal(
   precio_base: number,
   reglas: ReglasCuenta | null,
   producto: ProductoParaPrecio
 ): ResultadoPrecio {
   const { descuento_pct, descuento_origen } = aplicarReglas(reglas, producto);
-  const precio_final = Math.round(precio_base * (1 - descuento_pct / 100) * 100) / 100;
+  const centimos = Math.round(precio_base * 100);
+  const puntosBase = Math.round(descuento_pct * 100);
+  const precio_final = Math.round((centimos * (10000 - puntosBase)) / 10000) / 100;
   return { precio_final, descuento_pct, descuento_origen };
 }

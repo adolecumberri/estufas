@@ -63,34 +63,37 @@ export function useProducto(id: string | undefined, clienteId?: string | null) {
       }
 
       if (modoLocal) {
+        // Cualquier fallo del camino local (BD corrupta, fila inválida, red
+        // caída sin snapshot) NO marca error: se continúa con el fallback de
+        // red documentado (fn_producto_detalle + caché), que ya informa del
+        // error si la red tampoco responde.
         try {
           await sincronizarCatalogo();
-        } catch {
-          // Sin snapshot local y sin red: se intenta el camino de red, que
-          // dará el mismo error si la red sigue caída.
-        }
-        if (cancelado) return;
-        const reglas: ReglasCuenta | null = await obtenerReglasCuenta(uid, clienteId);
-        const fila = obtenerProducto(id);
-        if (fila) {
-          const visible =
-            fila.proveedor_id === null ||
-            !uid ||
-            (perfil?.rol === 'admin' && !clienteId) ||
-            (reglas !== null && reglas.proveedores_habilitados.includes(fila.proveedor_id));
-          if (!visible) {
+          if (cancelado) return;
+          const reglas: ReglasCuenta | null = await obtenerReglasCuenta(uid, clienteId);
+          const fila = obtenerProducto(id);
+          if (fila) {
+            const visible =
+              fila.proveedor_id === null ||
+              !uid ||
+              (perfil?.rol === 'admin' && !clienteId) ||
+              (reglas !== null && reglas.proveedores_habilitados.includes(fila.proveedor_id));
+            if (!visible) {
+              if (cancelado) return;
+              setProducto(null);
+              setClaveMostrada(claveDeLectura);
+              setCargando(false);
+              setError('Producto no disponible');
+              return;
+            }
             if (cancelado) return;
-            setProducto(null);
+            setProducto(filaAProductoDetalle(fila, reglas));
             setClaveMostrada(claveDeLectura);
             setCargando(false);
-            setError('Producto no disponible');
             return;
           }
-          if (cancelado) return;
-          setProducto(filaAProductoDetalle(fila, reglas));
-          setClaveMostrada(claveDeLectura);
-          setCargando(false);
-          return;
+        } catch {
+          // se continúa con el camino de red
         }
       }
 
