@@ -185,25 +185,22 @@ VALUES
 
 -- ---------------------------------------------------------------------------
 -- Proveedores (multi-empresa) y asociaciones producto → proveedor.
--- (Prefijo "91..." porque los UUID solo admiten hex; p1000000 no es válido.)
--- El comercial 2222 tiene habilitados los proveedores 1 y 2; el 3 NO: LA-5
--- queda oculto para sus clientes hasta que el admin lo asigne/habilite.
+-- Solo quedan Eider Biomasa (004) y Fansa (005): los proveedores antiguos
+-- 001-003 se eliminaron (la migración 0014 los migra en BD viva). Las 7
+-- estufas son de Eider; el comercial de desarrollo 2222 solo tiene Eider
+-- (Fansa se asigna a 6666/7777 al final del seed). El INSERT de Eider se
+-- repite al final del seed (ON CONFLICT: re-ejecutable en BD viva).
 -- ---------------------------------------------------------------------------
-INSERT INTO proveedores (id, nombre, nif, email, telefono) VALUES
-('91000000-0000-4000-8000-000000000001', 'Estufas Norte S.L.', 'B11111111', 'norte@proveedores.local', NULL),
-('91000000-0000-4000-8000-000000000002', 'Calor Hogar S.L.',   'B22222222', NULL, NULL),
-('91000000-0000-4000-8000-000000000003', 'EcoCalor Global',    'B33333333', NULL, NULL);
+INSERT INTO proveedores (id, nombre, nif) VALUES
+('91000000-0000-4000-8000-000000000004', 'Eider Biomasa', 'B95000000')
+ON CONFLICT (id) DO NOTHING;
 
-UPDATE productos SET proveedor_id = '91000000-0000-4000-8000-000000000001'
-WHERE referencia IN ('LP-9', 'TF-12', 'TF-70', 'TF-X');
-UPDATE productos SET proveedor_id = '91000000-0000-4000-8000-000000000002'
-WHERE referencia IN ('LL-7', 'EF-8');
-UPDATE productos SET proveedor_id = '91000000-0000-4000-8000-000000000003'
-WHERE referencia = 'LA-5';
+UPDATE productos SET proveedor_id = '91000000-0000-4000-8000-000000000004'
+WHERE referencia IN ('LP-9', 'TF-12', 'LL-7', 'EF-8', 'TF-70', 'LA-5', 'TF-X');
 
-INSERT INTO comercial_proveedor (comercial_id, proveedor_id, habilitado, creado_por) VALUES
-('22222222-2222-4222-8222-222222222222', '91000000-0000-4000-8000-000000000001', TRUE, '11111111-1111-4111-8111-111111111111'),
-('22222222-2222-4222-8222-222222222222', '91000000-0000-4000-8000-000000000002', TRUE, '11111111-1111-4111-8111-111111111111');
+INSERT INTO comercial_proveedor (comercial_id, proveedor_id) VALUES
+('22222222-2222-4222-8222-222222222222', '91000000-0000-4000-8000-000000000004')
+ON CONFLICT (comercial_id, proveedor_id) DO NOTHING;
 
 -- Galerías.
 INSERT INTO producto_recurso (producto_id, recurso_id, tipo_en_producto, orden) VALUES

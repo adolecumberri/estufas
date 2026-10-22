@@ -257,3 +257,74 @@ export function useAsignacionesProveedores(comercialId: string | undefined) {
 
   return { asignaciones, cargando, error, recargar, asignar, desasignar, habilitar };
 }
+
+// Comerciales (admin): lista de comerciales y sus clientes asignados.
+export function useComerciales() {
+  const [comerciales, setComerciales] = React.useState<PerfilUsuario[]>([]);
+  const [clientesPorComercial, setClientesPorComercial] = React.useState<Record<string, PerfilUsuario[]>>({});
+  const [cargando, setCargando] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const recargar = React.useCallback(async () => {
+    setCargando(true);
+    setError(null);
+    const [resComerciales, resClientes] = await Promise.all([
+      supabase.from('usuarios').select('*').eq('rol', 'comercial').eq('borrado', false).order('nombre'),
+      supabase
+        .from('usuarios')
+        .select('*')
+        .eq('rol', 'cliente')
+        .eq('borrado', false)
+        .not('id_comercial', 'is', null)
+        .order('nombre'),
+    ]);
+    setCargando(false);
+    if (resComerciales.error || resClientes.error) {
+      setError(resComerciales.error?.message ?? resClientes.error?.message ?? null);
+      return;
+    }
+    const comerciales = (resComerciales.data ?? []) as PerfilUsuario[];
+    const clientes = (resClientes.data ?? []) as PerfilUsuario[];
+    const porComercial: Record<string, PerfilUsuario[]> = {};
+    for (const c of clientes) {
+      if (!c.id_comercial) continue;
+      (porComercial[c.id_comercial] ??= []).push(c);
+    }
+    setComerciales(comerciales);
+    setClientesPorComercial(porComercial);
+  }, []);
+
+  React.useEffect(() => {
+    void recargar();
+  }, [recargar]);
+
+  return { comerciales, clientesPorComercial, cargando, error, recargar };
+}
+
+// Crear comercial (admin) vía RPC crear_comercial.
+export function useCrearComercial() {
+  const [cargando, setCargando] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const crearComercial = React.useCallback(
+    async (datos: { email: string; password: string; nombre: string; apellidos?: string | null }) => {
+      setCargando(true);
+      setError(null);
+      const { error } = await supabase.rpc('crear_comercial', {
+        p_email: datos.email,
+        p_password: datos.password,
+        p_nombre: datos.nombre,
+        p_apellidos: datos.apellidos ?? null,
+      });
+      setCargando(false);
+      if (error) {
+        setError(error.message);
+        return { error: error.message };
+      }
+      return { error: null };
+    },
+    []
+  );
+
+  return { crearComercial, cargando, error };
+}

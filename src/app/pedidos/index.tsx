@@ -3,7 +3,6 @@ import {
   Building2,
   CheckCircle2,
   ChevronRight,
-  LogOut,
   ReceiptText,
   User,
   Zap,
@@ -33,7 +32,7 @@ type Filtro = (typeof FILTROS)[number];
 export default function Pedidos() {
   const insets = useSafeAreaInsets();
   const colores = useColoresIcono();
-  const { session, perfil, cerrarSesion } = useAuth();
+  const { session, perfil } = useAuth();
   const { pedidos, cargando: cargandoPedidos, error: errorPedidos, recargar } = usePedidos();
   const { clientes } = useCartera();
   const { confirmar } = useAccionesPedido();
@@ -105,7 +104,7 @@ export default function Pedidos() {
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top + 8 }}>
-      {/* Cabecera */}
+      {/* Cabecera (el cierre de sesión vive en la navegación lateral) */}
       <View className="flex-row items-center justify-between px-4 pb-2">
         <View className="gap-0.5">
           <Text className="text-xl font-bold tracking-tight">Pedidos</Text>
@@ -113,9 +112,6 @@ export default function Pedidos() {
             {etiquetaRol ? `${etiquetaRol} · ${perfil?.email ?? ''}` : (perfil?.email ?? '')}
           </Text>
         </View>
-        <Pressable onPress={() => void cerrarSesion()} className="rounded-md p-2 active:bg-accent">
-          <LogOut size={20} color={colores.tenue} />
-        </Pressable>
       </View>
 
       <ScrollView

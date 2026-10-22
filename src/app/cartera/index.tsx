@@ -1,5 +1,4 @@
 import { Redirect, router } from 'expo-router';
-import { LogOut } from 'lucide-react-native';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -11,12 +10,10 @@ import { TIPOS_CLIENTE } from '@/constants';
 import { useAuth } from '@/hooks/use-auth';
 import { useCartera } from '@/hooks/use-comercial';
 import { formatPct } from '@/lib/format';
-import { useColoresIcono } from '@/lib/theme';
 
 export default function Cartera() {
   const insets = useSafeAreaInsets();
-  const colores = useColoresIcono();
-  const { session, perfil, cerrarSesion } = useAuth();
+  const { session, perfil } = useAuth();
   const { clientes, cargando, error } = useCartera();
 
   if (!session) return <Redirect href="/acceso" />;
@@ -28,14 +25,12 @@ export default function Cartera() {
     <>
       <ScrollView showsVerticalScrollIndicator={false} className="flex-1 bg-background" contentContainerStyle={{ paddingBottom: 96 + insets.bottom }}>
         <View style={{ paddingTop: insets.top + 8 }} className="gap-4 p-4">
+          {/* Cabecera (el cierre de sesión vive en la navegación lateral) */}
           <View className="flex-row items-center justify-between">
             <View className="gap-1">
               <Text className="text-xl font-bold tracking-tight">Cartera</Text>
               <Text className="text-xs text-muted-foreground">{perfil?.email}</Text>
             </View>
-            <Pressable onPress={() => void cerrarSesion()} className="rounded-md p-2 active:bg-accent">
-              <LogOut size={20} color={colores.tenue} />
-            </Pressable>
           </View>
 
           {cargando ? (

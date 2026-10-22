@@ -1,4 +1,4 @@
-# Estufas — Catálogo y gestión comercial (MVP)
+# Brasa y Verde — Catálogo y gestión comercial (MVP)
 
 Aplicación de catálogo de productos y gestión comercial (PRD en [`docs/PRD.md`](docs/PRD.md)) construida con:
 
@@ -43,12 +43,12 @@ npm start                   # Expo Go / emuladores
 
 ## Usuarios de desarrollo (seed)
 
-| Rol | Email | Contraseña |
-|---|---|---|
-| Administrador | `admin@estufas.local` | `Admin123!` |
-| Comercial | `comercial@estufas.local` | `Comercial123!` |
-| Cliente particular | `cliente@estufas.local` | `Cliente123!` |
-| Cliente empresa | `empresa@estufas.local` | `Empresa123!` |
+| Rol                | Email                     | Contraseña      |
+| ------------------ | ------------------------- | --------------- |
+| Administrador      | `admin@estufas.local`     | `Admin123!`     |
+| Comercial          | `comercial@estufas.local` | `Comercial123!` |
+| Cliente particular | `cliente@estufas.local`   | `Cliente123!`   |
+| Cliente empresa    | `empresa@estufas.local`   | `Empresa123!`   |
 
 El seed carga marcas, categorías, características, 7 productos (6 publicados + 1 borrador), precios, una promoción del 5% y descuentos de ejemplo. El cliente particular y la empresa están asignados al comercial de prueba; la empresa tiene 10% de descuento general y una excepción del 0% en el producto LP-9.
 

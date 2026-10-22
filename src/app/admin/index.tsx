@@ -1,5 +1,5 @@
 import { Redirect, router } from 'expo-router';
-import { Boxes, Factory, LogOut, Percent, Users } from 'lucide-react-native';
+import { Factory, Users } from 'lucide-react-native';
 import * as React from 'react';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -10,15 +10,13 @@ import { useAuth } from '@/hooks/use-auth';
 import { useColoresIcono } from '@/lib/theme';
 
 const SECCIONES = [
-  { titulo: 'Productos', descripcion: 'Publicación y precios', icono: Boxes, ruta: '/admin/productos' },
+  { titulo: 'Comerciales', descripcion: 'Comerciales, sus clientes y accesos a proveedores', icono: Users, ruta: '/admin/comerciales' },
   { titulo: 'Proveedores', descripcion: 'Catálogo multi-empresa y comerciales', icono: Factory, ruta: '/admin/proveedores' },
-  { titulo: 'Promociones', descripcion: 'Descuentos generales de tienda', icono: Percent, ruta: '/admin/promociones' },
-  { titulo: 'Usuarios', descripcion: 'Roles, comerciales y descuentos', icono: Users, ruta: '/admin/usuarios' },
 ] as const;
 
 export default function Admin() {
   const insets = useSafeAreaInsets();
-  const { session, perfil, cerrarSesion } = useAuth();
+  const { session, perfil } = useAuth();
   const colores = useColoresIcono();
 
   if (!session) return <Redirect href="/acceso" />;
@@ -26,11 +24,8 @@ export default function Admin() {
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top + 8 }}>
-      <View className="flex-row items-center justify-between px-4 pb-4">
+      <View className="px-4 pb-4">
         <Text className="text-xl font-bold tracking-tight">Administración</Text>
-        <Pressable onPress={() => void cerrarSesion()} className="rounded-md p-2 active:bg-accent">
-          <LogOut size={20} color={colores.tenue} />
-        </Pressable>
       </View>
       <View className="gap-3 px-4">
         {SECCIONES.map((s) => (

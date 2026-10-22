@@ -61,6 +61,9 @@ export function NavInferior({
               return perfil?.rol === 'comercial' || perfil?.rol === 'admin';
             }
             if (p.id === 'admin') return perfil?.rol === 'admin';
+            // El admin no compra: sin pestaña Solicitud (Catálogo, Pedidos,
+            // Cartera y Admin = 4 pestañas).
+            if (p.id === 'solicitud') return perfil?.rol !== 'admin';
             return true;
           })
         : PESTANAS_ANONIMAS,
