@@ -13,12 +13,13 @@ export interface TemaProveedor {
   borde: string; // hsla al 40% de opacidad
 }
 
-// Primario global (mismo acento ámbar que el sistema de diseño).
+// Primario global por defecto de la app (verde #415D43, el mismo que
+// --primary en global.css). Se usa cuando un proveedor no tiene color.
 const TEMA_PRIMARIO: TemaProveedor = {
   base: 'hsl(124.3 17.7% 31%)',
-  tinte: 'hsla(24.6, 95%, 53.1%, 0.10)',
-  borde: 'hsla(24.6, 95%, 53.1%, 0.40)',
-  texto: 'hsl(24.6 95% 45%)',
+  tinte: 'hsla(124.3, 17.7%, 31%, 0.10)',
+  borde: 'hsla(124.3, 17.7%, 31%, 0.40)',
+  texto: 'hsl(124.3 17.7% 16%)',
 };
 
 // ¿El valor es un color HEX '#RRGGBB'?

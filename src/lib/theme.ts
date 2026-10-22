@@ -80,14 +80,14 @@ export const NAV_THEME: Record<'light' | 'dark', typeof DefaultTheme> = {
 // explícito según el tema (los tokens de clase no llegan al stroke del SVG).
 export const COLORES_ICONO = {
   light: {
-    primario: '#f97316',
+    primario: '#415D43',
     primarioClaro: '#fafafa',
     primerPlano: '#09090b',
     tenue: '#71717a',
     destructivo: '#dc2626',
   },
   dark: {
-    primario: '#f97316',
+    primario: '#415D43',
     primarioClaro: '#fafafa',
     primerPlano: '#fafafa',
     tenue: '#a1a1aa',
