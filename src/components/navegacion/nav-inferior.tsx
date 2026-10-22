@@ -57,13 +57,13 @@ export function NavInferior({
     () =>
       session
         ? PESTANAS.filter((p) => {
-            if (p.id === 'cartera') {
-              return perfil?.rol === 'comercial' || perfil?.rol === 'admin';
+            // El admin no compra ni gestiona pedidos/cartera: su ámbito es
+            // Catálogo (solo lectura) + Admin.
+            if (perfil?.rol === 'admin') {
+              return p.id === 'catalogo' || p.id === 'admin';
             }
-            if (p.id === 'admin') return perfil?.rol === 'admin';
-            // El admin no compra: sin pestaña Solicitud (Catálogo, Pedidos,
-            // Cartera y Admin = 4 pestañas).
-            if (p.id === 'solicitud') return perfil?.rol !== 'admin';
+            if (p.id === 'cartera') return perfil?.rol === 'comercial';
+            if (p.id === 'admin') return false;
             return true;
           })
         : PESTANAS_ANONIMAS,

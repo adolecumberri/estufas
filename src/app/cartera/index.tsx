@@ -17,7 +17,10 @@ export default function Cartera() {
   const { clientes, cargando, error } = useCartera();
 
   if (!session) return <Redirect href="/acceso" />;
-  if (perfil && perfil.rol !== 'comercial' && perfil.rol !== 'admin') {
+  // El admin no gestiona cartera de clientes: su ámbito es Comerciales y
+  // Proveedores (pestaña Admin).
+  if (perfil?.rol === 'admin') return <Redirect href="/admin" />;
+  if (perfil && perfil.rol !== 'comercial') {
     return <Redirect href="/pedidos" />;
   }
 

@@ -56,11 +56,13 @@ export default function Pedidos() {
   );
 
   if (!session) return <Redirect href="/acceso" />;
+  // El admin no tiene pedidos propios ni cartera: su ámbito es Comerciales y
+  // Proveedores (pestaña Admin), no la gestión de pedidos.
+  if (perfil?.rol === 'admin') return <Redirect href="/admin" />;
 
-  const esComercialOAdmin = perfil?.rol === 'comercial' || perfil?.rol === 'admin';
+  const esComercialOAdmin = perfil?.rol === 'comercial';
   // Subtítulo de la cabecera según el rol (el cliente solo ve su email).
-  const etiquetaRol =
-    perfil?.rol === 'comercial' ? 'Comercial' : perfil?.rol === 'admin' ? 'Admin' : null;
+  const etiquetaRol = perfil?.rol === 'comercial' ? 'Comercial' : null;
   const pendientes = pedidos.filter((p) => p.estado === 'solicitado');
   const pedidosFiltrados = filtro === 'todos' ? pedidos : pedidos.filter((p) => p.estado === filtro);
 

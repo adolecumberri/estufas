@@ -74,8 +74,10 @@ export default function ClienteDetalle() {
   }, [cliente]);
 
   if (!session) return <Redirect href="/acceso" />;
+  // El admin no gestiona cartera de clientes: vuelve a su panel.
+  if (perfil?.rol === 'admin') return <Redirect href="/admin" />;
 
-  const puedeGestionar = perfil?.rol === 'comercial' || perfil?.rol === 'admin';
+  const puedeGestionar = perfil?.rol === 'comercial';
   if (perfil && !puedeGestionar) return <Redirect href="/pedidos" />;
 
   const pedidosDelCliente = pedidos.filter((p) => p.cliente_id === id);

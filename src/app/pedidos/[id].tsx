@@ -46,11 +46,12 @@ export default function PedidoDetalle() {
   const [trabajando, setTrabajando] = React.useState(false);
 
   if (!session) return <Redirect href="/acceso" />;
+  // El admin no gestiona pedidos: si llega por URL, vuelve a su panel.
+  if (perfil?.rol === 'admin') return <Redirect href="/admin" />;
 
   const esComercial = perfil?.rol === 'comercial';
-  const esAdmin = perfil?.rol === 'admin';
   const esCliente = perfil?.rol === 'cliente';
-  const puedeGestionar = esComercial || esAdmin;
+  const puedeGestionar = esComercial;
 
   const varianteEstado = (estado: EstadoPedido) => {
     switch (estado) {
