@@ -204,3 +204,53 @@ export interface LineaSolicitud {
   proveedor_id?: string | null;
   proveedor_nombre?: string | null;
 }
+
+// ---------------------------------------------------------------------------
+// Catálogo local (SQLite): contrato de los RPC fn_catalogo_snapshot y
+// fn_descuentos_cuenta del backend. Se consumen tal cual llegan del servidor.
+// ---------------------------------------------------------------------------
+
+export interface ProductoSnapshot {
+  producto_id: string;
+  referencia: string;
+  nombre: string;
+  slug: string;
+  descripcion: string | null;
+  tipo: string | null;
+  marca_id: string | null;
+  proveedor_id: string | null;
+  proveedor_nombre: string | null;
+  activo: boolean;
+  destacado: boolean;
+  etiqueta_energetica: string | null;
+  imagen_url: string | null;
+  plano_url: string | null;
+  precio_base: number;
+  precios_transporte: {
+    camion: number | null;
+    palet: number | null;
+    franquicia: number | null;
+  } | null;
+  // Claves ('pellets' | 'lena') e IDs de categorías a los que pertenece.
+  combustibles: string[];
+  categorias: string[];
+  // Datos técnicos flexibles (JSONB productos.datos).
+  datos: GrupoDatos[];
+}
+
+export interface SnapshotCatalogo {
+  version: number;
+  categorias: Categoria[];
+  marcas: Marca[];
+  proveedores: { id: string; nombre: string }[];
+  productos: ProductoSnapshot[];
+}
+
+export interface DescuentosCuenta {
+  cliente_id: string | null;
+  general_pct: number | null;
+  productos: { producto_id: string; pct: number }[];
+  combustibles: { combustible: string; pct: number }[];
+  promo_pct: number | null;
+  proveedores_habilitados: string[];
+}

@@ -109,7 +109,7 @@ INSERT INTO auth.users (
     confirmation_token, recovery_token, email_change_token_new, email_change
 ) VALUES
 ('00000000-0000-0000-0000-000000000000', '55555555-5555-4555-8555-555555555555',
- 'authenticated', 'authenticated', 'suelto@estufas.local',
+ 'authenticated', 'authenticated', 'sincomercial@estufas.local',
  crypt('Suelto123!', gen_salt('bf')), now(), now(), now(),
  '{"provider":"email","providers":["email"]}',
  '{"rol":"cliente","tipo_cliente":"particular","nombre":"Cliente","apellidos":"Suelto"}', '', '', '', '');
