@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import { router, useLocalSearchParams } from 'expo-router';
 import { RefreshCw, X } from 'lucide-react-native';
 import * as React from 'react';
 import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
@@ -29,7 +30,9 @@ export default function CatalogoScreen() {
   const insets = useSafeAreaInsets();
   const { session } = useAuth();
   const { clienteObjetivoId, aviso, limpiarAviso, anadir } = useSolicitud();
-  const cat = useCatalogo(clienteObjetivoId);
+  // Filtro por proveedor (Admin → Proveedores → "Ver catálogo").
+  const { proveedor } = useLocalSearchParams<{ proveedor?: string }>();
+  const cat = useCatalogo(clienteObjetivoId, proveedor ?? null);
   const [menuAbierto, setMenuAbierto] = React.useState(false);
   const colores = useColoresIcono();
 
@@ -56,6 +59,25 @@ export default function CatalogoScreen() {
       <View className="mt-2 px-4 pb-2">
         <Buscador valor={cat.busqueda} onChange={cat.setBusqueda} />
       </View>
+
+      {/* Banner: catálogo filtrado por proveedor (vista de admin). El nombre
+          sale del primer producto cargado; sin resultados, texto genérico. */}
+      {proveedor && (
+        <View className="mx-4 mb-2 flex-row items-center gap-2 rounded-[10px] border border-primary/40 bg-primary/10 px-3 py-2">
+          <Text className="flex-1 text-sm">
+            {cat.productos[0]?.proveedor_nombre
+              ? `Viendo solo el catálogo de ${cat.productos[0].proveedor_nombre}`
+              : 'Solo productos de ese proveedor'}
+          </Text>
+          <Pressable
+            onPress={() => router.setParams({ proveedor: undefined })}
+            className="rounded-md p-0.5 active:bg-accent"
+            accessibilityLabel="Quitar filtro de proveedor"
+          >
+            <X size={16} color={colores.tenue} />
+          </Pressable>
+        </View>
+      )}
 
       {/* Aviso global del carrito (p. ej. no mezclar proveedores): el mismo
           aviso que muestra /solicitud, para que el rechazo se vea al añadir. */}

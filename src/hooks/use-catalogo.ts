@@ -33,9 +33,10 @@ const claveProductos = (
   combustible: Combustible,
   categoria: string | null,
   marca: string | null,
-  pagina: number
+  pagina: number,
+  proveedorId: string | null | undefined
 ) =>
-  `estufas.cache.productos.v1:${uid ?? 'anon'}:${clienteId ?? 'anon'}:${busqueda}|${combustible}|${categoria ?? ''}|${marca ?? ''}|${pagina}`;
+  `estufas.cache.productos.v1:${uid ?? 'anon'}:${clienteId ?? 'anon'}:${busqueda}|${combustible}|${categoria ?? ''}|${marca ?? ''}|${pagina}|${proveedorId ?? ''}`;
 
 // Visibilidad por proveedor replicando fn_catalogo_usuario_v2 (0007/0009):
 // anónimo y admin sin cliente objetivo ven todo (null); el resto ve los
@@ -57,7 +58,8 @@ function proveedoresVisibles(
 // plataforma no soporta SQLite. La API pública no cambia.
 // `clienteId`: cuando un comercial crea un pedido para un cliente asignado,
 // el catálogo muestra las condiciones de ESE cliente.
-export function useCatalogo(clienteId?: string | null) {
+// `proveedorId`: restringe el catálogo a un proveedor (vista de admin).
+export function useCatalogo(clienteId?: string | null, proveedorId?: string | null) {
   const { session, perfil } = useAuth();
   const uid = session?.user?.id ?? null;
 
@@ -96,7 +98,8 @@ export function useCatalogo(clienteId?: string | null) {
     combustible,
     categoria,
     marca,
-    pagina
+    pagina,
+    proveedorId
   );
   const productos = claveMostrada === claveProductosActual ? productosBruto : [];
   const mostrandoCarga = cargando || claveMostrada !== claveProductosActual;
@@ -217,7 +220,15 @@ export function useCatalogo(clienteId?: string | null) {
             proveedoresVisibles: visibles,
           });
           if (cancelado) return;
-          setProductos(filas.map((f) => filaAProductoCatalogo(f, datosBase.reglas)));
+          // El snapshot ya trae proveedor_id: el filtro por proveedor se
+          // aplica AQUÍ (catalogo-local.ts no admite proveedor). En la vista
+          // de admin es aceptable que la página quede corta cuando el
+          // proveedor no llena la página completa.
+          let filasMapeadas = filas.map((f) => filaAProductoCatalogo(f, datosBase.reglas));
+          if (proveedorId) {
+            filasMapeadas = filasMapeadas.filter((p) => p.proveedor_id === proveedorId);
+          }
+          setProductos(filasMapeadas);
           setHayMas(mas);
         } catch (e) {
           if (cancelado) return;
@@ -259,6 +270,7 @@ export function useCatalogo(clienteId?: string | null) {
           p_limite: limite,
           p_offset: pagina * PAGINACION.catalogo,
           p_cliente: clienteId ?? null,
+          p_proveedor: proveedorId ?? null,
         });
         if (cancelado) return;
         if (error) {
@@ -283,7 +295,7 @@ export function useCatalogo(clienteId?: string | null) {
       cancelado = true;
       clearTimeout(t);
     };
-  }, [datosBase, busqueda, categoria, marca, pagina, clienteId, combustible, uid, perfil?.rol]);
+  }, [datosBase, busqueda, categoria, marca, pagina, clienteId, combustible, uid, perfil?.rol, proveedorId]);
 
   const limpiarFiltros = () => {
     setBusqueda('');
@@ -310,5 +322,6 @@ export function useCatalogo(clienteId?: string | null) {
     cargando: mostrandoCarga,
     error,
     limpiarFiltros,
+    proveedor: proveedorId ?? null,
   };
 }

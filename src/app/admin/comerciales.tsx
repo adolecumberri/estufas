@@ -1,5 +1,5 @@
 import { Redirect, router } from 'expo-router';
-import { ChevronLeft, Plus } from 'lucide-react-native';
+import { Check, ChevronLeft, Plus } from 'lucide-react-native';
 import * as React from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -21,10 +21,10 @@ import { useColoresIcono } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import type { PerfilUsuario, Proveedor } from '@/lib/types';
 
-// Accesos a proveedores de un comercial: un chip por proveedor con
-// asignar/habilitar/deshabilitar. Componente propio, así que puede llamar al
-// hook de asignaciones (una instancia por comercial) sin romper las reglas de
-// hooks. El toque en un chip no navega a la fila (stopPropagation).
+// Accesos a proveedores de un comercial: un checkbox por proveedor (único
+// booleano: asignado). Componente propio, así que puede llamar al hook de
+// asignaciones (una instancia por comercial) sin romper las reglas de hooks.
+// El toque en un checkbox no navega a la fila (stopPropagation).
 function FilaComercial({
   comercial,
   proveedores,
@@ -32,9 +32,10 @@ function FilaComercial({
   comercial: PerfilUsuario;
   proveedores: Proveedor[];
 }) {
-  const { asignaciones, cargando, error, recargar, asignar, habilitar } =
+  const { asignaciones, cargando, error, recargar, asignar, desasignar, habilitar } =
     useAsignacionesProveedores(comercial.id);
   const [errorAccion, setErrorAccion] = React.useState<string | null>(null);
+  const colores = useColoresIcono();
 
   const ejecutar = async (accion: () => Promise<{ error: string | null }>) => {
     setErrorAccion(null);
@@ -51,50 +52,51 @@ function FilaComercial({
   }
 
   return (
-    <View className="gap-1.5">
-      <View className="flex-row flex-wrap gap-1.5">
-        {proveedores.map((p) => {
-          const asignacion = asignaciones.find((a) => a.proveedor_id === p.id);
-          const habilitado = asignacion?.habilitado ?? false;
-          return (
-            <Pressable
-              key={p.id}
-              accessibilityRole="button"
-              accessibilityLabel={`Proveedor ${p.nombre}: ${
-                asignacion ? (habilitado ? 'habilitado' : 'deshabilitado') : 'sin asignar'
-              }`}
-              onPress={(e) => {
-                e.stopPropagation();
-                void ejecutar(
-                  asignacion ? () => habilitar(p.id, !habilitado) : () => asignar(p.id)
-                );
-              }}
+    <View className="gap-0.5">
+      {proveedores.map((p) => {
+        // La fila se busca independientemente de `habilitado`. Marcado =
+        // asignación activa: una fila deshabilitada se muestra sin marcar y al
+        // marcarla se rehabilita en lugar de crear un duplicado.
+        const fila = asignaciones.find((a) => a.proveedor_id === p.id);
+        const marcado = fila?.habilitado === true;
+        return (
+          <Pressable
+            key={p.id}
+            accessibilityRole="checkbox"
+            accessibilityState={{ checked: marcado }}
+            accessibilityLabel={`Proveedor ${p.nombre} ${marcado ? 'asignado' : 'sin asignar'}`}
+            onPress={(e) => {
+              e.stopPropagation();
+              void ejecutar(
+                !fila
+                  ? () => asignar(p.id)
+                  : fila.habilitado
+                    ? () => desasignar(p.id)
+                    : () => habilitar(p.id, true)
+              );
+            }}
+            className="flex-row items-center gap-2 py-0.5 active:opacity-80"
+          >
+            <View
               className={cn(
-                'rounded-full border px-2.5 py-1 active:opacity-80',
-                asignacion
-                  ? habilitado
-                    ? 'border-transparent bg-primary/10'
-                    : 'border-border bg-muted'
-                  : 'border-border bg-background'
+                'h-5 w-5 items-center justify-center rounded border',
+                marcado ? 'border-primary bg-primary/10' : 'border-border bg-background'
               )}
             >
-              <Text
-                numberOfLines={1}
-                className={cn(
-                  'max-w-28 text-xs font-medium',
-                  asignacion
-                    ? habilitado
-                      ? 'text-primary'
-                      : 'text-muted-foreground line-through'
-                    : 'text-foreground'
-                )}
-              >
-                {p.nombre}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+              {marcado && <Check size={14} strokeWidth={3} color={colores.primario} />}
+            </View>
+            <Text
+              numberOfLines={1}
+              className={cn(
+                'flex-1 text-xs font-medium',
+                marcado ? 'text-foreground' : 'text-muted-foreground'
+              )}
+            >
+              {p.nombre}
+            </Text>
+          </Pressable>
+        );
+      })}
       {errorAccion && <Text className="text-xs text-muted-foreground">{errorAccion}</Text>}
     </View>
   );
@@ -191,7 +193,7 @@ export default function AdminComerciales() {
                 <Text className="flex-1 text-xs font-semibold text-muted-foreground">
                   Comercial
                 </Text>
-                <Text className="w-32 text-xs font-semibold text-muted-foreground">
+                <Text className="w-36 text-xs font-semibold text-muted-foreground">
                   Proveedores
                 </Text>
                 <Text className="w-16 text-right text-xs font-semibold text-muted-foreground">
@@ -218,7 +220,7 @@ export default function AdminComerciales() {
                             {c.email}
                           </Text>
                         </View>
-                        <View className="w-32">
+                        <View className="w-36">
                           {proveedores.length === 0 ? (
                             <Text className="text-xs text-muted-foreground">
                               Sin proveedores
