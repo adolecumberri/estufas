@@ -50,7 +50,7 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
   // Los borradores se aíslan por CUENTA: cada usuario autenticado tiene su
   // propia clave de almacenamiento, para que en un dispositivo compartido un
   // cliente no vea (ni envíe) el carrito o los borradores de otro usuario.
-  const { session } = useAuth();
+  const { session, perfil } = useAuth();
   const uid = session?.user?.id ?? null;
   const claveAlmacen = uid ? `${STORAGE_KEYS.carritos}.${uid}` : null;
 
@@ -186,6 +186,9 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
   // seleccionado o carrito propio), nunca sobre los demás borradores.
   const anadir = React.useCallback(
     (linea: LineaSolicitud) => {
+      // Guarda defensiva: el admin navega el catálogo en solo lectura y nunca
+      // añade al carrito (la UI ya lo oculta; aquí se garantiza).
+      if (perfil?.rol === 'admin') return;
       // Acción explícita de nuevo carrito: rehabilita la persistencia si la
       // lectura inicial había fallado.
       if (lecturaFallida.current) {
@@ -226,7 +229,7 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
         return { ...previos, [clave]: nuevas };
       });
     },
-    [clienteObjetivoId, lineas, mostrarAviso, limpiarAviso]
+    [clienteObjetivoId, lineas, mostrarAviso, limpiarAviso, perfil?.rol]
   );
 
   const quitar = React.useCallback(

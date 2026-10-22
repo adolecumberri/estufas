@@ -1,4 +1,5 @@
 import { Image } from 'expo-image';
+import { router } from 'expo-router';
 import { RefreshCw, X } from 'lucide-react-native';
 import * as React from 'react';
 import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
@@ -9,14 +10,18 @@ import banner from '../../assets/images/banner.jpg';
 import { Buscador } from '@/components/catalogo/buscador';
 import { EncabezadoCatalogo } from '@/components/catalogo/encabezado';
 import TarjetaProducto from '@/components/catalogo/tarjeta-producto';
+import { SelectorProveedor } from '@/components/catalogo/selector-proveedor';
 import { NavInferior } from '@/components/navegacion/nav-inferior';
 import { NavLateral } from '@/components/navegacion/nav-lateral';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { COMBUSTIBLES } from '@/constants';
+import { useProveedorActivo } from '@/contexts/proveedor-activo-context';
 import { useSolicitud } from '@/contexts/solicitud-context';
+import { useProveedores } from '@/hooks/use-admin';
 import { useAuth } from '@/hooks/use-auth';
 import { useCatalogo } from '@/hooks/use-catalogo';
+import { temaProveedor } from '@/lib/colores-proveedor';
 import { useColoresIcono } from '@/lib/theme';
 
 // Pantalla raíz de la app: catálogo público. Vive como componente compartido
@@ -25,13 +30,44 @@ import { useColoresIcono } from '@/lib/theme';
 // compartidos del catálogo (diseño Stitch): cabecera fija, navegación
 // lateral por combustible, buscador, chips de categorías, rejilla de 2
 // columnas con paginación y barra de navegación.
-export default function CatalogoScreen() {
+//
+// `proveedorIdOverride` permite montar ESTA misma pantalla desde la ruta
+// dedicada /catalogo/proveedor/[id] (catálogo de un proveedor concreto).
+export default function CatalogoScreen({
+  proveedorIdOverride,
+}: {
+  proveedorIdOverride?: string | null;
+} = {}) {
   const insets = useSafeAreaInsets();
   const { session } = useAuth();
   const { clienteObjetivoId, aviso, limpiarAviso, anadir } = useSolicitud();
-  const cat = useCatalogo(clienteObjetivoId);
+  // Filtro por proveedor: la ruta dedicada fija uno (prop); si no, el
+  // proveedor activo del contexto (un solo proveedor a la vez).
+  const { activo: proveedorActivo } = useProveedorActivo();
+  const proveedorId = proveedorIdOverride ?? proveedorActivo?.id ?? null;
+  const cat = useCatalogo(clienteObjetivoId, proveedorId);
   const [menuAbierto, setMenuAbierto] = React.useState(false);
   const colores = useColoresIcono();
+
+  // Al cambiar de proveedor se reinician búsqueda/categoría/página para no
+  // arrastrar filtros de la selección anterior. limpiarFiltros se recrea en
+  // cada render y no entra en las dependencias: así no pisa lo que el usuario
+  // está tecleando mientras el proveedor no cambia.
+  React.useEffect(() => {
+    cat.limpiarFiltros();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [proveedorId]);
+
+  // Color del proveedor filtrado para el banner: se busca por el id del
+  // primer producto cargado. Solo el admin llega a esta vista; si el hook
+  // devuelve error/lista vacía (o no hay color), temaProveedor usa el
+  // primario global como fallback.
+  const { proveedores: proveedoresAdmin } = useProveedores();
+  const proveedorIdActivo = cat.productos[0]?.proveedor_id ?? null;
+  const colorProveedorActivo = proveedorIdActivo
+    ? (proveedoresAdmin.find((pr) => pr.id === proveedorIdActivo)?.color ?? null)
+    : null;
+  const temaBanner = temaProveedor(colorProveedorActivo);
 
   // Etiqueta a la que se vuelve desde el detalle: categoría seleccionada o,
   // si no la hay, el combustible activo. Con búsqueda activa los resultados
@@ -45,6 +81,8 @@ export default function CatalogoScreen() {
       : (COMBUSTIBLES.find((c) => c.id === cat.combustible)?.etiqueta ?? 'Catálogo'));
 
   return (
+    // El tema del proveedor (--primary) lo aplica el layout raíz SOLO en las
+    // rutas de catálogo, decidiéndolo por ruta: aquí no hace falta duplicarlo.
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       {/* Cabecera */}
       <EncabezadoCatalogo onAbrirMenu={() => setMenuAbierto(true)} />
@@ -52,10 +90,45 @@ export default function CatalogoScreen() {
       {/* Banner decorativo */}
       <Image source={banner} className="h-[60px] w-full" contentFit="cover" transition={200} />
 
+      {/* Selector de proveedor (solo en el catálogo general: la ruta dedicada
+          tiene su proveedor fijo y su propio banner). */}
+      {!proveedorIdOverride && (
+        <View className="mt-2">
+          <SelectorProveedor />
+        </View>
+      )}
+
       {/* Buscador */}
       <View className="mt-2 px-4 pb-2">
         <Buscador valor={cat.busqueda} onChange={cat.setBusqueda} />
       </View>
+
+      {/* Banner: catálogo filtrado por proveedor (vista de admin). El nombre
+          sale del primer producto cargado; sin resultados, texto genérico.
+          El tinte, el borde y el texto usan el tema del color del proveedor. */}
+      {proveedorIdOverride && (
+        <View
+          className="mx-4 mb-2 flex-row items-center gap-2 rounded-[10px] border px-3 py-2"
+          style={{ backgroundColor: temaBanner.tinte, borderColor: temaBanner.borde }}
+        >
+          <Text className="flex-1 text-sm" style={{ color: temaBanner.texto }}>
+            {cat.productos[0]?.proveedor_nombre
+              ? `Viendo solo el catálogo de ${cat.productos[0].proveedor_nombre}`
+              : 'Solo productos de ese proveedor'}
+          </Text>
+          <Pressable
+            onPress={() => {
+              // En la ruta dedicada el "quitar filtro" vuelve al catálogo
+              // general (el banner solo existe en esa ruta).
+              router.replace('/');
+            }}
+            className="rounded-md p-0.5 active:bg-accent"
+            accessibilityLabel="Quitar filtro de proveedor"
+          >
+            <X size={16} color={colores.tenue} />
+          </Pressable>
+        </View>
+      )}
 
       {/* Aviso global del carrito (p. ej. no mezclar proveedores): el mismo
           aviso que muestra /solicitud, para que el rechazo se vea al añadir. */}
@@ -91,7 +164,7 @@ export default function CatalogoScreen() {
         ListEmptyComponent={
           cat.cargando ? (
             <View className="items-center py-16">
-              <ActivityIndicator color="hsl(24.6 95% 53.1%)" />
+              <ActivityIndicator color="hsl(124.3 17.7% 31%)" />
             </View>
           ) : (
             <View className="items-center gap-2 px-8 py-16">
