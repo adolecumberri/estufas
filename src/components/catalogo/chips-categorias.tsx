@@ -21,6 +21,7 @@ export function ChipsCategorias({ categorias, seleccionada, onSeleccionar }: Pro
   return (
     <ScrollView
       horizontal
+      showsVerticalScrollIndicator={false}
       showsHorizontalScrollIndicator={false}
       className={cn(
         'py-0.5',

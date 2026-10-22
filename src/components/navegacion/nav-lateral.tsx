@@ -80,7 +80,7 @@ export function NavLateral({
           </View>
 
           {/* Secciones: combustibles con sus subsecciones */}
-          <ScrollView className="flex-1">
+          <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
             {COMBUSTIBLES.map((c) => {
               const activo = combustible === c.id;
               const subsecciones = categorias.filter(

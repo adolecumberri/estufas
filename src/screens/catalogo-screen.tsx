@@ -8,7 +8,7 @@ import banner from '../../assets/images/banner.jpg';
 
 import { Buscador } from '@/components/catalogo/buscador';
 import { EncabezadoCatalogo } from '@/components/catalogo/encabezado';
-import { TarjetaProducto } from '@/components/catalogo/tarjeta-producto';
+import TarjetaProducto from '@/components/catalogo/tarjeta-producto';
 import { NavInferior } from '@/components/navegacion/nav-inferior';
 import { NavLateral } from '@/components/navegacion/nav-lateral';
 import { Button } from '@/components/ui/button';
@@ -28,7 +28,7 @@ import { useColoresIcono } from '@/lib/theme';
 export default function CatalogoScreen() {
   const insets = useSafeAreaInsets();
   const { session } = useAuth();
-  const { clienteObjetivoId, aviso, limpiarAviso } = useSolicitud();
+  const { clienteObjetivoId, aviso, limpiarAviso, anadir } = useSolicitud();
   const cat = useCatalogo(clienteObjetivoId);
   const [menuAbierto, setMenuAbierto] = React.useState(false);
   const colores = useColoresIcono();
@@ -80,13 +80,14 @@ export default function CatalogoScreen() {
 
       {/* Rejilla de productos */}
       <FlatList
+        showsVerticalScrollIndicator={false}
         style={{ flex: 1 }}
         data={cat.productos}
         keyExtractor={(p) => p.producto_id}
         numColumns={2}
         columnWrapperStyle={{ gap: 12, paddingHorizontal: 16 }}
         contentContainerStyle={{ gap: 12, paddingBottom: (session ? 88 : 24) + insets.bottom }}
-        renderItem={({ item }) => <TarjetaProducto producto={item} origen={origen} />}
+        renderItem={({ item }) => <TarjetaProducto producto={item} origen={origen} onAnadir={anadir} />}
         ListEmptyComponent={
           cat.cargando ? (
             <View className="items-center py-16">

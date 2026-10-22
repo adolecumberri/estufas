@@ -109,7 +109,7 @@ export default function Solicitud() {
 
   return (
     <>
-      <ScrollView className="flex-1 bg-background" contentContainerStyle={{ paddingBottom: 96 + insets.bottom }}>
+      <ScrollView showsVerticalScrollIndicator={false} className="flex-1 bg-background" contentContainerStyle={{ paddingBottom: 96 + insets.bottom }}>
         <View style={{ paddingTop: insets.top + 8 }} className="gap-4 p-4">
           <View className="flex-row items-center justify-between">
             <View className="flex-1 gap-0.5">

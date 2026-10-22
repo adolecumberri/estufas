@@ -109,7 +109,7 @@ export default function ClienteDetalle() {
   }
 
   return (
-    <ScrollView className="flex-1 bg-background" contentContainerStyle={{ paddingBottom: 32 }}>
+    <ScrollView showsVerticalScrollIndicator={false} className="flex-1 bg-background" contentContainerStyle={{ paddingBottom: 32 }}>
       <View style={{ paddingTop: insets.top + 8 }} className="gap-4 p-4">
         <View className="flex-row items-center gap-2">
           <Pressable onPress={() => router.back()} className="rounded-md p-1 active:bg-accent">
@@ -203,7 +203,7 @@ export default function ClienteDetalle() {
               placeholder="Buscar producto…"
               className="h-10 text-sm"
             />
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="max-h-16">
+            <ScrollView horizontal showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} className="max-h-16">
               <View className="flex-row gap-2">
                 {catalogo.productos.map((p) => (
                   <Pressable

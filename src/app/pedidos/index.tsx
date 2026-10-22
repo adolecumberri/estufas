@@ -72,6 +72,7 @@ export default function Pedidos() {
       </View>
 
       <ScrollView
+        showsVerticalScrollIndicator={false}
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1, paddingBottom: 96 + insets.bottom }}
       >

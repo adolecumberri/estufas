@@ -120,6 +120,7 @@ export default function DevAcceso() {
       </View>
 
       <ScrollView
+        showsVerticalScrollIndicator={false}
         className="flex-1"
         contentContainerStyle={{ gap: 12, padding: 16, paddingBottom: 32 + insets.bottom }}
       >

@@ -112,7 +112,7 @@ export default function ProductoDetalle() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-background" contentContainerStyle={{ paddingBottom: 32 }}>
+    <ScrollView showsVerticalScrollIndicator={false} className="flex-1 bg-background" contentContainerStyle={{ paddingBottom: 32 }}>
       <View style={{ paddingTop: insets.top + 8 }}>
         {/* 1. Cabecera: volver + origen */}
         <View className="flex-row items-center gap-1 px-2">
@@ -151,6 +151,7 @@ export default function ProductoDetalle() {
         <ScrollView
           horizontal
           pagingEnabled
+          showsVerticalScrollIndicator={false}
           showsHorizontalScrollIndicator={false}
         >
           {fuentes.map((url, i) => (

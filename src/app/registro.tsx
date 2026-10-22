@@ -70,6 +70,7 @@ export default function Registro() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 24 }}
         style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}
       >
