@@ -1,7 +1,6 @@
 import { Redirect, router } from 'expo-router';
 import {
   Boxes,
-  Check,
   ChevronLeft,
   Flame,
   Flower,
@@ -17,12 +16,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
-import { useAsignacionesProveedores, useProveedores, useUsuarios } from '@/hooks/use-admin';
+import { useProveedores } from '@/hooks/use-admin';
 import { useAuth } from '@/hooks/use-auth';
 import { temaProveedor } from '@/lib/colores-proveedor';
 import { useColoresIcono } from '@/lib/theme';
 import { cn } from '@/lib/utils';
-import type { PerfilUsuario, Proveedor } from '@/lib/types';
+import type { Proveedor } from '@/lib/types';
 
 // Icono asociado a cada proveedor: llama (pellets), flor (leña) o cajas por
 // defecto. (Duplicada a propósito en admin/comerciales.tsx para no crear un
@@ -33,96 +32,6 @@ function iconoProveedor(icono: string | null | undefined): LucideIcon {
   return Boxes;
 }
 
-// Fila de un comercial dentro de un proveedor: checkbox de asignación.
-// Marcado = fila existente y habilitada → desmarcar desasigna; sin fila →
-// marcar asigna; fila deshabilitada → marcar la habilita. Cada fila es un
-// componente propio, así que puede llamar al hook de asignaciones (una
-// instancia por comercial) sin romper las reglas de hooks.
-function FilaComercial({
-  comercial,
-  proveedorId,
-  colorProveedor,
-}: {
-  comercial: PerfilUsuario;
-  proveedorId: string;
-  colorProveedor: string | null | undefined;
-}) {
-  const colores = useColoresIcono();
-  const tema = temaProveedor(colorProveedor);
-  const { asignaciones, cargando, error: errorCarga, recargar, asignar, desasignar, habilitar } =
-    useAsignacionesProveedores(comercial.id);
-  const [errorAccion, setErrorAccion] = React.useState<string | null>(null);
-  const [trabajando, setTrabajando] = React.useState(false);
-
-  const asignacion = asignaciones.find((a) => a.proveedor_id === proveedorId);
-  const marcado = asignacion?.habilitado === true;
-
-  const alternar = async () => {
-    if (cargando || trabajando) return;
-    setTrabajando(true);
-    setErrorAccion(null);
-    let error: string | null;
-    if (marcado) {
-      // Desmarcar: quitar la asignación.
-      error = (await desasignar(proveedorId)).error;
-    } else if (asignacion) {
-      // La fila existe pero está deshabilitada: marcar la vuelve a habilitar.
-      error = (await habilitar(proveedorId, true)).error;
-    } else {
-      // Sin fila: marcar crea la asignación.
-      error = (await asignar(proveedorId)).error;
-    }
-    setTrabajando(false);
-    setErrorAccion(error);
-    if (!error) await recargar();
-  };
-
-  return (
-    <View className="gap-1">
-      <View className="flex-row items-center justify-between gap-2">
-        <View className="flex-1">
-          <Text numberOfLines={1} className="text-xs">
-            {comercial.nombre} {comercial.apellidos ?? ''}
-          </Text>
-          {asignacion && (
-            <Badge variant="outline" className="mt-1 self-start">
-              <Text className="text-[10px]">
-                Asignado{asignacion.habilitado ? '' : ' · deshabilitado'}
-              </Text>
-            </Badge>
-          )}
-        </View>
-        {cargando ? (
-          <ActivityIndicator size="small" color="hsl(24.6 95% 53.1%)" />
-        ) : errorCarga ? (
-          <Text className="text-xs text-destructive">No se pudo cargar la asignación</Text>
-        ) : (
-          <Pressable
-            accessibilityRole="checkbox"
-            accessibilityState={{ checked: marcado }}
-            accessibilityLabel={`Asignar este proveedor a ${comercial.nombre}`}
-            onPress={() => void alternar()}
-            className={cn(
-              'h-6 w-6 flex-row items-center justify-center rounded-md border',
-              marcado ? 'border-transparent' : 'border-border bg-background'
-            )}
-            style={marcado ? { backgroundColor: tema.base } : undefined}
-          >
-            {trabajando ? (
-              <ActivityIndicator
-                size="small"
-                color={marcado ? colores.primarioClaro : colores.primario}
-              />
-            ) : marcado ? (
-              <Check size={16} color={colores.primarioClaro} />
-            ) : null}
-          </Pressable>
-        )}
-      </View>
-      {errorAccion && <Text className="text-xs text-destructive">{errorAccion}</Text>}
-    </View>
-  );
-}
 
 export default function AdminProveedores() {
   const insets = useSafeAreaInsets();
@@ -131,8 +40,6 @@ export default function AdminProveedores() {
 
   const { proveedores, cargando, error, recargar, crearProveedor, actualizarProveedor } =
     useProveedores();
-  const { usuarios } = useUsuarios();
-  const comerciales = usuarios.filter((u) => u.rol === 'comercial');
 
   // Formulario de creación, ahora en un modal como el de "Nuevo comercial".
   const [modalAbierto, setModalAbierto] = React.useState(false);
@@ -335,25 +242,6 @@ export default function AdminProveedores() {
                         </Button>
                       </View>
                     )}
-
-                    {/* Comerciales con acceso a este proveedor (checkboxes) */}
-                    <View className="gap-2 border-t border-border pt-3">
-                      <Text className="text-sm font-semibold">Comerciales</Text>
-                      {comerciales.length === 0 ? (
-                        <Text className="text-xs text-muted-foreground">
-                          No hay comerciales registrados.
-                        </Text>
-                      ) : (
-                        comerciales.map((c) => (
-                          <FilaComercial
-                            key={c.id}
-                            comercial={c}
-                            proveedorId={p.id}
-                            colorProveedor={p.color}
-                          />
-                        ))
-                      )}
-                    </View>
                   </CardContent>
                 </Card>
                 );
