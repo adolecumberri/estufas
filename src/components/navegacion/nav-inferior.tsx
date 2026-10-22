@@ -1,5 +1,13 @@
 import { router, type Href } from 'expo-router';
-import { FilePlus2, Flame, LogIn, ReceiptText, Wallet, type LucideIcon } from 'lucide-react-native';
+import {
+  FilePlus2,
+  Flame,
+  LogIn,
+  ReceiptText,
+  ShieldCheck,
+  Wallet,
+  type LucideIcon,
+} from 'lucide-react-native';
 import * as React from 'react';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,7 +19,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useColoresIcono } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 
-type PestanaNav = 'catalogo' | 'solicitud' | 'pedidos' | 'cartera' | 'acceso';
+type PestanaNav = 'catalogo' | 'solicitud' | 'pedidos' | 'cartera' | 'admin' | 'acceso';
 
 type Pestana = { id: PestanaNav; etiqueta: string; icono: LucideIcon; ruta: Href };
 
@@ -20,6 +28,7 @@ const PESTANAS: Pestana[] = [
   { id: 'solicitud', etiqueta: 'Solicitud', icono: FilePlus2, ruta: '/solicitud' },
   { id: 'pedidos', etiqueta: 'Pedidos', icono: ReceiptText, ruta: RUTAS.pedidos },
   { id: 'cartera', etiqueta: 'Cartera', icono: Wallet, ruta: RUTAS.cartera },
+  { id: 'admin', etiqueta: 'Admin', icono: ShieldCheck, ruta: RUTAS.admin },
 ];
 
 // Sin sesión solo se ofrecen catálogo e inicio de sesión: añadir al pedido o
@@ -31,8 +40,14 @@ const PESTANAS_ANONIMAS: Pestana[] = [
 
 // Barra de pestañas inferior compartida (diseño Stitch): fondo semántico,
 // acento ámbar en la pestaña activa y punto indicador en "Solicitud" cuando
-// el carrito tiene líneas. Cartera solo se muestra a comercial/admin.
-export function NavInferior({ activa }: { activa: 'catalogo' | 'solicitud' | 'pedidos' | 'cartera' }) {
+// el carrito tiene líneas. Cartera solo se muestra a comercial/admin y la
+// pestaña Admin (5ª, acceso al panel de administración) solo al admin: el
+// acceso de administración vive aquí, no en la cabecera superior.
+export function NavInferior({
+  activa,
+}: {
+  activa: 'catalogo' | 'solicitud' | 'pedidos' | 'cartera' | 'admin';
+}) {
   const insets = useSafeAreaInsets();
   const { lineas } = useSolicitud();
   const { session, perfil } = useAuth();
@@ -41,9 +56,13 @@ export function NavInferior({ activa }: { activa: 'catalogo' | 'solicitud' | 'pe
   const pestanas = React.useMemo(
     () =>
       session
-        ? PESTANAS.filter(
-            (p) => p.id !== 'cartera' || perfil?.rol === 'comercial' || perfil?.rol === 'admin'
-          )
+        ? PESTANAS.filter((p) => {
+            if (p.id === 'cartera') {
+              return perfil?.rol === 'comercial' || perfil?.rol === 'admin';
+            }
+            if (p.id === 'admin') return perfil?.rol === 'admin';
+            return true;
+          })
         : PESTANAS_ANONIMAS,
     [session, perfil]
   );

@@ -25,10 +25,15 @@ export function EncabezadoCatalogo({ onAbrirMenu }: { onAbrirMenu?: () => void }
       router.push(RUTAS.login);
       return;
     }
-    if (perfil?.rol === 'admin') router.push(RUTAS.admin);
-    else if (perfil?.rol === 'comercial') router.push(RUTAS.cartera);
+    // El acceso de administración vive en la pestaña Admin del navbar
+    // inferior (5ª pestaña del admin), no en la cabecera.
+    if (perfil?.rol === 'comercial') router.push(RUTAS.cartera);
     else router.push(RUTAS.pedidos);
   };
+
+  // El admin no usa el icono de cuenta de la cabecera: su acceso al panel
+  // está en la barra inferior.
+  const mostrarCuenta = !(session && perfil?.rol === 'admin');
 
   return (
     <View className="h-16 flex-row items-center justify-between border-b border-border bg-background px-4">
@@ -78,18 +83,20 @@ export function EncabezadoCatalogo({ onAbrirMenu }: { onAbrirMenu?: () => void }
           </Badge>
         )}
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={session ? 'Cuenta de usuario' : 'Iniciar sesión'}
-          onPress={destinoCuenta}
-          className="rounded-lg p-2 active:bg-muted"
-        >
-          {session ? (
-            <UserRound size={20} color={colores.primerPlano} />
-          ) : (
-            <LogIn size={20} color={colores.primerPlano} />
-          )}
-        </Pressable>
+        {mostrarCuenta && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={session ? 'Cuenta de usuario' : 'Iniciar sesión'}
+            onPress={destinoCuenta}
+            className="rounded-lg p-2 active:bg-muted"
+          >
+            {session ? (
+              <UserRound size={20} color={colores.primerPlano} />
+            ) : (
+              <LogIn size={20} color={colores.primerPlano} />
+            )}
+          </Pressable>
+        )}
       </View>
     </View>
   );
