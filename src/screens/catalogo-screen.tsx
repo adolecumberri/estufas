@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router } from 'expo-router';
 import { RefreshCw, X } from 'lucide-react-native';
 import * as React from 'react';
 import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
@@ -10,11 +10,13 @@ import banner from '../../assets/images/banner.jpg';
 import { Buscador } from '@/components/catalogo/buscador';
 import { EncabezadoCatalogo } from '@/components/catalogo/encabezado';
 import TarjetaProducto from '@/components/catalogo/tarjeta-producto';
+import { SelectorProveedor } from '@/components/catalogo/selector-proveedor';
 import { NavInferior } from '@/components/navegacion/nav-inferior';
 import { NavLateral } from '@/components/navegacion/nav-lateral';
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { COMBUSTIBLES } from '@/constants';
+import { useProveedorActivo } from '@/contexts/proveedor-activo-context';
 import { useSolicitud } from '@/contexts/solicitud-context';
 import { useProveedores } from '@/hooks/use-admin';
 import { useAuth } from '@/hooks/use-auth';
@@ -39,12 +41,22 @@ export default function CatalogoScreen({
   const insets = useSafeAreaInsets();
   const { session } = useAuth();
   const { clienteObjetivoId, aviso, limpiarAviso, anadir } = useSolicitud();
-  // Filtro por proveedor: prop (ruta dedicada) o query param (compatibilidad).
-  const { proveedor: proveedorParam } = useLocalSearchParams<{ proveedor?: string }>();
-  const proveedor = proveedorIdOverride ?? proveedorParam ?? null;
-  const cat = useCatalogo(clienteObjetivoId, proveedor);
+  // Filtro por proveedor: la ruta dedicada fija uno (prop); si no, el
+  // proveedor activo del contexto (un solo proveedor a la vez).
+  const { activo: proveedorActivo } = useProveedorActivo();
+  const proveedorId = proveedorIdOverride ?? proveedorActivo?.id ?? null;
+  const cat = useCatalogo(clienteObjetivoId, proveedorId);
   const [menuAbierto, setMenuAbierto] = React.useState(false);
   const colores = useColoresIcono();
+
+  // Al cambiar de proveedor se reinician búsqueda/categoría/página para no
+  // arrastrar filtros de la selección anterior. limpiarFiltros se recrea en
+  // cada render y no entra en las dependencias: así no pisa lo que el usuario
+  // está tecleando mientras el proveedor no cambia.
+  React.useEffect(() => {
+    cat.limpiarFiltros();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [proveedorId]);
 
   // Color del proveedor filtrado para el banner: se busca por el id del
   // primer producto cargado. Solo el admin llega a esta vista; si el hook
@@ -76,6 +88,14 @@ export default function CatalogoScreen({
       {/* Banner decorativo */}
       <Image source={banner} className="h-[60px] w-full" contentFit="cover" transition={200} />
 
+      {/* Selector de proveedor (solo en el catálogo general: la ruta dedicada
+          tiene su proveedor fijo y su propio banner). */}
+      {!proveedorIdOverride && (
+        <View className="mt-2">
+          <SelectorProveedor />
+        </View>
+      )}
+
       {/* Buscador */}
       <View className="mt-2 px-4 pb-2">
         <Buscador valor={cat.busqueda} onChange={cat.setBusqueda} />
@@ -84,7 +104,7 @@ export default function CatalogoScreen({
       {/* Banner: catálogo filtrado por proveedor (vista de admin). El nombre
           sale del primer producto cargado; sin resultados, texto genérico.
           El tinte, el borde y el texto usan el tema del color del proveedor. */}
-      {proveedor && (
+      {proveedorIdOverride && (
         <View
           className="mx-4 mb-2 flex-row items-center gap-2 rounded-[10px] border px-3 py-2"
           style={{ backgroundColor: temaBanner.tinte, borderColor: temaBanner.borde }}
@@ -97,9 +117,8 @@ export default function CatalogoScreen({
           <Pressable
             onPress={() => {
               // En la ruta dedicada el "quitar filtro" vuelve al catálogo
-              // completo; con query param basta con limpiarlo.
-              if (proveedorIdOverride) router.replace('/');
-              else router.setParams({ proveedor: undefined });
+              // general (el banner solo existe en esa ruta).
+              router.replace('/');
             }}
             className="rounded-md p-0.5 active:bg-accent"
             accessibilityLabel="Quitar filtro de proveedor"

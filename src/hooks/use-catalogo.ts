@@ -218,17 +218,11 @@ export function useCatalogo(clienteId?: string | null, proveedorId?: string | nu
             pagina,
             limite: PAGINACION.catalogo,
             proveedoresVisibles: visibles,
+            // Filtro por proveedor en SQL: paginación y hayMas correctos.
+            proveedorId,
           });
           if (cancelado) return;
-          // El snapshot ya trae proveedor_id: el filtro por proveedor se
-          // aplica AQUÍ (catalogo-local.ts no admite proveedor). En la vista
-          // de admin es aceptable que la página quede corta cuando el
-          // proveedor no llena la página completa.
-          let filasMapeadas = filas.map((f) => filaAProductoCatalogo(f, datosBase.reglas));
-          if (proveedorId) {
-            filasMapeadas = filasMapeadas.filter((p) => p.proveedor_id === proveedorId);
-          }
-          setProductos(filasMapeadas);
+          setProductos(filas.map((f) => filaAProductoCatalogo(f, datosBase.reglas)));
           setHayMas(mas);
         } catch (e) {
           if (cancelado) return;

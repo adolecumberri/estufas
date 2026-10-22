@@ -281,6 +281,9 @@ export interface OpcionesConsulta {
   // null → sin filtro de proveedor (anónimo / admin sin cliente objetivo ven
   // todo); lista → productos sin proveedor + los proveedores habilitados.
   proveedoresVisibles: string[] | null;
+  // Restringe a UN proveedor concreto (selector/vista de proveedor); se
+  // aplica en SQL para que la paginación y hayMas sean correctos.
+  proveedorId?: string | null;
 }
 
 // Consulta local con los mismos criterios que fn_catalogo_usuario_v2:
@@ -323,6 +326,12 @@ export function consultarCatalogo(opciones: OpcionesConsulta): {
       condiciones.push(`(proveedor_id IS NULL OR proveedor_id IN (${huecos}))`);
       parametros.push(...habilitados);
     }
+  }
+  // Filtro por un proveedor concreto (vista de proveedor): se añade en el
+  // WHERE para no cortar la paginación con un filtro posterior en JS.
+  if (opciones.proveedorId != null) {
+    condiciones.push('proveedor_id = ?');
+    parametros.push(opciones.proveedorId);
   }
 
   const limite = Math.max(1, opciones.limite + 1); // +1 para saber si hay más
