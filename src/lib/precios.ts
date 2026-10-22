@@ -1,4 +1,4 @@
-import { cacheEdad, cacheEscribir, cacheLeer } from '@/lib/cache';
+import { cacheBorrar, cacheEdad, cacheEscribir, cacheLeer } from '@/lib/cache';
 import { supabase } from '@/lib/supabase';
 import type { Combustible, DescuentosCuenta, OrigenDescuento } from '@/lib/types';
 
@@ -38,9 +38,20 @@ export interface ResultadoPrecio {
 
 const CLAVE_REGLAS = 'estufas.cache.reglas.v1';
 const TTL_REGLAS_MS = 5 * 60 * 1000; // 5 minutos por cuenta (offline friendly)
+// Vida máxima de una autorización cacheada cuando NO se puede contactar con el
+// servidor: pasada esa edad no se sirve la caché (evita seguir autorizando
+// lecturas con una concesión de proveedores antigua; p. ej. tras reasignar
+// clientes o revocar proveedores).
+const EDAD_MAX_REGLAS_OFFLINE_MS = 24 * 60 * 60 * 1000;
 
 const claveReglas = (uid: string | null, clienteId: string | null | undefined) =>
   `${CLAVE_REGLAS}:${uid ?? 'anon'}:${clienteId ?? 'propia'}`;
+
+// El RPC lanza 'Sin permiso para consultar las condiciones de ese cliente'
+// cuando la cuenta no puede pedir esas condiciones: es una DENEGACIÓN (no una
+// caída de red) y no debe reutilizar la caché.
+const esDenegacionPermisos = (mensaje: string | undefined): boolean =>
+  Boolean(mensaje && /sin permiso/i.test(mensaje));
 
 // Convierte el resultado del RPC fn_descuentos_cuenta en las reglas locales.
 function aReglas(datos: DescuentosCuenta | null | undefined): ReglasCuenta | null {
@@ -76,15 +87,35 @@ export async function obtenerReglasCuenta(
     const { data, error } = await supabase.rpc('fn_descuentos_cuenta', {
       p_cliente: clienteId ?? null,
     });
-    if (error || !data) {
-      // Red caída o sin permiso: se devuelve la caché caducada si existe.
-      return enCache ? aReglas(enCache) : null;
+    if (error) {
+      // Denegación explícita de permisos: se invalida la caché y no se sirve
+      // (una autorización revocada no debe sobrevivir en local).
+      if (esDenegacionPermisos(error.message)) {
+        void cacheBorrar(clave);
+        return null;
+      }
+      // Error transitorio (red/servidor): se sirve la caché solo dentro de la
+      // ventana offline acotada.
+      if (enCache && edad !== null && edad <= EDAD_MAX_REGLAS_OFFLINE_MS) {
+        return aReglas(enCache);
+      }
+      return null;
+    }
+    if (!data) {
+      if (enCache && edad !== null && edad <= EDAD_MAX_REGLAS_OFFLINE_MS) {
+        return aReglas(enCache);
+      }
+      return null;
     }
     const dto = data as DescuentosCuenta;
     void cacheEscribir(clave, dto);
     return aReglas(dto);
   } catch {
-    return enCache ? aReglas(enCache) : null;
+    // Excepción de red: misma ventana offline acotada.
+    if (enCache && edad !== null && edad <= EDAD_MAX_REGLAS_OFFLINE_MS) {
+      return aReglas(enCache);
+    }
+    return null;
   }
 }
 

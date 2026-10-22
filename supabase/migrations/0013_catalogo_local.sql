@@ -150,6 +150,18 @@ SELECT jsonb_build_object(
             WHERE p.activo = TRUE
               AND p.borrado = FALSE
               AND v.precio IS NOT NULL
+              -- Coherencia con la visibilidad del catálogo (0007): un producto
+              -- con proveedor inactivo o borrado NO se publica en el snapshot
+              -- (el LEFT JOIN de arriba solo sirve para el nombre).
+              AND (
+                  p.proveedor_id IS NULL
+                  OR EXISTS (
+                      SELECT 1 FROM proveedores prv
+                      WHERE prv.id = p.proveedor_id
+                        AND prv.activo = TRUE
+                        AND prv.borrado = FALSE
+                  )
+              )
         ) prods
     )
 );
