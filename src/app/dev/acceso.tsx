@@ -90,24 +90,38 @@ export default function DevAcceso() {
     if (procesando) return;
     setErrores((prev) => ({ ...prev, [p.id]: '' }));
     setProcesando(p.id);
-    if (!p.email) {
-      // Anónimo: cierra la sesión actual y vuelve al catálogo público.
-      await supabase.auth.signOut();
-      setProcesando(null);
+    try {
+      if (!p.email) {
+        // Anónimo: cierra SOLO la sesión de este dispositivo (los perfiles del
+        // seed se comparten entre dispositivos de desarrollo) y vuelve al
+        // catálogo público. Si el cierre falla, nos quedamos en esta pantalla
+        // mostrando el error bajo el perfil.
+        const { error } = await supabase.auth.signOut({ scope: 'local' });
+        if (error) {
+          setErrores((prev) => ({ ...prev, [p.id]: error.message }));
+          return;
+        }
+        router.replace('/');
+        return;
+      }
+      const { error } = await supabase.auth.signInWithPassword({
+        email: p.email,
+        password: p.password ?? '',
+      });
+      if (error) {
+        setErrores((prev) => ({ ...prev, [p.id]: error.message }));
+        return;
+      }
+      // El listener de auth-context refresca sesión y perfil; vamos al catálogo.
       router.replace('/');
-      return;
+    } catch (e) {
+      setErrores((prev) => ({
+        ...prev,
+        [p.id]: e instanceof Error ? e.message : 'Error inesperado al cambiar de perfil',
+      }));
+    } finally {
+      setProcesando(null);
     }
-    const { error } = await supabase.auth.signInWithPassword({
-      email: p.email,
-      password: p.password ?? '',
-    });
-    setProcesando(null);
-    if (error) {
-      setErrores((prev) => ({ ...prev, [p.id]: error.message }));
-      return;
-    }
-    // El listener de auth-context refresca sesión y perfil; vamos al catálogo.
-    router.replace('/');
   };
 
   return (
