@@ -1,5 +1,13 @@
 import { Redirect, router } from 'expo-router';
-import { Boxes, Check, ChevronLeft, Plus } from 'lucide-react-native';
+import {
+  Boxes,
+  Check,
+  ChevronLeft,
+  Flame,
+  Flower,
+  Plus,
+  type LucideIcon,
+} from 'lucide-react-native';
 import * as React from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,6 +22,15 @@ import { useAuth } from '@/hooks/use-auth';
 import { useColoresIcono } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import type { PerfilUsuario, Proveedor } from '@/lib/types';
+
+// Icono asociado a cada proveedor: llama (pellets), flor (leña) o cajas por
+// defecto. (Duplicada a propósito en admin/comerciales.tsx para no crear un
+// módulo compartido mientras otros workers editan estos archivos.)
+function iconoProveedor(icono: string | null | undefined): LucideIcon {
+  if (icono === 'flame') return Flame;
+  if (icono === 'flower') return Flower;
+  return Boxes;
+}
 
 // Fila de un comercial dentro de un proveedor: checkbox de asignación.
 // Marcado = fila existente y habilitada → desmarcar desasigna; sin fila →
@@ -219,12 +236,17 @@ export default function AdminProveedores() {
           ) : (
             <View className="gap-3">
               {mensajeLista && <Text className="text-sm text-muted-foreground">{mensajeLista}</Text>}
-              {proveedores.map((p) => (
+              {proveedores.map((p) => {
+                const Icono = iconoProveedor(p.icono);
+                return (
                 <Card key={p.id} className="rounded-[10px] p-4">
                   <CardContent className="gap-2">
                     <View className="flex-row items-start justify-between gap-2">
                       <View className="flex-1 gap-1">
-                        <Text className="font-medium">{p.nombre}</Text>
+                        <View className="flex-row items-center gap-2">
+                          <Icono size={18} color={colores.primario} />
+                          <Text className="font-medium">{p.nombre}</Text>
+                        </View>
                         <Text className="text-xs text-muted-foreground">
                           {[p.nif, p.email, p.telefono].filter(Boolean).join(' · ') ||
                             'Sin datos de contacto'}
@@ -240,11 +262,10 @@ export default function AdminProveedores() {
                       <Button
                         size="sm"
                         variant="outline"
-                        // '/catalogo' aún no está en los tipos generados de rutas
-                        // (.expo/types/router.d.ts): se regeneran al arrancar el
-                        // dev server. El `as never` mantiene el typecheck verde.
+                        // El catálogo vive en la ruta raíz ('/'): se filtra por
+                        // proveedor con el query param que lee catalogo-screen.
                         onPress={() =>
-                          router.push({ pathname: '/catalogo', params: { proveedor: p.id } } as never)
+                          router.push({ pathname: '/', params: { proveedor: p.id } })
                         }
                       >
                         <Boxes size={14} color={colores.tenue} />
@@ -307,7 +328,8 @@ export default function AdminProveedores() {
                     </View>
                   </CardContent>
                 </Card>
-              ))}
+                );
+              })}
             </View>
           )}
         </View>

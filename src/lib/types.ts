@@ -163,6 +163,7 @@ export interface Proveedor {
   email: string | null;
   telefono: string | null;
   activo: boolean;
+  icono?: string | null;
 }
 
 export interface ComercialProveedor {

@@ -1,10 +1,17 @@
 import { Redirect, router } from 'expo-router';
-import { Check, ChevronLeft, Plus } from 'lucide-react-native';
+import {
+  Boxes,
+  Check,
+  ChevronLeft,
+  Flame,
+  Flower,
+  Plus,
+  type LucideIcon,
+} from 'lucide-react-native';
 import * as React from 'react';
 import { ActivityIndicator, Modal, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -20,6 +27,15 @@ import { useAuth } from '@/hooks/use-auth';
 import { useColoresIcono } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import type { PerfilUsuario, Proveedor } from '@/lib/types';
+
+// Icono asociado a cada proveedor: llama (pellets), flor (leña) o cajas por
+// defecto. (Duplicada a propósito en admin/proveedores.tsx para no crear un
+// módulo compartido mientras otros workers editan estos archivos.)
+function iconoProveedor(icono: string | null | undefined): LucideIcon {
+  if (icono === 'flame') return Flame;
+  if (icono === 'flower') return Flower;
+  return Boxes;
+}
 
 // Accesos a proveedores de un comercial: un checkbox por proveedor (único
 // booleano: asignado). Componente propio, así que puede llamar al hook de
@@ -59,6 +75,7 @@ function FilaComercial({
         // marcarla se rehabilita en lugar de crear un duplicado.
         const fila = asignaciones.find((a) => a.proveedor_id === p.id);
         const marcado = fila?.habilitado === true;
+        const Icono = iconoProveedor(p.icono);
         return (
           <Pressable
             key={p.id}
@@ -85,6 +102,7 @@ function FilaComercial({
             >
               {marcado && <Check size={14} strokeWidth={3} color={colores.primario} />}
             </View>
+            <Icono size={14} color={marcado ? colores.primario : colores.tenue} />
             <Text
               numberOfLines={1}
               className={cn(
@@ -230,9 +248,7 @@ export default function AdminComerciales() {
                           )}
                         </View>
                         <View className="w-16 items-end">
-                          <Badge variant="outline">
-                            <Text>{clientes.length} clientes</Text>
-                          </Badge>
+                          <Text className="text-sm font-semibold">{clientes.length}</Text>
                         </View>
                       </View>
                     </Pressable>

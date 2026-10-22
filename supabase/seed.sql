@@ -191,8 +191,8 @@ VALUES
 -- (Fansa se asigna a 6666/7777 al final del seed). El INSERT de Eider se
 -- repite al final del seed (ON CONFLICT: re-ejecutable en BD viva).
 -- ---------------------------------------------------------------------------
-INSERT INTO proveedores (id, nombre, nif) VALUES
-('91000000-0000-4000-8000-000000000004', 'Eider Biomasa', 'B95000000')
+INSERT INTO proveedores (id, nombre, nif, icono) VALUES
+('91000000-0000-4000-8000-000000000004', 'Eider Biomasa', 'B95000000', 'flame')
 ON CONFLICT (id) DO NOTHING;
 
 UPDATE productos SET proveedor_id = '91000000-0000-4000-8000-000000000004'
@@ -339,8 +339,8 @@ INSERT INTO descuentos_cliente_producto (cliente_id, producto_id, descuento_porc
 -- ============================================================================
 
 -- Proveedor y asignación al comercial de desarrollo.
-INSERT INTO proveedores (id, nombre, nif) VALUES
-('91000000-0000-4000-8000-000000000004', 'Eider Biomasa', 'B95000000')
+INSERT INTO proveedores (id, nombre, nif, icono) VALUES
+('91000000-0000-4000-8000-000000000004', 'Eider Biomasa', 'B95000000', 'flame')
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO comercial_proveedor (comercial_id, proveedor_id) VALUES
@@ -888,8 +888,8 @@ ON CONFLICT (producto_id, transporte) WHERE borrado = FALSE DO NOTHING;
 -- ============================================================================
 
 -- Proveedor.
-INSERT INTO proveedores (id, nombre) VALUES
-('91000000-0000-4000-8000-000000000005', 'Fansa')
+INSERT INTO proveedores (id, nombre, icono) VALUES
+('91000000-0000-4000-8000-000000000005', 'Fansa', 'flower')
 ON CONFLICT (id) DO NOTHING;
 
 -- Categoría gama (los ids 011-015 ya los usa Eider).
