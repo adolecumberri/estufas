@@ -39,7 +39,12 @@ INSERT INTO auth.users (
  'authenticated', 'authenticated', 'empresa@estufas.local',
  crypt('Empresa123!', gen_salt('bf')), now(), now(), now(),
  '{"provider":"email","providers":["email"]}',
- '{"rol":"cliente","tipo_cliente":"empresa","nombre":"Contacto","apellidos":"Empresa","razon_social":"Calor Hogar S.L.","nif_cif":"B12345678"}', '', '', '', '')
+ '{"rol":"cliente","tipo_cliente":"empresa","nombre":"Contacto","apellidos":"Empresa","razon_social":"Calor Hogar S.L.","nif_cif":"B12345678"}', '', '', '', ''),
+('00000000-0000-0000-0000-000000000000', '88888888-8888-4888-8888-888888888888',
+ 'authenticated', 'authenticated', 'suelto@estufas.local',
+ crypt('Suelto123!', gen_salt('bf')), now(), now(), now(),
+ '{"provider":"email","providers":["email"]}',
+ '{"rol":"cliente","tipo_cliente":"particular","nombre":"Cliente","apellidos":"Suelto"}', '', '', '', '')
 ON CONFLICT (id) DO NOTHING;
 
 -- Con la migración 0010 el trigger de registro SIEMPRE crea perfiles 'cliente'

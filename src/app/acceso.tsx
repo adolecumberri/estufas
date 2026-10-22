@@ -116,6 +116,20 @@ export default function Acceso() {
             <Button variant="ghost" className="w-full" onPress={() => router.replace('/')}>
               <Text className="text-sm text-muted-foreground">Volver al catálogo</Text>
             </Button>
+            {__DEV__ && (
+              <Pressable
+                accessibilityRole="link"
+                className="self-center py-1"
+                // '/dev/acceso' aún no está en los tipos generados de rutas
+                // (.expo/types/router.d.ts): se regeneran al arrancar el dev
+                // server. El `as never` mantiene el typecheck verde hasta entonces.
+                onPress={() => router.push('/dev/acceso' as never)}
+              >
+                <Text className="text-xs text-muted-foreground underline">
+                  Acceso rápido (dev)
+                </Text>
+              </Pressable>
+            )}
           </CardContent>
         </Card>
       </View>
