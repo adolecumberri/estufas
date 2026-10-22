@@ -1,5 +1,5 @@
 import { Redirect, router } from 'expo-router';
-import { Factory, Users } from 'lucide-react-native';
+import { ChevronLeft, Factory, Users } from 'lucide-react-native';
 import * as React from 'react';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Text } from '@/components/ui/text';
 import { useAuth } from '@/hooks/use-auth';
+import { volverA } from '@/lib/navegacion';
 import { useColoresIcono } from '@/lib/theme';
 
 const SECCIONES = [
@@ -24,7 +25,16 @@ export default function Admin() {
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top + 8 }}>
-      <View className="px-4 pb-4">
+      {/* Cabecera con volver (al catálogo si no hay historial). */}
+      <View className="flex-row items-center gap-2 px-4 pb-4">
+        <Pressable
+          onPress={() => volverA('/')}
+          accessibilityRole="button"
+          accessibilityLabel="Volver al catálogo"
+          className="rounded-md p-1 active:bg-accent"
+        >
+          <ChevronLeft size={24} color={colores.primerPlano} />
+        </Pressable>
         <Text className="text-xl font-bold tracking-tight">Administración</Text>
       </View>
       <View className="gap-3 px-4">
