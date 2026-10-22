@@ -79,6 +79,9 @@ export default function ProductoDetalle() {
     producto.imagen_url,
     ...producto.galeria.map((g) => g.url),
   ].filter((u): u is string => Boolean(u));
+  // Sin ninguna foto (catálogos importados) se muestra el placeholder
+  // empaquetado (fuenteImagen(null) lo resuelve).
+  const fuentes = imagenes.length > 0 ? imagenes : [null];
 
   // Filas de la tarjeta "Precios por transporte" (si hay datos de transporte).
   const preciosTransporte = producto.precios_transporte;
@@ -150,10 +153,10 @@ export default function ProductoDetalle() {
           pagingEnabled
           showsHorizontalScrollIndicator={false}
         >
-          {imagenes.map((url, i) => (
+          {fuentes.map((url, i) => (
             <Image
               key={`${url}-${i}`}
-              source={fuenteImagen(url) ?? undefined}
+              source={fuenteImagen(url)}
               className="h-80 w-screen bg-muted web:max-w-lg"
               contentFit="cover"
               transition={200}

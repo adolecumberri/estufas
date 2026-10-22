@@ -72,7 +72,7 @@ export function TarjetaProducto({
           <View className="relative aspect-square w-full overflow-hidden bg-muted">
             <View className="h-full w-full p-2.5">
               <Image
-                source={fuenteImagen(producto.imagen_url) ?? undefined}
+                source={fuenteImagen(producto.imagen_url)}
                 className="h-full w-full"
                 contentFit="cover"
                 transition={200}
