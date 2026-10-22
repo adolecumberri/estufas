@@ -142,7 +142,7 @@ export default function ClienteDetalle() {
   if (cargando || !cliente) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator color="hsl(24.6 95% 53.1%)" />
+        <ActivityIndicator color="hsl(124.3 17.7% 31%)" />
       </View>
     );
   }
@@ -465,7 +465,7 @@ export default function ClienteDetalle() {
                   />
                 </View>
                 {catalogo.cargando ? (
-                  <ActivityIndicator color="hsl(24.6 95% 53.1%)" />
+                  <ActivityIndicator color="hsl(124.3 17.7% 31%)" />
                 ) : catalogo.productos.length === 0 ? (
                   <Text className="text-sm text-muted-foreground">Sin resultados.</Text>
                 ) : (

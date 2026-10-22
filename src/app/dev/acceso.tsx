@@ -154,7 +154,7 @@ export default function DevAcceso() {
                   <View className="flex-row items-center justify-between gap-2">
                     <Text className="font-medium">{p.nombre}</Text>
                     {procesando === p.id && (
-                      <ActivityIndicator color="hsl(24.6 95% 53.1%)" />
+                      <ActivityIndicator color="hsl(124.3 17.7% 31%)" />
                     )}
                   </View>
                   <Text className="text-sm">{p.email ?? 'Sin sesión'}</Text>

@@ -86,7 +86,7 @@ export default function AdminPromociones() {
 
         {cargando ? (
           <View className="items-center py-8">
-            <ActivityIndicator color="hsl(24.6 95% 53.1%)" />
+            <ActivityIndicator color="hsl(124.3 17.7% 31%)" />
           </View>
         ) : (
           <View className="gap-3">

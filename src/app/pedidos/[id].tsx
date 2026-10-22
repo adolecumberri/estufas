@@ -123,7 +123,7 @@ export default function PedidoDetalle() {
         {error ? (
           <Text className="px-8 text-center text-muted-foreground">{error}</Text>
         ) : (
-          <ActivityIndicator color="hsl(24.6 95% 53.1%)" />
+          <ActivityIndicator color="hsl(124.3 17.7% 31%)" />
         )}
       </View>
     );

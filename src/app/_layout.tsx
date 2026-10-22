@@ -5,25 +5,20 @@ import { Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
-import { vars } from 'nativewind';
 import * as React from 'react';
 import { Platform, useColorScheme, View } from 'react-native';
 
 import { AuthProvider } from '@/contexts/auth-context';
-import { ProveedorActivoProvider, useProveedorActivo } from '@/contexts/proveedor-activo-context';
+import { ProveedorActivoProvider } from '@/contexts/proveedor-activo-context';
 import { SolicitudProvider } from '@/contexts/solicitud-context';
-import { textoSobreProveedor, tripletProveedor } from '@/lib/colores-proveedor';
 import { NAV_THEME } from '@/lib/theme';
 
 void SplashScreen.preventAutoHideAsync();
 
-// Contenido raíz: consume el proveedor activo y aplica sus colores como
-// variables CSS de NativeWind en el contenedor. Al cambiar de proveedor se
-// re-pinta el primario (--primary / --primary-foreground) de TODA la app,
-// porque todos los tokens bg-primary/text-primary resuelven desde aquí.
+// Contenido raíz. El primario global es el VERDE por defecto de la app
+// (--primary en global.css); el color del proveedor activo se aplica solo en
+// las vistas relacionadas con proveedores (p. ej. el catálogo), no aquí.
 function ContenidoRaiz({ scheme }: { scheme: 'light' | 'dark' }) {
-  const { activo } = useProveedorActivo();
-
   return (
     <>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
@@ -32,17 +27,7 @@ function ContenidoRaiz({ scheme }: { scheme: 'light' | 'dark' }) {
           neutro, igual que la maqueta de Google Stitch. En nativo estas
           clases web: no tienen efecto. */}
       <View className="flex-1 web:items-center web:bg-zinc-100 web:dark:bg-zinc-950">
-        <View
-          className="relative w-full flex-1 web:max-w-[430px] web:shadow-2xl"
-          style={
-            activo
-              ? vars({
-                  '--primary': tripletProveedor(activo.color),
-                  '--primary-foreground': textoSobreProveedor(activo.color),
-                })
-              : undefined
-          }
-        >
+        <View className="relative w-full flex-1 web:max-w-[430px] web:shadow-2xl">
           <Stack screenOptions={{ headerShown: false }} />
           <PortalHost />
         </View>

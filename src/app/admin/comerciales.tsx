@@ -62,7 +62,7 @@ function FilaComercial({
   };
 
   if (cargando) {
-    return <ActivityIndicator size="small" color="hsl(24.6 95% 53.1%)" />;
+    return <ActivityIndicator size="small" color="hsl(124.3 17.7% 31%)" />;
   }
   if (error) {
     return <Text className="text-xs text-destructive">No se pudo cargar la asignación</Text>;
@@ -201,7 +201,7 @@ export default function AdminComerciales() {
           {/* Tabla de comerciales */}
           {cargando ? (
             <View className="items-center py-16">
-              <ActivityIndicator color="hsl(24.6 95% 53.1%)" />
+              <ActivityIndicator color="hsl(124.3 17.7% 31%)" />
             </View>
           ) : error ? (
             <Text className="text-muted-foreground">{error}</Text>

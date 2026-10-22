@@ -167,7 +167,7 @@ export default function Pedidos() {
 
         {cargandoPedidos ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="hsl(24.6 95% 53.1%)" />
+            <ActivityIndicator color="hsl(124.3 17.7% 31%)" />
           </View>
         ) : errorPedidos ? (
           <View className="flex-1 items-center justify-center gap-3 px-8">

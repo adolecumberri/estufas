@@ -15,7 +15,7 @@ export interface TemaProveedor {
 
 // Primario global (mismo acento ámbar que el sistema de diseño).
 const TEMA_PRIMARIO: TemaProveedor = {
-  base: 'hsl(24.6 95% 53.1%)',
+  base: 'hsl(124.3 17.7% 31%)',
   tinte: 'hsla(24.6, 95%, 53.1%, 0.10)',
   borde: 'hsla(24.6, 95%, 53.1%, 0.40)',
   texto: 'hsl(24.6 95% 45%)',
@@ -80,7 +80,7 @@ export function temaProveedor(colorHex: string | null | undefined): TemaProveedo
 // variable --primary de NativeWind. Color ausente/inválido → primario global.
 export function tripletProveedor(hex: string | null | undefined): string {
   if (typeof hex !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(hex)) {
-    return '24.6 95% 53.1%';
+    return '124.3 17.7% 31%';
   }
   const { h, s, l } = hexAHsl(hex);
   return `${h} ${s}% ${l}%`;
