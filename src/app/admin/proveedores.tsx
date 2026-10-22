@@ -1,4 +1,6 @@
 import { Redirect, router } from 'expo-router';
+
+import { volverA } from '@/lib/navegacion';
 import {
   Boxes,
   ChevronLeft,
@@ -132,7 +134,7 @@ export default function AdminProveedores() {
       >
         <View style={{ paddingTop: insets.top + 8 }} className="gap-4 p-4">
           <View className="flex-row items-center gap-2">
-            <Pressable onPress={() => router.back()} className="rounded-md p-1 active:bg-accent">
+            <Pressable onPress={() => volverA('/admin')} className="rounded-md p-1 active:bg-accent">
               <ChevronLeft size={24} color={colores.primerPlano} />
             </Pressable>
             <Text className="flex-1 text-xl font-bold tracking-tight">Proveedores</Text>

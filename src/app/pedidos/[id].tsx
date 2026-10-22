@@ -28,6 +28,7 @@ import { useCatalogo } from '@/hooks/use-catalogo';
 import { useAccionesPedido, usePedido } from '@/hooks/use-pedidos';
 import { obtenerProducto } from '@/lib/catalogo-local';
 import { formatEUR, formatFecha, formatFechaHora } from '@/lib/format';
+import { volverA } from '@/lib/navegacion';
 import { fuenteImagen } from '@/lib/imagenes';
 import { useColoresIcono } from '@/lib/theme';
 
@@ -143,7 +144,7 @@ export default function PedidoDetalle() {
         {/* 1. Cabecera: volver + Detalle de Gestión + nº + estado */}
         <View className="flex-row items-center gap-2">
           <Pressable
-            onPress={() => router.back()}
+            onPress={() => volverA('/pedidos')}
             className="rounded-[10px] bg-accent p-2 active:bg-accent"
             accessibilityLabel="Volver al listado de pedidos"
           >

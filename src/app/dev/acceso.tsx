@@ -2,6 +2,8 @@
 // roles y reglas de visibilidad sin teclear credenciales (ver
 // docs/USUARIOS_PRUEBA.md). Fuera de __DEV__ no existe: redirige al catálogo.
 import { Redirect, router } from 'expo-router';
+
+import { volverA } from '@/lib/navegacion';
 import { ChevronLeft } from 'lucide-react-native';
 import * as React from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
@@ -127,7 +129,7 @@ export default function DevAcceso() {
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top + 8 }}>
       <View className="flex-row items-center gap-2 px-4 pb-2">
-        <Pressable onPress={() => router.back()} className="rounded-md p-1 active:bg-accent">
+        <Pressable onPress={() => volverA('/acceso')} className="rounded-md p-1 active:bg-accent">
           <ChevronLeft size={24} color={colores.primerPlano} />
         </Pressable>
         <Text className="text-xl font-bold tracking-tight">Acceso rápido (dev)</Text>

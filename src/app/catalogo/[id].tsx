@@ -16,6 +16,7 @@ import { useSolicitud } from '@/contexts/solicitud-context';
 import { useAuth } from '@/hooks/use-auth';
 import { useProducto } from '@/hooks/use-producto';
 import { formatEUR, formatPct } from '@/lib/format';
+import { volverA } from '@/lib/navegacion';
 import { fuenteImagen } from '@/lib/imagenes';
 import { useColoresIcono } from '@/lib/theme';
 
@@ -68,7 +69,7 @@ export default function ProductoDetalle() {
         <Text className="text-center text-muted-foreground">
           {error ?? 'Producto no disponible.'}
         </Text>
-        <Button variant="outline" onPress={() => router.back()}>
+        <Button variant="outline" onPress={() => volverA('/')}>
           <Text>Volver</Text>
         </Button>
       </View>
@@ -117,7 +118,7 @@ export default function ProductoDetalle() {
         {/* 1. Cabecera: volver + origen */}
         <View className="flex-row items-center gap-1 px-2">
           <Pressable
-            onPress={() => router.back()}
+            onPress={() => volverA('/')}
             className="rounded-md p-2 active:bg-accent"
             accessibilityLabel="Volver"
           >

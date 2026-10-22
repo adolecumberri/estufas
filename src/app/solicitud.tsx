@@ -16,6 +16,7 @@ import { useSolicitud } from '@/contexts/solicitud-context';
 import { useAuth } from '@/hooks/use-auth';
 import { useAccionesPedido, usePedido } from '@/hooks/use-pedidos';
 import { formatEUR } from '@/lib/format';
+import { volverA } from '@/lib/navegacion';
 import { fuenteImagen } from '@/lib/imagenes';
 import { useColoresIcono } from '@/lib/theme';
 
@@ -122,7 +123,7 @@ export default function Solicitud() {
                 </Text>
               )}
             </View>
-            <Button variant="ghost" size="sm" onPress={() => router.back()}>
+            <Button variant="ghost" size="sm" onPress={() => volverA('/')}>
               <Text className="text-sm text-muted-foreground">Volver</Text>
             </Button>
           </View>

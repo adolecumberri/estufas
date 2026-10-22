@@ -12,6 +12,7 @@ import { ESTADOS_PEDIDO, type EstadoPedido } from '@/constants';
 import { useComercialDetalle } from '@/hooks/use-admin';
 import { useAuth } from '@/hooks/use-auth';
 import { formatEUR, formatFecha } from '@/lib/format';
+import { volverA } from '@/lib/navegacion';
 import { useColoresIcono } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import type { Pedido, PerfilUsuario } from '@/lib/types';
@@ -73,7 +74,7 @@ export default function AdminComercialDetalle() {
         <View style={{ paddingTop: insets.top + 8 }} className="gap-4 p-4">
           {/* Cabecera: nombre y email del comercial */}
           <View className="flex-row items-center gap-2">
-            <Pressable onPress={() => router.back()} className="rounded-md p-1 active:bg-accent">
+            <Pressable onPress={() => volverA('/admin/comerciales')} className="rounded-md p-1 active:bg-accent">
               <ChevronLeft size={24} color={colores.primerPlano} />
             </Pressable>
             <View className="flex-1 gap-0.5">

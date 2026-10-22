@@ -28,6 +28,7 @@ import { useCatalogo } from '@/hooks/use-catalogo';
 import { useCliente, useDescuentos } from '@/hooks/use-comercial';
 import { usePedidos } from '@/hooks/use-pedidos';
 import { formatEUR, formatPct } from '@/lib/format';
+import { volverA } from '@/lib/navegacion';
 import { useColoresIcono } from '@/lib/theme';
 
 const DESCRIPCIONES_COMBUSTIBLE: Record<CombustibleId, string> = {
@@ -159,7 +160,7 @@ export default function ClienteDetalle() {
         {/* Cabecera */}
         <View className="gap-2">
           <Pressable
-            onPress={() => router.back()}
+            onPress={() => volverA('/cartera')}
             className="flex-row items-center gap-1 self-start px-1 py-1 active:bg-accent"
           >
             <ChevronLeft size={18} color={colores.primerPlano} />

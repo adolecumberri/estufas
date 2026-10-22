@@ -1,4 +1,6 @@
 import { Redirect, router } from 'expo-router';
+
+import { volverA } from '@/lib/navegacion';
 import { ChevronLeft } from 'lucide-react-native';
 import * as React from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
@@ -52,7 +54,7 @@ export default function AdminProductos() {
     <ScrollView showsVerticalScrollIndicator={false} className="flex-1 bg-background" contentContainerStyle={{ paddingBottom: 32 }}>
       <View style={{ paddingTop: insets.top + 8 }} className="gap-4 p-4">
         <View className="flex-row items-center gap-2">
-          <Pressable onPress={() => router.back()} className="rounded-md p-1 active:bg-accent">
+          <Pressable onPress={() => volverA('/admin')} className="rounded-md p-1 active:bg-accent">
             <ChevronLeft size={24} color={colores.primerPlano} />
           </Pressable>
           <Text className="text-xl font-bold tracking-tight">Productos</Text>
