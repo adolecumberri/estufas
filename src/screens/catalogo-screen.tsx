@@ -26,13 +26,21 @@ import { useColoresIcono } from '@/lib/theme';
 // compartidos del catálogo (diseño Stitch): cabecera fija, navegación
 // lateral por combustible, buscador, chips de categorías, rejilla de 2
 // columnas con paginación y barra de navegación.
-export default function CatalogoScreen() {
+//
+// `proveedorIdOverride` permite montar ESTA misma pantalla desde la ruta
+// dedicada /catalogo/proveedor/[id] (catálogo de un proveedor concreto).
+export default function CatalogoScreen({
+  proveedorIdOverride,
+}: {
+  proveedorIdOverride?: string | null;
+} = {}) {
   const insets = useSafeAreaInsets();
   const { session } = useAuth();
   const { clienteObjetivoId, aviso, limpiarAviso, anadir } = useSolicitud();
-  // Filtro por proveedor (Admin → Proveedores → "Ver catálogo").
-  const { proveedor } = useLocalSearchParams<{ proveedor?: string }>();
-  const cat = useCatalogo(clienteObjetivoId, proveedor ?? null);
+  // Filtro por proveedor: prop (ruta dedicada) o query param (compatibilidad).
+  const { proveedor: proveedorParam } = useLocalSearchParams<{ proveedor?: string }>();
+  const proveedor = proveedorIdOverride ?? proveedorParam ?? null;
+  const cat = useCatalogo(clienteObjetivoId, proveedor);
   const [menuAbierto, setMenuAbierto] = React.useState(false);
   const colores = useColoresIcono();
 
@@ -70,7 +78,12 @@ export default function CatalogoScreen() {
               : 'Solo productos de ese proveedor'}
           </Text>
           <Pressable
-            onPress={() => router.setParams({ proveedor: undefined })}
+            onPress={() => {
+              // En la ruta dedicada el "quitar filtro" vuelve al catálogo
+              // completo; con query param basta con limpiarlo.
+              if (proveedorIdOverride) router.replace('/');
+              else router.setParams({ proveedor: undefined });
+            }}
             className="rounded-md p-0.5 active:bg-accent"
             accessibilityLabel="Quitar filtro de proveedor"
           >

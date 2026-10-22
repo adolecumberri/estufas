@@ -262,10 +262,14 @@ export default function AdminProveedores() {
                       <Button
                         size="sm"
                         variant="outline"
-                        // El catálogo vive en la ruta raíz ('/'): se filtra por
-                        // proveedor con el query param que lee catalogo-screen.
+                        // Ruta dedicada del catálogo del proveedor; si aún no
+                        // está en los tipos generados, el cast mantiene el
+                        // typecheck verde (se regeneran al arrancar dev).
                         onPress={() =>
-                          router.push({ pathname: '/', params: { proveedor: p.id } })
+                          router.push({
+                            pathname: '/catalogo/proveedor/[id]',
+                            params: { id: p.id },
+                          } as never)
                         }
                       >
                         <Boxes size={14} color={colores.tenue} />
