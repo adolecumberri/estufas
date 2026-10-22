@@ -4,6 +4,7 @@ import ll7 from '../../assets/images/productos/ll7.jpg';
 import lp9 from '../../assets/images/productos/lp9.jpg';
 import tf12 from '../../assets/images/productos/tf12.jpg';
 import tf70 from '../../assets/images/productos/tf70.jpg';
+import placeholderProducto from '../../assets/images/placeholder-producto.png';
 
 // Las imágenes de desarrollo del seed apuntan a picsum.photos (internet
 // externo): desde el móvil en la LAN pueden no cargar. Los seeds conocidos se
@@ -20,9 +21,11 @@ const IMAGENES_LOCALES: { semilla: string; fuente: number }[] = [
 /**
  * Devuelve la fuente de imagen a usar en <Image> de expo-image: el asset
  * empaquetado si la URL corresponde a un seed conocido; si no, la URL remota.
+ * Sin imagen (productos importados de catálogos sin fotos) se usa el
+ * placeholder empaquetado, que siempre carga (offline-proof).
  */
-export function fuenteImagen(url: string | null | undefined): number | { uri: string } | null {
-  if (!url) return null;
+export function fuenteImagen(url: string | null | undefined): number | { uri: string } {
+  if (!url) return placeholderProducto;
   for (const { semilla, fuente } of IMAGENES_LOCALES) {
     if (url.includes(semilla)) return fuente;
   }

@@ -57,3 +57,7 @@ supabase/.temp/
 supabase/.branches/
 
 .dotslash-cache/
+
+# Datos crudos/normalizados de proveedores (contienen tarifas comerciales)
+docs/fansa.txt
+docs/fansa_normalizado.json

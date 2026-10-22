@@ -1,14 +1,14 @@
 import { Image } from 'expo-image';
-import { RefreshCw } from 'lucide-react-native';
+import { RefreshCw, X } from 'lucide-react-native';
 import * as React from 'react';
-import { ActivityIndicator, FlatList, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import banner from '../../assets/images/banner.jpg';
 
 import { Buscador } from '@/components/catalogo/buscador';
 import { EncabezadoCatalogo } from '@/components/catalogo/encabezado';
-import { TarjetaProducto } from '@/components/catalogo/tarjeta-producto';
+import TarjetaProducto from '@/components/catalogo/tarjeta-producto';
 import { NavInferior } from '@/components/navegacion/nav-inferior';
 import { NavLateral } from '@/components/navegacion/nav-lateral';
 import { Button } from '@/components/ui/button';
@@ -28,7 +28,7 @@ import { useColoresIcono } from '@/lib/theme';
 export default function CatalogoScreen() {
   const insets = useSafeAreaInsets();
   const { session } = useAuth();
-  const { clienteObjetivoId } = useSolicitud();
+  const { clienteObjetivoId, aviso, limpiarAviso, anadir } = useSolicitud();
   const cat = useCatalogo(clienteObjetivoId);
   const [menuAbierto, setMenuAbierto] = React.useState(false);
   const colores = useColoresIcono();
@@ -57,6 +57,21 @@ export default function CatalogoScreen() {
         <Buscador valor={cat.busqueda} onChange={cat.setBusqueda} />
       </View>
 
+      {/* Aviso global del carrito (p. ej. no mezclar proveedores): el mismo
+          aviso que muestra /solicitud, para que el rechazo se vea al añadir. */}
+      {aviso && (
+        <View className="mx-4 mb-2 flex-row items-start gap-2 rounded-[10px] border border-primary/40 bg-primary/10 p-3">
+          <Text className="flex-1 text-sm">{aviso}</Text>
+          <Pressable
+            onPress={limpiarAviso}
+            className="rounded-md p-0.5 active:bg-accent"
+            accessibilityLabel="Cerrar aviso"
+          >
+            <X size={16} color={colores.tenue} />
+          </Pressable>
+        </View>
+      )}
+
       {/* Cabecera de resultados */}
       <View className="flex-row items-center justify-between px-4 pb-2 pt-1">
         <Text className="text-sm font-semibold tracking-tight">Modelos disponibles</Text>
@@ -65,13 +80,14 @@ export default function CatalogoScreen() {
 
       {/* Rejilla de productos */}
       <FlatList
+        showsVerticalScrollIndicator={false}
         style={{ flex: 1 }}
         data={cat.productos}
         keyExtractor={(p) => p.producto_id}
         numColumns={2}
         columnWrapperStyle={{ gap: 12, paddingHorizontal: 16 }}
         contentContainerStyle={{ gap: 12, paddingBottom: (session ? 88 : 24) + insets.bottom }}
-        renderItem={({ item }) => <TarjetaProducto producto={item} origen={origen} />}
+        renderItem={({ item }) => <TarjetaProducto producto={item} origen={origen} onAnadir={anadir} />}
         ListEmptyComponent={
           cat.cargando ? (
             <View className="items-center py-16">

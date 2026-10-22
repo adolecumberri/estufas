@@ -18,6 +18,19 @@ $$;
 GRANT USAGE ON SCHEMA tests TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION tests.authenticate_as(UUID) TO anon, authenticated;
 
+-- Datos de partida de ESTE test (autocontenido: no depende del estado vivo de
+-- la BD; la transacción hace ROLLBACK al final). El 0% específico de LP-9
+-- sustituye al general del 10% de la empresa.
+RESET ROLE;
+UPDATE usuarios SET descuento_porcentaje = 10.00
+WHERE id = '44444444-4444-4444-8444-444444444444';
+DELETE FROM descuentos_cliente_producto
+WHERE cliente_id = '44444444-4444-4444-8444-444444444444'
+  AND producto_id = 'f1000000-0000-4000-8000-000000000001';
+INSERT INTO descuentos_cliente_producto (cliente_id, producto_id, descuento_porcentaje, creado_por)
+VALUES ('44444444-4444-4444-8444-444444444444', 'f1000000-0000-4000-8000-000000000001', 0.00,
+        '22222222-2222-4222-8222-222222222222');
+
 -- 1. Anónimo: precio base sin descuentos.
 SET LOCAL ROLE anon;
 SELECT results_eq(

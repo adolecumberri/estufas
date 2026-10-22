@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ChevronLeft, Minus, Plus } from 'lucide-react-native';
+import { ChevronLeft, Minus, Plus, X } from 'lucide-react-native';
 import * as React from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -19,12 +19,20 @@ import { formatEUR, formatPct } from '@/lib/format';
 import { fuenteImagen } from '@/lib/imagenes';
 import { useColoresIcono } from '@/lib/theme';
 
+// Formatea un valor flexible de la ficha técnica (JSONB productos.datos).
+function formatearValorDato(valor: string | number | boolean | null, unidad: string | null): string {
+  if (valor === null) return '—';
+  if (typeof valor === 'boolean') return valor ? 'Sí' : 'No';
+  const base = String(valor);
+  return unidad ? `${base} ${unidad}` : base;
+}
+
 export default function ProductoDetalle() {
   const { id, origen: origenParam } = useLocalSearchParams<{ id: string; origen?: string }>();
   const origen = origenParam ?? 'Catálogo';
   const insets = useSafeAreaInsets();
   const { session } = useAuth();
-  const { clienteObjetivoId, anadir } = useSolicitud();
+  const { clienteObjetivoId, anadir, aviso, limpiarAviso } = useSolicitud();
   const { producto, cargando, error } = useProducto(id, clienteObjetivoId);
   const colores = useColoresIcono();
 
@@ -71,6 +79,17 @@ export default function ProductoDetalle() {
     producto.imagen_url,
     ...producto.galeria.map((g) => g.url),
   ].filter((u): u is string => Boolean(u));
+  // Sin ninguna foto (catálogos importados) se muestra el placeholder
+  // empaquetado (fuenteImagen(null) lo resuelve).
+  const fuentes = imagenes.length > 0 ? imagenes : [null];
+
+  // Filas de la tarjeta "Precios por transporte" (si hay datos de transporte).
+  const preciosTransporte = producto.precios_transporte;
+  const filasTransporte = preciosTransporte && [
+    { etiqueta: 'Camión', valor: preciosTransporte.camion },
+    { etiqueta: 'Palet', valor: preciosTransporte.palet },
+    { etiqueta: 'Franquicia', valor: preciosTransporte.franquicia },
+  ];
 
   const anadirASolicitud = () => {
     if (!session) {
@@ -87,11 +106,13 @@ export default function ProductoDetalle() {
       descuento_pct: producto.descuento_pct,
       descuento_origen: producto.descuento_origen,
       imagen_url: producto.imagen_url,
+      proveedor_id: producto.proveedor_id,
+      proveedor_nombre: producto.proveedor_nombre,
     });
   };
 
   return (
-    <ScrollView className="flex-1 bg-background" contentContainerStyle={{ paddingBottom: 32 }}>
+    <ScrollView showsVerticalScrollIndicator={false} className="flex-1 bg-background" contentContainerStyle={{ paddingBottom: 32 }}>
       <View style={{ paddingTop: insets.top + 8 }}>
         {/* 1. Cabecera: volver + origen */}
         <View className="flex-row items-center gap-1 px-2">
@@ -105,6 +126,22 @@ export default function ProductoDetalle() {
           <Text className="flex-1 font-medium">{origen}</Text>
         </View>
 
+        {/* Aviso global del carrito (p. ej. no mezclar proveedores): mismo
+            banner que en /solicitud y el catálogo, para que el rechazo al
+            añadir se vea también desde la ficha. */}
+        {aviso && (
+          <View className="mx-4 mt-2 flex-row items-start gap-2 rounded-[10px] border border-primary/40 bg-primary/10 p-3">
+            <Text className="flex-1 text-sm">{aviso}</Text>
+            <Pressable
+              onPress={limpiarAviso}
+              className="rounded-md p-0.5 active:bg-accent"
+              accessibilityLabel="Cerrar aviso"
+            >
+              <X size={16} color={colores.tenue} />
+            </Pressable>
+          </View>
+        )}
+
         {/* 2. Nombre */}
         <View className="p-4 pb-2">
           <Text className="text-2xl font-bold tracking-tight">{producto.nombre}</Text>
@@ -114,12 +151,13 @@ export default function ProductoDetalle() {
         <ScrollView
           horizontal
           pagingEnabled
+          showsVerticalScrollIndicator={false}
           showsHorizontalScrollIndicator={false}
         >
-          {imagenes.map((url, i) => (
+          {fuentes.map((url, i) => (
             <Image
               key={`${url}-${i}`}
-              source={fuenteImagen(url) ?? undefined}
+              source={fuenteImagen(url)}
               className="h-80 w-screen bg-muted web:max-w-lg"
               contentFit="cover"
               transition={200}
@@ -130,6 +168,11 @@ export default function ProductoDetalle() {
         {/* 4. Referencia y marca · tipo */}
         <View className="mt-2 gap-0.5 px-4">
           <Text className="text-sm text-muted-foreground">Ref: {producto.referencia}</Text>
+          {producto.proveedor_nombre && (
+            <Text className="text-xs text-muted-foreground">
+              Proveedor: {producto.proveedor_nombre}
+            </Text>
+          )}
           {(producto.marca || producto.tipo) && (
             <Text className="text-sm text-muted-foreground">
               {[producto.marca, producto.tipo].filter(Boolean).join(' · ')}
@@ -209,32 +252,78 @@ export default function ProductoDetalle() {
             </CardContent>
           </Card>
 
-          {/* Características agrupadas */}
-          {grupos.map(([grupo, caracteristicas]) => (
-            <Card key={grupo}>
+          {/* Precios por transporte */}
+          {filasTransporte && filasTransporte.some((f) => f.valor !== null) && (
+            <Card>
               <CardHeader>
-                <CardTitle className="text-base">{grupo}</CardTitle>
+                <CardTitle className="text-base">Precios por transporte</CardTitle>
               </CardHeader>
               <CardContent className="gap-0">
-                {caracteristicas.map((c, i) => (
-                  <React.Fragment key={c.clave}>
+                {filasTransporte.map((f, i) => (
+                  <React.Fragment key={f.etiqueta}>
                     {i > 0 && <Separator className="my-2" />}
                     <View className="flex-row items-center justify-between">
-                      <Text className="text-sm text-muted-foreground">{c.nombre}</Text>
+                      <Text className="text-sm text-muted-foreground">{f.etiqueta}</Text>
                       <Text className="text-sm font-medium">
-                        {typeof c.valor === 'boolean'
-                          ? c.valor
-                            ? 'Sí'
-                            : 'No'
-                          : c.valor}
-                        {typeof c.valor !== 'boolean' && c.unidad ? ` ${c.unidad}` : ''}
+                        {f.valor !== null ? formatEUR(f.valor) : '—'}
                       </Text>
                     </View>
                   </React.Fragment>
                 ))}
+                <Text className="mt-2 text-xs text-muted-foreground">
+                  Según el tipo de transporte del pedido.
+                </Text>
               </CardContent>
             </Card>
-          ))}
+          )}
+
+          {/* Datos técnicos (JSONB) con fallback a características */}
+          {producto.datos?.length
+            ? producto.datos.map((g) => (
+                <Card key={g.grupo}>
+                  <CardHeader>
+                    <CardTitle className="text-base">{g.grupo}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="gap-0">
+                    {g.filas.map((f, i) => (
+                      <React.Fragment key={f.clave}>
+                        {i > 0 && <Separator className="my-2" />}
+                        <View className="flex-row items-center justify-between">
+                          <Text className="text-sm text-muted-foreground">{f.nombre}</Text>
+                          <Text className="text-sm font-medium">
+                            {formatearValorDato(f.valor, f.unidad)}
+                          </Text>
+                        </View>
+                      </React.Fragment>
+                    ))}
+                  </CardContent>
+                </Card>
+              ))
+            : grupos.map(([grupo, caracteristicas]) => (
+                <Card key={grupo}>
+                  <CardHeader>
+                    <CardTitle className="text-base">{grupo}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="gap-0">
+                    {caracteristicas.map((c, i) => (
+                      <React.Fragment key={c.clave}>
+                        {i > 0 && <Separator className="my-2" />}
+                        <View className="flex-row items-center justify-between">
+                          <Text className="text-sm text-muted-foreground">{c.nombre}</Text>
+                          <Text className="text-sm font-medium">
+                            {typeof c.valor === 'boolean'
+                              ? c.valor
+                                ? 'Sí'
+                                : 'No'
+                              : c.valor}
+                            {typeof c.valor !== 'boolean' && c.unidad ? ` ${c.unidad}` : ''}
+                          </Text>
+                        </View>
+                      </React.Fragment>
+                    ))}
+                  </CardContent>
+                </Card>
+              ))}
 
           {/* Descripción */}
           {producto.descripcion && (

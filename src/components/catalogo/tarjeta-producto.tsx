@@ -7,7 +7,6 @@ import { Pressable, View } from 'react-native';
 import { Card } from '@/components/ui/card';
 import { Text } from '@/components/ui/text';
 import { RUTAS } from '@/constants';
-import { useSolicitud } from '@/contexts/solicitud-context';
 import { useAuth } from '@/hooks/use-auth';
 import { formatEUR, formatPct } from '@/lib/format';
 import { fuenteImagen } from '@/lib/imagenes';
@@ -20,16 +19,19 @@ const CANTIDAD_MAX = 999;
 // Tarjeta de producto del catálogo (diseño Stitch): cabecera con imagen y
 // nombre, bloque central con referencia/precio y stepper, y botón "Añadir" a
 // ancho completo (solo con sesión). `origen` es la etiqueta a la que se
-// vuelve desde el detalle del producto.
-export function TarjetaProducto({
+// vuelve desde el detalle del producto. `onAnadir` llega por prop (estable
+// vía useCallback) para que React.memo evite re-renderizar toda la rejilla
+// con cada cambio del carrito.
+function TarjetaProducto({
   producto,
   origen,
+  onAnadir,
 }: {
   producto: ProductoCatalogo;
   origen?: string;
+  onAnadir: (linea: LineaSolicitud) => void;
 }) {
   const { session } = useAuth();
-  const { anadir } = useSolicitud();
   const [cantidad, setCantidad] = React.useState(1);
   const colores = useColoresIcono();
 
@@ -51,8 +53,10 @@ export function TarjetaProducto({
       descuento_pct: producto.descuento_pct,
       descuento_origen: producto.descuento_origen,
       imagen_url: producto.imagen_url,
+      proveedor_id: producto.proveedor_id,
+      proveedor_nombre: producto.proveedor_nombre,
     };
-    anadir(linea);
+    onAnadir(linea);
   };
 
   return (
@@ -70,7 +74,7 @@ export function TarjetaProducto({
           <View className="relative aspect-square w-full overflow-hidden bg-muted">
             <View className="h-full w-full p-2.5">
               <Image
-                source={fuenteImagen(producto.imagen_url) ?? undefined}
+                source={fuenteImagen(producto.imagen_url)}
                 className="h-full w-full"
                 contentFit="cover"
                 transition={200}
@@ -105,6 +109,13 @@ export function TarjetaProducto({
           <Text numberOfLines={1} className="text-xs text-muted-foreground">
             Ref: {producto.referencia}
           </Text>
+
+          {/* Proveedor (visible para saber si el carrito puede mezclarlo) */}
+          {producto.proveedor_nombre && (
+            <Text numberOfLines={1} className="text-[10px] text-muted-foreground">
+              {producto.proveedor_nombre}
+            </Text>
+          )}
 
           {/* Fila de precio con estado fiscal, con ajuste de línea */}
           <View className="flex-row flex-wrap items-baseline gap-x-1.5">
@@ -163,3 +174,5 @@ export function TarjetaProducto({
     </Pressable>
   );
 }
+
+export default React.memo(TarjetaProducto);

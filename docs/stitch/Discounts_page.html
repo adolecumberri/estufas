@@ -1,0 +1,612 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"><meta content="mobile_tab" name="shell-type"><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: 'class', theme: { extend: { 'colors': { 'on-tertiary': '#ffffff', 'inverse-on-surface': '#f1effa', 'energy-b': '#eab308', 'tertiary-fixed': '#cde5ff', 'amber-text': '#c2410c', 'surface-variant': '#e3e1ec', 'inverse-surface': '#2f3038', 'outline-variant': '#e0c0b1', 'outline': '#8c7164', 'surface': '#ffffff', 'on-error-container': '#93000a', 'on-surface': '#1a1b22', 'tertiary-fixed-dim': '#93ccff', 'text-primary-light': '#09090b', 'background': '#fbf8ff', 'tertiary': '#006398', 'on-background': '#1a1b22', 'on-surface-variant': '#584237', 'surface-dim': '#f4f4f5', 'surface-card-dark': '#18181b', 'inverse-primary': '#ffb690', 'surface-container-high': '#e8e7f1', 'secondary': '#5f5e61', 'error': '#ba1a1a', 'surface-container-low': '#f4f2fd', 'surface-dark': '#09090b', 'border-dark': '#27272a', 'primary-container': '#f97316', 'on-primary-fixed-variant': '#783200', 'surface-container-lowest': '#ffffff', 'on-primary-container': '#582200', 'energy-a-plus': '#15803d', 'amber-hover': '#ea580c', 'error-container': '#ffdad6', 'on-tertiary-fixed-variant': '#004b74', 'on-secondary-fixed': '#1b1b1e', 'destructive': '#ef4444', 'on-primary-fixed': '#341100', 'primary-fixed-dim': '#ffb690', 'secondary-fixed': '#e4e1e5', 'on-secondary': '#ffffff', 'border-light': '#e4e4e7', 'on-secondary-fixed-variant': '#47464a', 'secondary-fixed-dim': '#c8c6c9', 'destructive-container': '#fee2e2', 'on-primary': '#ffffff', 'energy-a': '#65a30d', 'surface-tint': '#9d4300', 'on-error': '#ffffff', 'text-primary-dark': '#fafafa', 'surface-container': '#fafafa', 'primary': '#9d4300', 'on-secondary-container': '#656467', 'on-tertiary-fixed': '#001d32', 'surface-container-highest': '#e3e1ec', 'on-tertiary-container': '#003554', 'amber-soft': '#ffedd5', 'primary-fixed': '#ffdbca', 'surface-bright': '#fbf8ff' }, 'borderRadius': { 'DEFAULT': '0.25rem', 'lg': '0.5rem', 'xl': '0.75rem', 'full': '9999px' }, 'spacing': { 'space-sm': '0.5rem', 'space-md': '0.75rem', 'gutter': '0.75rem', 'gutter-desktop': '1rem', 'space-xl': '1.5rem', 'space-lg': '1rem', 'space-xs': '0.25rem', 'margin': '1rem', 'margin-desktop': '1.5rem' }, 'fontFamily': { 'body-medium': ['Inter'], 'caption-sm': ['Inter'], 'body-base': ['Inter'], 'body-secondary': ['Inter'], 'headline-card': ['Inter'], 'badge-caps': ['Inter'], 'display-title': ['Inter'], 'headline-section': ['Inter'] }, 'fontSize': { 'body-medium': ['14px', { 'lineHeight': '20px', 'fontWeight': '500' }], 'caption-sm': ['12px', { 'lineHeight': '16px', 'letterSpacing': '0.01em', 'fontWeight': '500' }], 'body-base': ['16px', { 'lineHeight': '24px', 'fontWeight': '400' }], 'body-secondary': ['14px', { 'lineHeight': '20px', 'fontWeight': '400' }], 'headline-card': ['15px', { 'lineHeight': '20px', 'letterSpacing': '-0.01em', 'fontWeight': '600' }], 'badge-caps': ['11px', { 'lineHeight': '14px', 'letterSpacing': '0.03em', 'fontWeight': '700' }], 'display-title': ['24px', { 'lineHeight': '32px', 'letterSpacing': '-0.015em', 'fontWeight': '700' }], 'headline-section': ['18px', { 'lineHeight': '26px', 'letterSpacing': '-0.01em', 'fontWeight': '600' }] } } } };</script><style>@layer base { html, body { width: 100%; margin: 0; padding: 0; min-height: 100vh; } body { overscroll-behavior-y: none; } .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); } .pt-safe { padding-top: env(safe-area-inset-top, 0px); } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-surface text-text-primary-light font-body-base antialiased flex flex-col min-h-screen relative"><header class="fixed top-0 w-full z-50 bg-surface/90 backdrop-blur-xl pt-safe shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-16 px-gutter flex items-center justify-between gap-space-sm"><div class="flex items-center gap-space-sm"><button aria-label="Abrir menú de filtros y categorías" class="w-11 h-11 flex items-center justify-center rounded-lg text-text-primary-light hover:bg-surface-dim transition-colors" onclick="document.getElementById('catalog-drawer').classList.remove('-translate-x-full'); document.getElementById('drawer-backdrop').classList.remove('opacity-0', 'pointer-events-none');" type="button"><span class="material-symbols-outlined text-[24px]">menu</span></button><div class="flex items-center gap-space-xs"><img alt="Estufas Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1Vrz2KPAYwMYvGqeNxMxk0ldqUvA9DCvnTB1eR3rrD4GoI3CyYsEbxCt0kZZXUlC5X7YM2K3j6Sb_40mYE0dXDfoU_rIdcl6i84wkDDKdngznNLNk7WmHYj5ngts5auRLA4YSr134LVE9OIuh9X8GDJtbnDlb607vACOBxqRY9TEwI27ZmtDQvqro9GakbOcurDW782JhLk_z-LI-y5ds5cfSQbtrxt3fc1aLn6FzWWyp8pFPfn-DiJcszE"><div class="flex flex-col"><span class="font-headline-card text-headline-card text-text-primary-light leading-none">Estufas</span><span class="font-caption-sm text-caption-sm text-secondary">Catálogo</span></div></div></div><div class="flex items-center gap-space-xs"><a aria-label="Tu solicitud de presupuesto" class="relative w-11 h-11 flex items-center justify-center rounded-lg text-text-primary-light hover:bg-surface-dim transition-colors" data-path="solicitud-carrito" href="#"><span class="material-symbols-outlined text-[22px]">receipt_long</span><span class="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-primary-container text-on-primary font-badge-caps text-badge-caps flex items-center justify-center rounded-full">3</span></a><div class="w-11 h-11 flex items-center justify-center"><img alt="Profile" class="w-8 h-8 rounded-full object-cover ring-2 ring-primary-container/20" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBy1o2seyosLUTLLq_1p9GEStn6c6XMGhuX7Le7iLTqw0useguHTJAHE1TXnb8xzxhSTMDrgPOgj60c3Yk1GEI0JoQiK4iNXCIv6DIVw76b8SXUe7YCqUSKN43UxYJzQuK0BuWO7Bo-kSHtD03CO8lXSWfr780XmBs3xRfKHbuN2GI3f45u2cqQZY5Sq87wtXFH2ZSlJ-3cC_HrlgWSlVM22oj1B9oRr00LcrKAfSUXt8psMw6o-fTLgA"></div></div></div></header><div class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300" id="drawer-backdrop" onclick="document.getElementById('catalog-drawer').classList.add('-translate-x-full'); this.classList.add('opacity-0', 'pointer-events-none');"></div><aside class="fixed top-0 bottom-0 left-0 z-50 w-80 max-w-[85vw] bg-surface flex flex-col -translate-x-full transition-transform duration-300 ease-out shadow-[0_1px_16px_rgba(0,0,0,0.08)] pt-safe pb-safe" id="catalog-drawer"><div class="h-16 px-gutter flex items-center justify-between bg-surface-container"><div class="flex items-center gap-space-sm"><div class="w-9 h-9 rounded-full bg-amber-soft text-amber-text flex items-center justify-center font-headline-card text-headline-card">ES</div><div><h2 class="font-headline-card text-headline-card text-text-primary-light">Filtros Técnicos</h2><p class="font-caption-sm text-caption-sm text-secondary">Catálogo de Climatización</p></div></div><button class="w-11 h-11 flex items-center justify-center rounded-lg text-secondary hover:text-text-primary-light hover:bg-surface-dim" onclick="document.getElementById('catalog-drawer').classList.add('-translate-x-full'); document.getElementById('drawer-backdrop').classList.add('opacity-0', 'pointer-events-none');" type="button"><span class="material-symbols-outlined text-[20px]">close</span></button></div><div class="flex-1 overflow-y-auto px-gutter py-space-md flex flex-col gap-space-lg"><div class="flex flex-col gap-space-xs"><span class="font-badge-caps text-badge-caps text-secondary uppercase">Fabricante</span><div class="flex flex-wrap gap-space-xs pt-1"><button class="px-space-md py-1 rounded-full bg-amber-soft text-amber-text font-caption-sm text-caption-sm" type="button">Todas</button><button class="px-space-md py-1 rounded-full bg-surface-dim text-secondary hover:text-text-primary-light font-caption-sm text-caption-sm" type="button">Bronpi</button><button class="px-space-md py-1 rounded-full bg-surface-dim text-secondary hover:text-text-primary-light font-caption-sm text-caption-sm" type="button">EcoForest</button><button class="px-space-md py-1 rounded-full bg-surface-dim text-secondary hover:text-text-primary-light font-caption-sm text-caption-sm" type="button">Lacunza</button></div></div><div class="flex flex-col gap-space-xs"><span class="font-badge-caps text-badge-caps text-secondary uppercase">Taxonomía y Especificaciones</span><div class="flex flex-col divide-y divide-surface-dim"><details class="group py-space-sm"><summary class="flex items-center justify-between cursor-pointer list-none text-text-primary-light font-body-medium text-body-medium min-h-[44px]"><span>Combustible</span><span class="material-symbols-outlined text-[18px] text-secondary group-open:rotate-45 transition-transform">add</span></summary><div class="flex flex-col gap-space-xs pl-space-sm pt-space-xs"><a class="flex items-center justify-between py-2 text-primary-container font-body-medium text-body-medium" href="#"><span>Pellet</span><span class="font-caption-sm text-caption-sm text-secondary">42</span></a><a class="flex items-center justify-between py-2 text-secondary hover:text-text-primary-light font-body-secondary text-body-secondary" href="#"><span>Leña</span><span class="font-caption-sm text-caption-sm text-secondary">28</span></a><a class="flex items-center justify-between py-2 text-secondary hover:text-text-primary-light font-body-secondary text-body-secondary" href="#"><span>Biomasa Mixta</span><span class="font-caption-sm text-caption-sm text-secondary">11</span></a><a class="flex items-center justify-between py-2 text-secondary hover:text-text-primary-light font-body-secondary text-body-secondary" href="#"><span>Gas</span><span class="font-caption-sm text-caption-sm text-secondary">6</span></a></div></details><details class="group py-space-sm"><summary class="flex items-center justify-between cursor-pointer list-none text-text-primary-light font-body-medium text-body-medium min-h-[44px]"><span>Tipo de Instalación</span><span class="material-symbols-outlined text-[18px] text-secondary group-open:rotate-45 transition-transform">add</span></summary><div class="flex flex-col gap-space-xs pl-space-sm pt-space-xs"><a class="flex items-center justify-between py-2 text-secondary hover:text-text-primary-light font-body-secondary text-body-secondary" href="#"><span>Insertable / Cassette</span><span class="font-caption-sm text-caption-sm text-secondary">19</span></a><a class="flex items-center justify-between py-2 text-secondary hover:text-text-primary-light font-body-secondary text-body-secondary" href="#"><span>Canalizada</span><span class="font-caption-sm text-caption-sm text-secondary">24</span></a><a class="flex items-center justify-between py-2 text-secondary hover:text-text-primary-light font-body-secondary text-body-secondary" href="#"><span>Aire Forzado / Ventilada</span><span class="font-caption-sm text-caption-sm text-secondary">31</span></a><a class="flex items-center justify-between py-2 text-secondary hover:text-text-primary-light font-body-secondary text-body-secondary" href="#"><span>Fundición Rústica</span><span class="font-caption-sm text-caption-sm text-secondary">14</span></a><a class="flex items-center justify-between py-2 text-secondary hover:text-text-primary-light font-body-secondary text-body-secondary" href="#"><span>Termoestufas / Hidro</span><span class="font-caption-sm text-caption-sm text-secondary">8</span></a></div></details><details class="group py-space-sm"><summary class="flex items-center justify-between cursor-pointer list-none text-text-primary-light font-body-medium text-body-medium min-h-[44px]"><span>Potencia Térmica</span><span class="material-symbols-outlined text-[18px] text-secondary group-open:rotate-45 transition-transform">add</span></summary><div class="flex flex-col gap-space-xs pl-space-sm pt-space-xs"><a class="flex items-center justify-between py-2 text-secondary hover:text-text-primary-light font-body-secondary text-body-secondary" href="#"><span>Hasta 8 kW</span><span class="font-caption-sm text-caption-sm text-secondary">16</span></a><a class="flex items-center justify-between py-2 text-secondary hover:text-text-primary-light font-body-secondary text-body-secondary" href="#"><span>8 kW a 12 kW</span><span class="font-caption-sm text-caption-sm text-secondary">37</span></a><a class="flex items-center justify-between py-2 text-secondary hover:text-text-primary-light font-body-secondary text-body-secondary" href="#"><span>Más de 12 kW</span><span class="font-caption-sm text-caption-sm text-secondary">18</span></a></div></details></div></div></div><div class="p-gutter bg-surface-container flex items-center gap-space-sm"><button class="w-full h-11 rounded-lg bg-primary-container text-on-primary font-headline-card text-headline-card flex items-center justify-center shadow-[0_1px_8px_rgba(0,0,0,0.04)]" onclick="document.getElementById('catalog-drawer').classList.add('-translate-x-full'); document.getElementById('drawer-backdrop').classList.add('opacity-0', 'pointer-events-none');" type="button">Aplicar Filtros</button></div></aside><main class="flex flex-col relative w-full pt-16 pb-24 bg-surface min-h-[calc(100vh-4rem)]"><div class="flex flex-col w-full">
+<!-- Internal Header -->
+<div class="px-gutter pt-space-md pb-space-sm bg-surface">
+<button class="inline-flex items-center gap-space-xs text-secondary hover:text-text-primary-light transition-colors py-1 group" type="button">
+<span class="material-symbols-outlined text-[18px] group-hover:-translate-x-0.5 transition-transform">arrow_back</span>
+<span class="font-body-medium text-body-medium">Volver a Cartera</span>
+</button>
+<div class="mt-space-sm flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<h1 class="font-display-title text-display-title text-text-primary-light tracking-tight">Condiciones y Descuentos</h1>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-badge-caps text-badge-caps uppercase tracking-wider">
+          Empresa
+        </span>
+</div>
+<div class="flex flex-col gap-0.5 mt-0.5">
+<p class="font-headline-card text-headline-card text-text-primary-light">Calor Hogar S.L. <span class="font-body-secondary text-secondary">· CIF B12345678</span></p>
+<div class="flex items-center gap-1.5 text-secondary">
+<span class="material-symbols-outlined text-[15px]">mail</span>
+<span class="font-caption-sm text-caption-sm text-secondary">empresa@estufas.local</span>
+<span class="w-1 h-1 rounded-full bg-surface-dim mx-0.5"></span>
+<span class="inline-flex items-center text-energy-a-plus font-caption-sm text-caption-sm font-medium">Tarifa Profesional</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Content Stream -->
+<div class="px-gutter flex flex-col gap-space-lg pb-28 pt-space-xs">
+<!-- Section 1: General Discount Card -->
+<div class="bg-surface-container-low rounded-xl p-space-md shadow-sm flex flex-col gap-space-md">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-lg bg-amber-soft text-amber-text flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">percent</span>
+</div>
+<div>
+<h2 class="font-headline-section text-headline-section text-text-primary-light">Descuento General de Cartera</h2>
+<p class="font-caption-sm text-caption-sm text-secondary">Base para todos los pedidos</p>
+</div>
+</div>
+<!-- Toggle Switch -->
+<label class="relative inline-flex items-center cursor-pointer select-none">
+<input checked="" class="sr-only peer" id="toggle-general" type="checkbox">
+<div class="w-11 h-6 bg-surface-dim peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+<span class="sr-only">Estado activo</span>
+</label>
+</div>
+<p class="font-body-secondary text-body-secondary text-secondary">
+        Se aplica por defecto a todos los productos excepto excepciones de producto o promociones de tienda superiores.
+      </p>
+<!-- Percentage Adjustment Unit -->
+<div class="bg-surface rounded-lg p-space-sm flex flex-col gap-space-sm shadow-sm">
+<div class="flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-2">
+<span class="font-caption-sm text-caption-sm text-secondary uppercase font-semibold">Valor Porcentual</span>
+</div>
+<span class="font-caption-sm text-caption-sm text-energy-a-plus font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+            Activo
+          </span>
+</div>
+<div class="flex items-center gap-space-sm">
+<!-- Stepper Input -->
+<div class="flex items-center bg-surface-container rounded-lg px-1 py-0.5">
+<button class="w-9 h-9 rounded-md flex items-center justify-center text-text-primary-light hover:bg-surface active:scale-95 transition-all" onclick="adjustGeneralVal(-1)" type="button">
+<span class="material-symbols-outlined text-[18px]">remove</span>
+</button>
+<input aria-label="Porcentaje de descuento general" class="w-14 text-center font-headline-card text-headline-card text-text-primary-light bg-transparent focus:outline-none" id="general-discount-input" type="text" value="10">
+<span class="font-headline-card text-headline-card text-secondary pr-2">%</span>
+<button class="w-9 h-9 rounded-md flex items-center justify-center text-text-primary-light hover:bg-surface active:scale-95 transition-all" onclick="adjustGeneralVal(1)" type="button">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+<!-- Quick Chips -->
+<div class="flex items-center gap-1.5 flex-1 overflow-x-auto py-0.5">
+<button class="px-2.5 py-1.5 rounded-md bg-surface-container text-secondary hover:text-text-primary-light text-caption-sm font-caption-sm transition-colors" onclick="setGeneralVal(5)" type="button">5%</button>
+<button class="px-2.5 py-1.5 rounded-md bg-amber-soft text-amber-text text-caption-sm font-caption-sm font-semibold" onclick="setGeneralVal(10)" type="button">10%</button>
+<button class="px-2.5 py-1.5 rounded-md bg-surface-container text-secondary hover:text-text-primary-light text-caption-sm font-caption-sm transition-colors" onclick="setGeneralVal(15)" type="button">15%</button>
+<button class="px-2.5 py-1.5 rounded-md bg-surface-container text-secondary hover:text-text-primary-light text-caption-sm font-caption-sm transition-colors" onclick="setGeneralVal(20)" type="button">20%</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Section 2: Specific Discounts by Category -->
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div>
+<h2 class="font-headline-section text-headline-section text-text-primary-light">Por Categoría Técnica</h2>
+<p class="font-caption-sm text-caption-sm text-secondary">2 reglas activadas en catálogo</p>
+</div>
+<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-dim text-text-primary-light font-caption-sm text-caption-sm font-medium transition-colors" onclick="openDrawer('category')" type="button">
+<span class="material-symbols-outlined text-[16px] text-primary-container">add</span>
+<span>Añadir Categoría</span>
+</button>
+</div>
+<!-- Quick Search Categories -->
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-[18px]">search</span>
+<input class="w-full h-11 pl-9 pr-3 rounded-lg bg-surface-container font-body-secondary text-body-secondary text-text-primary-light placeholder:text-secondary focus:outline-none focus:bg-surface-container-high transition-colors" id="cat-search" oninput="filterCategories(this.value)" placeholder="Buscar combustible o tipo: Pellet, Leña, Insertables..." type="text">
+</div>
+<!-- Category Rule Cards -->
+<div class="flex flex-col gap-space-xs pt-1" id="category-rules-container">
+<!-- Rule 1 -->
+<div class="cat-rule-card bg-surface rounded-xl p-space-md shadow-sm flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-text-primary-light shrink-0">
+<span class="material-symbols-outlined text-[20px]">local_fire_department</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-headline-card text-headline-card text-text-primary-light truncate">Estufas de Pellet</span>
+<span class="font-caption-sm text-caption-sm text-secondary">Canalizadas, Aire y Autónomas</span>
+</div>
+</div>
+<div class="flex items-center gap-2 shrink-0">
+<span class="px-2.5 py-1 rounded-md bg-amber-soft text-amber-text font-headline-card text-caption-sm font-semibold">
+              15% Dto.
+            </span>
+<button aria-label="Modificar descuento de Estufas de Pellet" class="w-8 h-8 rounded-lg flex items-center justify-center text-secondary hover:text-text-primary-light hover:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+</button>
+<button aria-label="Eliminar regla de Estufas de Pellet" class="w-8 h-8 rounded-lg flex items-center justify-center text-secondary hover:text-destructive hover:bg-destructive-container/50 transition-colors" onclick="this.closest('.cat-rule-card').remove()" type="button">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</div>
+<!-- Rule 2 -->
+<div class="cat-rule-card bg-surface rounded-xl p-space-md shadow-sm flex items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-text-primary-light shrink-0">
+<span class="material-symbols-outlined text-[20px]">dashboard_customize</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-headline-card text-headline-card text-text-primary-light truncate">Insertables &amp; Hogares</span>
+<span class="font-caption-sm text-caption-sm text-secondary">Fundición, Cassette e Insert Leña</span>
+</div>
+</div>
+<div class="flex items-center gap-2 shrink-0">
+<span class="px-2.5 py-1 rounded-md bg-amber-soft text-amber-text font-headline-card text-caption-sm font-semibold">
+              12% Dto.
+            </span>
+<button aria-label="Modificar descuento de Insertables &amp; Hogares" class="w-8 h-8 rounded-lg flex items-center justify-center text-secondary hover:text-text-primary-light hover:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+</button>
+<button aria-label="Eliminar regla de Insertables &amp; Hogares" class="w-8 h-8 rounded-lg flex items-center justify-center text-secondary hover:text-destructive hover:bg-destructive-container/50 transition-colors" onclick="this.closest('.cat-rule-card').remove()" type="button">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Fast suggestions chips -->
+<div class="flex items-center gap-1.5 flex-wrap pt-1">
+<span class="font-caption-sm text-caption-sm text-secondary">Frecuentes:</span>
+<button class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-high hover:bg-surface-dim text-text-primary-light font-caption-sm text-caption-sm transition-colors" onclick="quickAddCategory('Pellet Canalizada', '14%')" type="button">
+<span>+ Pellet Canalizada</span>
+</button>
+<button class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-high hover:bg-surface-dim text-text-primary-light font-caption-sm text-caption-sm transition-colors" onclick="quickAddCategory('Leña Tradicional', '8%')" type="button">
+<span>+ Leña Tradicional</span>
+</button>
+<button class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-high hover:bg-surface-dim text-text-primary-light font-caption-sm text-caption-sm transition-colors" onclick="quickAddCategory('Biomasa Mixta', '10%')" type="button">
+<span>+ Biomasa</span>
+</button>
+</div>
+</div>
+<!-- Section 3: Specific Discounts by Product / Reference -->
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div>
+<h2 class="font-headline-section text-headline-section text-text-primary-light">Descuentos por Producto</h2>
+<p class="font-caption-sm text-caption-sm text-secondary"><span id="product-count">3</span> referencias con tarifa individualizada</p>
+</div>
+<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary-container text-on-primary font-caption-sm text-caption-sm font-semibold shadow-sm hover:bg-amber-hover transition-colors" onclick="openDrawer('product')" type="button">
+<span class="material-symbols-outlined text-[16px]">add</span>
+<span>Añadir Producto</span>
+</button>
+</div>
+<!-- Product Live Search Bar -->
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-[18px]">search</span>
+<input class="w-full h-11 pl-9 pr-3 rounded-lg bg-surface-container font-body-secondary text-body-secondary text-text-primary-light placeholder:text-secondary focus:outline-none focus:bg-surface-container-high transition-colors" id="prod-search" oninput="filterProducts(this.value)" placeholder="Buscar por referencia o modelo (ej. TerraFoc, Sintra...)" type="text">
+</div>
+<!-- Product Items List -->
+<div class="flex flex-col gap-space-xs pt-1" id="product-rules-container">
+<!-- Product 1: TerraFoc 12 kW -->
+<div class="prod-item-card bg-surface rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-14 h-14 rounded-lg bg-surface-container flex items-center justify-center p-1 shrink-0 overflow-hidden relative">
+<img class="w-full h-full object-cover rounded" data-alt="Compact modern black pellet stove TerraFoc 12 kW with glass front viewing chamber, studio clean white background product rendering" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBNBlCKVIheep8bjyW_k31VlzN9Je96wgMVzaoucyHv1om2UQz68wtaAyyB3ken6HYLEXEWrxJiOHuLtaQzyi9Qwo_T0y_ewR5fTVe4gd45OhlBX_cf7LLRytUxqJSvexOVNC46OBjiV9Jv2b624vHINDar9_ntoLFCZMTTPxaxOU-GSwwIDFAIjB31nBUcctgOsXQq2crRno2cgim-DQGY5kuWORVW4-ZZSOhTMPYfBk3dfKTGRKKLSw">
+<span class="absolute top-0.5 right-0.5 text-[9px] font-bold px-1 py-0.2 rounded bg-energy-a-plus text-on-primary leading-tight">A+</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-badge-caps text-badge-caps text-secondary uppercase">EcoForest</span>
+<span class="text-secondary text-[10px]">·</span>
+<span class="font-caption-sm text-caption-sm text-secondary font-mono">Ref. TF-12</span>
+</div>
+<h3 class="font-headline-card text-headline-card text-text-primary-light truncate">TerraFoc 12 kW Canalizada</h3>
+<div class="flex items-baseline gap-2 mt-0.5">
+<span class="font-caption-sm text-caption-sm text-secondary line-through">1.499,00 €</span>
+<span class="font-headline-card text-headline-card text-primary font-bold">1.349,10 €</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-1 shrink-0">
+<span class="px-2 py-0.5 rounded-full bg-amber-soft text-amber-text font-badge-caps text-badge-caps font-bold">
+                -10% DTO
+              </span>
+<button aria-label="Eliminar descuento de TerraFoc" class="w-8 h-8 rounded-lg flex items-center justify-center text-secondary hover:text-destructive hover:bg-destructive-container/50 transition-colors" onclick="removeProductCard(this)" type="button">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</div>
+<!-- Bottom Micro Action Bar for this item -->
+<div class="flex items-center justify-between pt-1 border-t-0 bg-surface-container-low rounded-lg px-2.5 py-1.5">
+<span class="font-caption-sm text-caption-sm text-secondary">Tipo: Específico de cuenta</span>
+<div class="flex items-center gap-2">
+<button class="text-primary-container font-caption-sm text-caption-sm font-semibold hover:underline flex items-center gap-0.5" onclick="editDiscountPrompt('TerraFoc 12 kW', 10)" type="button">
+<span class="material-symbols-outlined text-[14px]">tune</span>
+                Ajustar %
+              </button>
+</div>
+</div>
+</div>
+<!-- Product 2: Sintra 9 kW Negra -->
+<div class="prod-item-card bg-surface rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-14 h-14 rounded-lg bg-surface-container flex items-center justify-center p-1 shrink-0 overflow-hidden relative">
+<img class="w-full h-full object-cover rounded" data-alt="Contemporary dark anthracite cast iron wood stove Sintra 9 kW, warm ember glow visible through front ceramic window, sharp product photograph" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCM4KzeqorKNI2XdmzGC1MoFRtciOSF2ukjttTX0RYd9OO6LPjRvKnE0T5KpV0_5JZYw95DYSWZ3EpZTy8yXxUD3rUkadAEQ2ZoFpCTLVs2K7n9KfPLui-N6jN9Went3bHjTH4J43RXMDrkekCzt7HVh96waNau_S0FrYCsHH-F0TeB2FjyKz8URK6yfmBhoLyEZfSvEmlUwhAOf_zJS9N0v4iZKnnsvDaiOya6l10mjybXI1UxEc0gXg">
+<span class="absolute top-0.5 right-0.5 text-[9px] font-bold px-1 py-0.2 rounded bg-energy-a-plus text-on-primary leading-tight">A++</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-badge-caps text-badge-caps text-secondary uppercase">Bronpi</span>
+<span class="text-secondary text-[10px]">·</span>
+<span class="font-caption-sm text-caption-sm text-secondary font-mono">Ref. 013329</span>
+</div>
+<h3 class="font-headline-card text-headline-card text-text-primary-light truncate">Sintra 9 kW Negra Fundición</h3>
+<div class="flex items-baseline gap-2 mt-0.5">
+<span class="font-caption-sm text-caption-sm text-secondary line-through">1.353,00 €</span>
+<span class="font-headline-card text-headline-card text-primary font-bold">1.150,00 €</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-1 shrink-0">
+<span class="px-2 py-0.5 rounded-full bg-amber-soft text-amber-text font-badge-caps text-badge-caps font-bold">
+                -15% DTO
+              </span>
+<button aria-label="Eliminar descuento de Sintra 9 kW" class="w-8 h-8 rounded-lg flex items-center justify-center text-secondary hover:text-destructive hover:bg-destructive-container/50 transition-colors" onclick="removeProductCard(this)" type="button">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</div>
+<div class="flex items-center justify-between pt-1 bg-surface-container-low rounded-lg px-2.5 py-1.5">
+<span class="font-caption-sm text-caption-sm text-secondary">Tarifa Especial Instalador</span>
+<div class="flex items-center gap-2">
+<button class="text-primary-container font-caption-sm text-caption-sm font-semibold hover:underline flex items-center gap-0.5" onclick="editDiscountPrompt('Sintra 9 kW Negra', 15)" type="button">
+<span class="material-symbols-outlined text-[14px]">tune</span>
+                Ajustar %
+              </button>
+</div>
+</div>
+</div>
+<!-- Product 3: Exclusion Rule (0%) -->
+<div class="prod-item-card bg-surface rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-start justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-14 h-14 rounded-lg bg-surface-container flex items-center justify-center p-1 shrink-0 overflow-hidden relative">
+<img class="w-full h-full object-cover rounded" data-alt="High-end designer suspended steel fireplace Lume 9 matte finish, industrial architectural setting, minimalist product render" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAz9lzaC8Glk8vMbMiV24wupzDJ_30TR0HNBVjeq2RuSTRBsw3jCEGvVTpVzP4dKIVwxgpQPjz3C5L5Uup7TpKfG_VGH0nISKCGG1bo-NSDR4EMOzd_2HZU6LTGjVfJXWC4CdkWv6GBNiJ5K1iEPyKICpdemoaj0gFYl3XdJsnXYymULtUv_MtfZ_gu7Z2RSUvvET4lb-mIARG42PqdkYmtVpGudiMkjXS_s5iN3Ssxd-Jj6hO3nAI07g">
+<span class="absolute top-0.5 right-0.5 text-[9px] font-bold px-1 py-0.2 rounded bg-surface-dark text-text-primary-dark leading-tight">EXCL</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-1.5">
+<span class="font-badge-caps text-badge-caps text-secondary uppercase">Lacunza</span>
+<span class="text-secondary text-[10px]">·</span>
+<span class="font-caption-sm text-caption-sm text-secondary font-mono">Ref. LP-9</span>
+</div>
+<h3 class="font-headline-card text-headline-card text-text-primary-light truncate">Lume 9 Premium Suspendida</h3>
+<div class="flex items-baseline gap-2 mt-0.5">
+<span class="font-headline-card text-headline-card text-text-primary-light font-bold">2.450,00 €</span>
+<span class="font-caption-sm text-caption-sm text-secondary">PVP Fijo</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-1 shrink-0">
+<span class="px-2 py-0.5 rounded-full bg-surface-container-high text-secondary font-badge-caps text-badge-caps font-bold">
+                0% EXCLUIDO
+              </span>
+<button aria-label="Eliminar exclusión de Lume 9" class="w-8 h-8 rounded-lg flex items-center justify-center text-secondary hover:text-destructive hover:bg-destructive-container/50 transition-colors" onclick="removeProductCard(this)" type="button">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</div>
+<div class="flex items-center justify-between pt-1 bg-surface-container-low rounded-lg px-2.5 py-1.5">
+<span class="font-caption-sm text-caption-sm text-secondary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-secondary">block</span>
+              Excluido de descuento general (0%)
+            </span>
+<button class="text-secondary font-caption-sm text-caption-sm hover:underline" onclick="editDiscountPrompt('Lume 9', 0)" type="button">
+              Editar
+            </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Commercial Policy Banner / Audit Note -->
+<div class="bg-surface-container rounded-xl p-space-md flex gap-space-sm items-start">
+<span class="material-symbols-outlined text-primary-container text-[20px] shrink-0 mt-0.5">verified_user</span>
+<div class="flex flex-col gap-0.5">
+<h4 class="font-headline-card text-caption-sm font-semibold text-text-primary-light">Condiciones Vinculadas a CIF B12345678</h4>
+<p class="font-caption-sm text-caption-sm text-secondary">
+          Las modificaciones quedan registradas en el historial de auditoría comercial de la cuenta y entran en vigor de forma inmediata en las cotizaciones vigentes.
+        </p>
+</div>
+</div>
+</div>
+<!-- Interactive Slide-up Drawer / Modal for Quick Addition -->
+<div class="fixed inset-0 z-50 pointer-events-none transition-opacity duration-300 opacity-0 flex flex-col justify-end" id="add-modal">
+<!-- Backdrop -->
+<div class="absolute inset-0 bg-black/40 backdrop-blur-sm" onclick="closeDrawer()"></div>
+<!-- Modal Box -->
+<div class="relative w-full max-w-lg mx-auto bg-surface rounded-t-2xl p-space-lg shadow-xl flex flex-col gap-space-md translate-y-full transition-transform duration-300 ease-out z-10" id="modal-box">
+<!-- Handle -->
+<div class="w-12 h-1.5 rounded-full bg-surface-dim mx-auto -mt-2"></div>
+<div class="flex items-center justify-between">
+<div>
+<h3 class="font-headline-section text-headline-section text-text-primary-light" id="modal-title">Añadir Regla de Descuento</h3>
+<p class="font-caption-sm text-caption-sm text-secondary">Selección de catálogo con aplicación inmediata</p>
+</div>
+<button class="w-9 h-9 rounded-lg flex items-center justify-center text-secondary hover:text-text-primary-light hover:bg-surface-container" onclick="closeDrawer()" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<!-- Search in modal -->
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary text-[18px]">search</span>
+<input class="w-full h-11 pl-9 pr-3 rounded-lg bg-surface-container font-body-secondary text-body-secondary text-text-primary-light placeholder:text-secondary focus:outline-none focus:bg-surface-container-high transition-colors" id="modal-search" placeholder="Escribe modelo, referencia o tipo..." type="text">
+</div>
+<!-- Quick Discount selector -->
+<div class="flex flex-col gap-space-xs">
+<label class="font-caption-sm text-caption-sm text-secondary font-semibold">Porcentaje de Descuento Especial</label>
+<div class="flex items-center gap-space-sm">
+<div class="flex items-center bg-surface-container rounded-lg px-2 py-1 w-28">
+<input class="w-full text-center font-headline-card text-headline-card text-text-primary-light bg-transparent focus:outline-none" id="modal-pct-input" type="number" value="12">
+<span class="font-headline-card text-headline-card text-secondary">%</span>
+</div>
+<div class="flex items-center gap-1 overflow-x-auto flex-1">
+<button class="px-2 py-1 rounded bg-surface-container text-caption-sm font-caption-sm text-secondary" onclick="document.getElementById('modal-pct-input').value = '0'" type="button">0% (Excl.)</button>
+<button class="px-2 py-1 rounded bg-surface-container text-caption-sm font-caption-sm text-secondary" onclick="document.getElementById('modal-pct-input').value = '8'" type="button">8%</button>
+<button class="px-2 py-1 rounded bg-amber-soft text-amber-text text-caption-sm font-caption-sm font-semibold" onclick="document.getElementById('modal-pct-input').value = '12'" type="button">12%</button>
+<button class="px-2 py-1 rounded bg-surface-container text-caption-sm font-caption-sm text-secondary" onclick="document.getElementById('modal-pct-input').value = '15'" type="button">15%</button>
+<button class="px-2 py-1 rounded bg-surface-container text-caption-sm font-caption-sm text-secondary" onclick="document.getElementById('modal-pct-input').value = '20'" type="button">20%</button>
+</div>
+</div>
+</div>
+<!-- Internal audit reason field -->
+<div class="flex flex-col gap-space-xs">
+<label class="font-caption-sm text-caption-sm text-secondary font-semibold">Motivo comercial / Auditoría</label>
+<input class="w-full h-10 px-3 rounded-lg bg-surface-container font-caption-sm text-caption-sm text-text-primary-light placeholder:text-secondary focus:outline-none" id="modal-audit-input" type="text" value="Acuerdo marco anual de distribución">
+</div>
+<div class="flex items-center gap-space-sm pt-2">
+<button class="flex-1 h-11 rounded-lg bg-surface-container hover:bg-surface-dim font-headline-card text-headline-card text-text-primary-light transition-colors" onclick="closeDrawer()" type="button">
+          Cancelar
+        </button>
+<button class="flex-1 h-11 rounded-lg bg-primary-container hover:bg-amber-hover font-headline-card text-headline-card text-on-primary transition-colors flex items-center justify-center gap-1" onclick="confirmModalAction()" type="button">
+<span class="material-symbols-outlined text-[18px]">cloud_download</span>
+<span>Aplicar Regla</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Persistent Sticky Bottom Action Bar -->
+<div class="fixed bottom-20 left-0 w-full z-40 bg-surface/90 backdrop-blur-md px-gutter py-space-sm shadow-[0_-2px_10px_rgba(0,0,0,0.04)]">
+<div class="max-w-md mx-auto flex flex-col gap-1.5">
+<button class="w-full h-12 rounded-xl bg-primary-container hover:bg-amber-hover active:scale-[0.99] text-on-primary font-headline-card text-headline-card flex items-center justify-center gap-2 shadow-sm transition-all" id="save-btn" onclick="saveAllConditions()" type="button">
+<span class="material-symbols-outlined text-[20px]">save</span>
+<span>Guardar Condiciones de Cliente</span>
+</button>
+<p class="text-center font-caption-sm text-caption-sm text-secondary text-[11px]">
+        Los cambios se auditarán y aplicarán a futuros pedidos y presupuestos.
+      </p>
+</div>
+</div>
+<!-- Micro Interaction Toast -->
+<div class="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-inverse-surface text-inverse-on-surface font-caption-sm text-caption-sm flex items-center gap-2 shadow-lg opacity-0 pointer-events-none transition-all duration-300" id="toast">
+<span class="material-symbols-outlined text-energy-a text-[16px]">check_circle</span>
+<span id="toast-text">Cambios guardados con éxito</span>
+</div>
+</div>
+<script>
+  let activeModalType = 'product';
+
+  function adjustGeneralVal(delta) {
+    const el = document.getElementById('general-discount-input');
+    let current = parseInt(el.value, 10) || 0;
+    current = Math.max(0, Math.min(100, current + delta));
+    el.value = current;
+    highlightSaveNeeded();
+  }
+
+  function setGeneralVal(val) {
+    const el = document.getElementById('general-discount-input');
+    el.value = val;
+    highlightSaveNeeded();
+  }
+
+  function highlightSaveNeeded() {
+    const btn = document.getElementById('save-btn');
+    if (btn) {
+      btn.classList.add('animate-pulse');
+      setTimeout(() => btn.classList.remove('animate-pulse'), 1200);
+    }
+  }
+
+  function filterCategories(query) {
+    const q = (query || '').toLowerCase().trim();
+    const cards = document.querySelectorAll('.cat-rule-card');
+    cards.forEach(card => {
+      const text = card.textContent.toLowerCase();
+      card.style.display = text.includes(q) ? 'flex' : 'none';
+    });
+  }
+
+  function filterProducts(query) {
+    const q = (query || '').toLowerCase().trim();
+    const cards = document.querySelectorAll('.prod-item-card');
+    cards.forEach(card => {
+      const text = card.textContent.toLowerCase();
+      card.style.display = text.includes(q) ? 'flex' : 'none';
+    });
+  }
+
+  function quickAddCategory(name, pct) {
+    const container = document.getElementById('category-rules-container');
+    const newCard = document.createElement('div');
+    newCard.className = 'cat-rule-card bg-surface rounded-xl p-space-md shadow-sm flex items-center justify-between gap-space-sm';
+    newCard.innerHTML = `
+      <div class="flex items-center gap-space-sm min-w-0">
+        <div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-text-primary-light shrink-0">
+          <span class="material-symbols-outlined text-[20px]">tune</span>
+        </div>
+        <div class="flex flex-col min-w-0">
+          <span class="font-headline-card text-headline-card text-text-primary-light truncate">${name}</span>
+          <span class="font-caption-sm text-caption-sm text-secondary">Añadido de catálogo rápido</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <span class="px-2.5 py-1 rounded-md bg-amber-soft text-amber-text font-headline-card text-caption-sm font-semibold">
+          ${pct} Dto.
+        </span>
+        <button type="button" aria-label="Modificar descuento de ${name}" class="w-8 h-8 rounded-lg flex items-center justify-center text-secondary hover:text-text-primary-light hover:bg-surface-container transition-colors">
+          <span class="material-symbols-outlined text-[18px]">tune</span>
+        </button>
+        <button type="button" aria-label="Eliminar regla de ${name}" onclick="this.closest('.cat-rule-card').remove()" class="w-8 h-8 rounded-lg flex items-center justify-center text-secondary hover:text-destructive hover:bg-destructive-container/50 transition-colors">
+          <span class="material-symbols-outlined text-[18px]">delete</span>
+        </button>
+      </div>
+    `;
+    container.appendChild(newCard);
+    showToast(`Categoría "${name}" añadida`);
+    highlightSaveNeeded();
+  }
+
+  function removeProductCard(btn) {
+    const card = btn.closest('.prod-item-card');
+    if (card) {
+      card.style.transition = 'all 0.2s ease-out';
+      card.style.opacity = '0';
+      card.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        card.remove();
+        updateProductCount();
+      }, 200);
+      showToast('Descuento de producto eliminado');
+      highlightSaveNeeded();
+    }
+  }
+
+  function updateProductCount() {
+    const cards = document.querySelectorAll('.prod-item-card');
+    const counter = document.getElementById('product-count');
+    if (counter) counter.textContent = cards.length;
+  }
+
+  function openDrawer(type) {
+    activeModalType = type;
+    const modal = document.getElementById('add-modal');
+    const box = document.getElementById('modal-box');
+    const title = document.getElementById('modal-title');
+    const search = document.getElementById('modal-search');
+
+    if (type === 'category') {
+      title.textContent = 'Añadir Descuento por Categoría';
+      search.placeholder = 'Buscar familia o combustible (ej. Hidro, Termoestufas)...';
+    } else {
+      title.textContent = 'Añadir Descuento por Referencia';
+      search.placeholder = 'Buscar modelo, ref comercial o EAN...';
+    }
+
+    modal.classList.remove('pointer-events-none', 'opacity-0');
+    box.classList.remove('translate-y-full');
+  }
+
+  function closeDrawer() {
+    const modal = document.getElementById('add-modal');
+    const box = document.getElementById('modal-box');
+    modal.classList.add('opacity-0', 'pointer-events-none');
+    box.classList.add('translate-y-full');
+  }
+
+  function confirmModalAction() {
+    const pct = document.getElementById('modal-pct-input').value || '10';
+    const audit = document.getElementById('modal-audit-input').value || 'Acuerdo comercial';
+    const search = document.getElementById('modal-search').value.trim() || (activeModalType === 'category' ? 'Termoestufas Hidro' : 'Monza 10 kW Pellets');
+
+    if (activeModalType === 'category') {
+      quickAddCategory(search, pct + '%');
+    } else {
+      addProductCardDirect(search, pct, audit);
+    }
+    closeDrawer();
+  }
+
+  function addProductCardDirect(name, pct, auditNote) {
+    const container = document.getElementById('product-rules-container');
+    const newCard = document.createElement('div');
+    newCard.className = 'prod-item-card bg-surface rounded-xl p-space-md shadow-sm flex flex-col gap-space-sm';
+    newCard.innerHTML = `
+      <div class="flex items-start justify-between gap-space-sm">
+        <div class="flex items-center gap-space-sm min-w-0">
+          <div class="w-14 h-14 rounded-lg bg-surface-container flex items-center justify-center p-1 shrink-0 overflow-hidden relative">
+            <span class="material-symbols-outlined text-[28px] text-primary-container">fireplace</span>
+          </div>
+          <div class="flex flex-col min-w-0">
+            <div class="flex items-center gap-1.5">
+              <span class="font-badge-caps text-badge-caps text-secondary uppercase">Nuevo</span>
+              <span class="text-secondary text-[10px]">·</span>
+              <span class="font-caption-sm text-caption-sm text-secondary font-mono">Personalizado</span>
+            </div>
+            <h3 class="font-headline-card text-headline-card text-text-primary-light truncate">${name}</h3>
+            <div class="flex items-baseline gap-2 mt-0.5">
+              <span class="font-headline-card text-headline-card text-primary font-bold">Tarifa con ${pct}% dto.</span>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center gap-1 shrink-0">
+          <span class="px-2 py-0.5 rounded-full bg-amber-soft text-amber-text font-badge-caps text-badge-caps font-bold">
+            -${pct}% DTO
+          </span>
+          <button type="button" aria-label="Eliminar descuento de ${name}" onclick="removeProductCard(this)" class="w-8 h-8 rounded-lg flex items-center justify-center text-secondary hover:text-destructive hover:bg-destructive-container/50 transition-colors">
+            <span class="material-symbols-outlined text-[18px]">delete</span>
+          </button>
+        </div>
+      </div>
+      <div class="flex items-center justify-between pt-1 bg-surface-container-low rounded-lg px-2.5 py-1.5">
+        <span class="font-caption-sm text-caption-sm text-secondary truncate max-w-[200px]">${auditNote}</span>
+        <button type="button" onclick="editDiscountPrompt('${name}', ${pct})" class="text-primary-container font-caption-sm text-caption-sm font-semibold hover:underline">
+          Ajustar %
+        </button>
+      </div>
+    `;
+    container.prepend(newCard);
+    updateProductCount();
+    showToast(`Producto "${name}" agregado`);
+    highlightSaveNeeded();
+  }
+
+  function editDiscountPrompt(item, currentVal) {
+    const input = prompt(`Ajustar nuevo porcentaje para ${item}:`, currentVal);
+    if (input !== null && !isNaN(input)) {
+      showToast(`Descuento de ${item} actualizado a ${input}%`);
+      highlightSaveNeeded();
+    }
+  }
+
+  function saveAllConditions() {
+    const btn = document.getElementById('save-btn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = `<span class="material-symbols-outlined text-[20px] animate-spin">refresh</span> Guardando cambios...`;
+    btn.disabled = true;
+
+    setTimeout(() => {
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+      showToast('Condiciones comerciales guardadas y auditadas');
+    }, 700);
+  }
+
+  function showToast(text) {
+    const toast = document.getElementById('toast');
+    const toastText = document.getElementById('toast-text');
+    if (toast && toastText) {
+      toastText.textContent = text;
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 2600);
+    }
+  }
+</script></main><nav class="fixed bottom-0 w-full z-50 pb-safe bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]" data-active-classes="text-primary-container font-headline-card"><div class="flex justify-around items-center h-20 px-space-xs"><a class="flex flex-col items-center justify-center gap-1 w-16 h-16 text-secondary hover:text-text-primary-light transition-colors group" data-path="catalogo" href="#"><span class="material-symbols-outlined text-[24px] group-hover:scale-105 transition-transform">grid_view</span><span class="font-caption-sm text-caption-sm">Catálogo</span></a><a class="flex flex-col items-center justify-center gap-1 w-16 h-16 text-secondary hover:text-text-primary-light transition-colors relative group" data-path="solicitud-carrito" href="#"><span class="material-symbols-outlined text-[24px] group-hover:scale-105 transition-transform">shopping_bag</span><span class="font-caption-sm text-caption-sm">Solicitud</span><span class="absolute top-2 right-3 w-2 h-2 rounded-full bg-primary-container"></span></a><a class="flex flex-col items-center justify-center gap-1 w-16 h-16 text-secondary hover:text-text-primary-light transition-colors group" data-path="pedidos" href="#"><span class="material-symbols-outlined text-[24px] group-hover:scale-105 transition-transform">receipt_long</span><span class="font-caption-sm text-caption-sm">Pedidos</span></a><a class="flex flex-col items-center justify-center gap-1 w-16 h-16 text-secondary hover:text-text-primary-light transition-colors group" data-path="cartera-perfil" href="#"><span class="material-symbols-outlined text-[24px] group-hover:scale-105 transition-transform">account_circle</span><span class="font-caption-sm text-caption-sm">Cartera</span></a></div></nav></body></html>

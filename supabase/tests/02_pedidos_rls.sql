@@ -29,9 +29,10 @@ SELECT * FROM crear_pedido(
     'pedido de prueba'
 );
 
--- 1. El cliente ve su propio pedido.
+-- 1. El cliente ve su propio pedido (acotado al pedido del test: la BD puede
+--    contener pedidos previos de uso manual).
 SELECT results_eq(
-    'SELECT count(*)::int FROM pedidos',
+    'SELECT count(*)::int FROM pedidos WHERE id = (SELECT pedido_id FROM tmp_pedido)',
     ARRAY[1],
     'el cliente ve su pedido'
 );
@@ -46,7 +47,7 @@ SELECT results_eq(
 -- 3. Otro cliente NO ve el pedido.
 SELECT tests.authenticate_as('44444444-4444-4444-8444-444444444444');
 SELECT results_eq(
-    'SELECT count(*)::int FROM pedidos',
+    'SELECT count(*)::int FROM pedidos WHERE id = (SELECT pedido_id FROM tmp_pedido)',
     ARRAY[0],
     'otro cliente no ve pedidos ajenos'
 );
@@ -54,7 +55,7 @@ SELECT results_eq(
 -- 4. El comercial responsable SÍ lo ve.
 SELECT tests.authenticate_as('22222222-2222-4222-8222-222222222222');
 SELECT results_eq(
-    'SELECT count(*)::int FROM pedidos',
+    'SELECT count(*)::int FROM pedidos WHERE id = (SELECT pedido_id FROM tmp_pedido)',
     ARRAY[1],
     'el comercial responsable ve el pedido de su cartera'
 );

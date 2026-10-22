@@ -6,7 +6,7 @@
 
 ## One-paragraph elevator pitch
 
-"Estufas" is a product catalog and sales-management app for a stove/heater
+"Brasa y Verde" is a product catalog and sales-management app for a stove/heater
 business. It lets end customers (individuals and companies) browse a public
 catalog, request quotes for products, and track their orders, while the
 company's sales reps ("comerciales") manage their assigned customers, apply
@@ -50,7 +50,7 @@ catalog look.
 ## Screens (mobile-first)
 
 ### 1. Catalog home (`/`)
-- Top bar: app name "Estufas", cart icon with item-count badge, account icon
+- Top bar: app name "Brasa y Verde", cart icon with item-count badge, account icon
   (or login icon when anonymous).
 - Search input (placeholder "Buscar por nombre o referencia").
 - Horizontal row of category filter chips (Pellet, Leña, Aire, Insertable,

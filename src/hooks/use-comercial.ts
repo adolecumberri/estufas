@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import { supabase } from '@/lib/supabase';
-import type { Combustible, DescuentoClienteCombustible, DescuentoClienteProducto, PerfilUsuario, Promocion } from '@/lib/types';
+import type { Combustible, ComercialProveedor, DescuentoClienteCombustible, DescuentoClienteProducto, PerfilUsuario, Promocion, Proveedor } from '@/lib/types';
 
 // Cartera comercial: clientes asignados (RLS lo garantiza) y sus pedidos.
 export function useCartera() {
@@ -140,4 +140,44 @@ export function usePromociones() {
   }, [recargar]);
 
   return { promociones, cargando, recargar };
+}
+
+// Proveedores del comercial autenticado (RLS: sus propias filas) y catálogo
+// de proveedores activos (para mostrar cuáles tiene habilitados). Los nombres
+// llegan por el RPC fn_proveedores_visibles (SECURITY DEFINER): la tabla
+// proveedores completa (NIF/email/teléfono) solo es legible para el admin.
+export function useProveedoresComercial() {
+  const [asignaciones, setAsignaciones] = React.useState<ComercialProveedor[]>([]);
+  const [proveedores, setProveedores] = React.useState<Proveedor[]>([]);
+  const [cargando, setCargando] = React.useState(true);
+
+  const recargar = React.useCallback(async () => {
+    setCargando(true);
+    const [resAsig, resProv] = await Promise.all([
+      supabase.from('comercial_proveedor').select('*').eq('habilitado', true),
+      supabase.rpc('fn_proveedores_visibles'),
+    ]);
+    setCargando(false);
+    if (!resAsig.error) setAsignaciones((resAsig.data ?? []) as ComercialProveedor[]);
+    // El RPC solo expone id y nombre (el resto de campos de Proveedor no se
+    // usa fuera del admin).
+    if (!resProv.error) {
+      setProveedores(
+        ((resProv.data ?? []) as { id: string; nombre: string }[]).map((p) => ({
+          id: p.id,
+          nombre: p.nombre,
+          nif: null,
+          email: null,
+          telefono: null,
+          activo: true,
+        }))
+      );
+    }
+  }, []);
+
+  React.useEffect(() => {
+    void recargar();
+  }, [recargar]);
+
+  return { asignaciones, proveedores, cargando, recargar };
 }
