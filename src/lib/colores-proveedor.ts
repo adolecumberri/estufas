@@ -1,0 +1,77 @@
+// ---------------------------------------------------------------------------
+// Colores por proveedor.
+//
+// Deriva un tema (base/tinte/borde/texto) del color HEX guardado en
+// proveedores.color (#RRGGBB). Si el color falta o no es válido se usa el
+// primario global de la marca (el acento ámbar de la app).
+// ---------------------------------------------------------------------------
+
+export interface TemaProveedor {
+  base: string; // 'hsl(h s% l%)'
+  texto: string; // variante más oscura para contraste
+  tinte: string; // hsla al 10% de opacidad
+  borde: string; // hsla al 40% de opacidad
+}
+
+// Primario global (mismo acento ámbar que el sistema de diseño).
+const TEMA_PRIMARIO: TemaProveedor = {
+  base: 'hsl(24.6 95% 53.1%)',
+  tinte: 'hsla(24.6, 95%, 53.1%, 0.10)',
+  borde: 'hsla(24.6, 95%, 53.1%, 0.40)',
+  texto: 'hsl(24.6 95% 45%)',
+};
+
+// ¿El valor es un color HEX '#RRGGBB'?
+export function esColorValido(hex: string | null | undefined): boolean {
+  return typeof hex === 'string' && /^#[0-9a-fA-F]{6}$/.test(hex);
+}
+
+interface Hsl {
+  h: number; // 0-360
+  s: number; // 0-100
+  l: number; // 0-100
+}
+
+// Convierte '#RRGGBB' a { h, s, l } redondeados a enteros.
+function hexAHsl(hex: string): Hsl {
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+
+  let h = 0;
+  let s = 0;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    if (max === r) {
+      h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+    } else if (max === g) {
+      h = ((b - r) / d + 2) / 6;
+    } else {
+      h = ((r - g) / d + 4) / 6;
+    }
+  }
+
+  return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+}
+
+// Tema del proveedor a partir de su color HEX. null/inválido → primario global.
+export function temaProveedor(colorHex: string | null | undefined): TemaProveedor {
+  // Check inline para que TS afine el tipo (esColorValido no es un guard).
+  if (typeof colorHex !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(colorHex)) {
+    return TEMA_PRIMARIO;
+  }
+
+  const { h, s, l } = hexAHsl(colorHex);
+  const lTexto = Math.max(0, l - 15); // texto más oscuro para contraste
+
+  return {
+    base: `hsl(${h} ${s}% ${l}%)`,
+    tinte: `hsla(${h}, ${s}%, ${l}%, 0.10)`,
+    borde: `hsla(${h}, ${s}%, ${l}%, 0.40)`,
+    texto: `hsl(${h} ${s}% ${lTexto}%)`,
+  };
+}

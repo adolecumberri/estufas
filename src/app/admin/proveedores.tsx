@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import { useAsignacionesProveedores, useProveedores, useUsuarios } from '@/hooks/use-admin';
 import { useAuth } from '@/hooks/use-auth';
+import { temaProveedor } from '@/lib/colores-proveedor';
 import { useColoresIcono } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import type { PerfilUsuario, Proveedor } from '@/lib/types';
@@ -37,8 +38,17 @@ function iconoProveedor(icono: string | null | undefined): LucideIcon {
 // marcar asigna; fila deshabilitada → marcar la habilita. Cada fila es un
 // componente propio, así que puede llamar al hook de asignaciones (una
 // instancia por comercial) sin romper las reglas de hooks.
-function FilaComercial({ comercial, proveedorId }: { comercial: PerfilUsuario; proveedorId: string }) {
+function FilaComercial({
+  comercial,
+  proveedorId,
+  colorProveedor,
+}: {
+  comercial: PerfilUsuario;
+  proveedorId: string;
+  colorProveedor: string | null | undefined;
+}) {
   const colores = useColoresIcono();
+  const tema = temaProveedor(colorProveedor);
   const { asignaciones, cargando, error: errorCarga, recargar, asignar, desasignar, habilitar } =
     useAsignacionesProveedores(comercial.id);
   const [errorAccion, setErrorAccion] = React.useState<string | null>(null);
@@ -94,8 +104,9 @@ function FilaComercial({ comercial, proveedorId }: { comercial: PerfilUsuario; p
             onPress={() => void alternar()}
             className={cn(
               'h-6 w-6 flex-row items-center justify-center rounded-md border',
-              marcado ? 'border-transparent bg-primary' : 'border-border bg-background'
+              marcado ? 'border-transparent' : 'border-border bg-background'
             )}
+            style={marcado ? { backgroundColor: tema.base } : undefined}
           >
             {trabajando ? (
               <ActivityIndicator
@@ -238,14 +249,19 @@ export default function AdminProveedores() {
               {mensajeLista && <Text className="text-sm text-muted-foreground">{mensajeLista}</Text>}
               {proveedores.map((p) => {
                 const Icono = iconoProveedor(p.icono);
+                const tema = temaProveedor(p.color);
                 return (
                 <Card key={p.id} className="rounded-[10px] p-4">
                   <CardContent className="gap-2">
                     <View className="flex-row items-start justify-between gap-2">
                       <View className="flex-1 gap-1">
                         <View className="flex-row items-center gap-2">
-                          <Icono size={18} color={colores.primario} />
+                          <Icono size={18} color={tema.base} />
                           <Text className="font-medium">{p.nombre}</Text>
+                          <View
+                            className="h-2.5 w-2.5 rounded-full"
+                            style={{ backgroundColor: tema.base }}
+                          />
                         </View>
                         <Text className="text-xs text-muted-foreground">
                           {[p.nif, p.email, p.telefono].filter(Boolean).join(' · ') ||
@@ -262,6 +278,7 @@ export default function AdminProveedores() {
                       <Button
                         size="sm"
                         variant="outline"
+                        style={{ borderColor: tema.borde }}
                         // Ruta dedicada del catálogo del proveedor; si aún no
                         // está en los tipos generados, el cast mantiene el
                         // typecheck verde (se regeneran al arrancar dev).
@@ -273,7 +290,9 @@ export default function AdminProveedores() {
                         }
                       >
                         <Boxes size={14} color={colores.tenue} />
-                        <Text className="text-xs">Ver catálogo</Text>
+                        <Text className="text-xs" style={{ color: tema.texto }}>
+                          Ver catálogo
+                        </Text>
                       </Button>
                       <Button size="sm" variant="outline" onPress={() => abrirEdicion(p)}>
                         <Text className="text-xs">
@@ -326,7 +345,12 @@ export default function AdminProveedores() {
                         </Text>
                       ) : (
                         comerciales.map((c) => (
-                          <FilaComercial key={c.id} comercial={c} proveedorId={p.id} />
+                          <FilaComercial
+                            key={c.id}
+                            comercial={c}
+                            proveedorId={p.id}
+                            colorProveedor={p.color}
+                          />
                         ))
                       )}
                     </View>

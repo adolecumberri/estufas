@@ -16,8 +16,10 @@ import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { COMBUSTIBLES } from '@/constants';
 import { useSolicitud } from '@/contexts/solicitud-context';
+import { useProveedores } from '@/hooks/use-admin';
 import { useAuth } from '@/hooks/use-auth';
 import { useCatalogo } from '@/hooks/use-catalogo';
+import { temaProveedor } from '@/lib/colores-proveedor';
 import { useColoresIcono } from '@/lib/theme';
 
 // Pantalla raíz de la app: catálogo público. Vive como componente compartido
@@ -44,6 +46,17 @@ export default function CatalogoScreen({
   const [menuAbierto, setMenuAbierto] = React.useState(false);
   const colores = useColoresIcono();
 
+  // Color del proveedor filtrado para el banner: se busca por el id del
+  // primer producto cargado. Solo el admin llega a esta vista; si el hook
+  // devuelve error/lista vacía (o no hay color), temaProveedor usa el
+  // primario global como fallback.
+  const { proveedores: proveedoresAdmin } = useProveedores();
+  const proveedorIdActivo = cat.productos[0]?.proveedor_id ?? null;
+  const colorProveedorActivo = proveedorIdActivo
+    ? (proveedoresAdmin.find((pr) => pr.id === proveedorIdActivo)?.color ?? null)
+    : null;
+  const temaBanner = temaProveedor(colorProveedorActivo);
+
   // Etiqueta a la que se vuelve desde el detalle: categoría seleccionada o,
   // si no la hay, el combustible activo. Con búsqueda activa los resultados
   // cruzan combustibles, así que se usa una etiqueta neutra.
@@ -69,10 +82,14 @@ export default function CatalogoScreen({
       </View>
 
       {/* Banner: catálogo filtrado por proveedor (vista de admin). El nombre
-          sale del primer producto cargado; sin resultados, texto genérico. */}
+          sale del primer producto cargado; sin resultados, texto genérico.
+          El tinte, el borde y el texto usan el tema del color del proveedor. */}
       {proveedor && (
-        <View className="mx-4 mb-2 flex-row items-center gap-2 rounded-[10px] border border-primary/40 bg-primary/10 px-3 py-2">
-          <Text className="flex-1 text-sm">
+        <View
+          className="mx-4 mb-2 flex-row items-center gap-2 rounded-[10px] border px-3 py-2"
+          style={{ backgroundColor: temaBanner.tinte, borderColor: temaBanner.borde }}
+        >
+          <Text className="flex-1 text-sm" style={{ color: temaBanner.texto }}>
             {cat.productos[0]?.proveedor_nombre
               ? `Viendo solo el catálogo de ${cat.productos[0].proveedor_nombre}`
               : 'Solo productos de ese proveedor'}

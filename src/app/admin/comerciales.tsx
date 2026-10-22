@@ -24,6 +24,7 @@ import {
   useProveedores,
 } from '@/hooks/use-admin';
 import { useAuth } from '@/hooks/use-auth';
+import { temaProveedor } from '@/lib/colores-proveedor';
 import { useColoresIcono } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import type { PerfilUsuario, Proveedor } from '@/lib/types';
@@ -76,6 +77,7 @@ function FilaComercial({
         const fila = asignaciones.find((a) => a.proveedor_id === p.id);
         const marcado = fila?.habilitado === true;
         const Icono = iconoProveedor(p.icono);
+        const tema = temaProveedor(p.color);
         return (
           <Pressable
             key={p.id}
@@ -97,12 +99,13 @@ function FilaComercial({
             <View
               className={cn(
                 'h-5 w-5 items-center justify-center rounded border',
-                marcado ? 'border-primary bg-primary/10' : 'border-border bg-background'
+                marcado ? 'border-transparent' : 'border-border bg-background'
               )}
+              style={marcado ? { backgroundColor: tema.base } : undefined}
             >
-              {marcado && <Check size={14} strokeWidth={3} color={colores.primario} />}
+              {marcado && <Check size={14} strokeWidth={3} color={colores.primarioClaro} />}
             </View>
-            <Icono size={14} color={marcado ? colores.primario : colores.tenue} />
+            <Icono size={14} color={tema.base} />
             <Text
               numberOfLines={1}
               className={cn(

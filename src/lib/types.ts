@@ -164,6 +164,7 @@ export interface Proveedor {
   telefono: string | null;
   activo: boolean;
   icono?: string | null;
+  color?: string | null;
 }
 
 export interface ComercialProveedor {
