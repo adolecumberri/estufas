@@ -62,7 +62,7 @@ SELECT
     jsonb_build_object('sub', id::text, 'email', email, 'email_verified', true, 'phone_verified', false),
     'email', email, now(), now(), now()
 FROM auth.users
-WHERE email LIKE '%@estufas.local'
+WHERE email LIKE '%@.local'
 ON CONFLICT DO NOTHING;
 
 -- ---------------------------------------------------------------------------

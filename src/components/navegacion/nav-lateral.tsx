@@ -161,8 +161,9 @@ export function NavLateral({
                       accessibilityState={{ selected: activa }}
                       onPress={() => {
                         // La categoría agnóstica no depende del combustible:
-                        // solo se fija la categoría y se cierra el cajón.
-                        setCategoria(x.id);
+                        // solo se fija la categoría y se cierra el cajón. Una
+                        // segunda pulsación sobre la activa la deselecciona.
+                        setCategoria(activa ? null : x.id);
                         onCerrar();
                       }}
                       className="rounded-[8px] py-2 pl-8 pr-4 active:bg-accent"

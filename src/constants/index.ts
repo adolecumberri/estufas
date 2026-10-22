@@ -7,8 +7,8 @@ import { Platform } from 'react-native';
 // ============================================================================
 
 export const APP = {
-  nombre: 'Estufas',
-  slug: 'estufas',
+  nombre: 'Brasa y Verde',
+  slug: 'brasa-y-verde',
   version: '0.1.0',
   idioma: 'es-ES',
 } as const;
