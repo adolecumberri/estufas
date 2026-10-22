@@ -1,7 +1,6 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { RefreshCw, X } from 'lucide-react-native';
-import { vars } from 'nativewind';
 import * as React from 'react';
 import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -22,7 +21,7 @@ import { useSolicitud } from '@/contexts/solicitud-context';
 import { useProveedores } from '@/hooks/use-admin';
 import { useAuth } from '@/hooks/use-auth';
 import { useCatalogo } from '@/hooks/use-catalogo';
-import { temaProveedor, textoSobreProveedor, tripletProveedor } from '@/lib/colores-proveedor';
+import { temaProveedor } from '@/lib/colores-proveedor';
 import { useColoresIcono } from '@/lib/theme';
 
 // Pantalla raíz de la app: catálogo público. Vive como componente compartido
@@ -82,22 +81,9 @@ export default function CatalogoScreen({
       : (COMBUSTIBLES.find((c) => c.id === cat.combustible)?.etiqueta ?? 'Catálogo'));
 
   return (
-    // El PRIMARIO del catálogo es el color del proveedor activo: al cambiar de
-    // proveedor se re-pinta (--primary/--primary-foreground) todo el catálogo y
-    // su barra inferior. El resto de la app usa el verde por defecto de la
-    // global.css (no relacionado con proveedores).
-    <View
-      className="flex-1 bg-background"
-      style={[
-        { paddingTop: insets.top },
-        proveedorActivo
-          ? vars({
-              '--primary': tripletProveedor(proveedorActivo.color),
-              '--primary-foreground': textoSobreProveedor(proveedorActivo.color),
-            })
-          : undefined,
-      ]}
-    >
+    // El tema del proveedor (--primary) lo aplica el layout raíz SOLO en las
+    // rutas de catálogo, decidiéndolo por ruta: aquí no hace falta duplicarlo.
+    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       {/* Cabecera */}
       <EncabezadoCatalogo onAbrirMenu={() => setMenuAbierto(true)} />
 
