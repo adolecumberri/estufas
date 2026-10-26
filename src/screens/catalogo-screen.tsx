@@ -84,18 +84,20 @@ export default function CatalogoScreen({
   return (
     // El PRIMARIO del catálogo es el color del proveedor activo: esta pantalla
     // SÍ está dentro del contexto de navegación, así que aquí (y solo aquí) se
-    // sobreescriben las variables CSS. El resto de pantallas usan el verde por
-    // defecto de global.css (se aplican al desmontar/entrar en otra ruta).
+    // sobreescriben las variables CSS. IMPORTANTE: las variables deben existir
+    // YA en el primer render (con el verde por defecto cuando aún no hay
+    // proveedor cargado). Si se añaden más tarde, NativeWind entra en su ruta
+    // de "upgrade warning" y al serializar el árbol toca los getters del
+    // contexto de navegación de expo-router → crash
+    // ("Couldn't find a navigation context"). Por eso van SIEMPRE presentes.
     <View
       className="flex-1 bg-background"
       style={[
         { paddingTop: insets.top },
-        proveedorActivo
-          ? vars({
-              '--primary': tripletProveedor(proveedorActivo.color),
-              '--primary-foreground': textoSobreProveedor(proveedorActivo.color),
-            })
-          : undefined,
+        vars({
+          '--primary': tripletProveedor(proveedorActivo?.color ?? null),
+          '--primary-foreground': textoSobreProveedor(proveedorActivo?.color ?? null),
+        }),
       ]}
     >
       {/* Cabecera */}
