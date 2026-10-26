@@ -1,4 +1,8 @@
 import '@/global.css';
+// Registro de interop de expo-image (className → style). Debe importarse antes
+// de renderizar cualquier <Image> de expo-image; de lo contrario las imágenes
+// no reciben tamaño y quedan invisibles.
+import '@/lib/interop-expo-image';
 
 import { PortalHost } from '@rn-primitives/portal';
 import { Stack, ThemeProvider } from 'expo-router';
