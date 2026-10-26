@@ -1,43 +1,27 @@
 import '@/global.css';
 
 import { PortalHost } from '@rn-primitives/portal';
-import { Stack, ThemeProvider, usePathname } from 'expo-router';
+import { Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
-import { vars } from 'nativewind';
 import * as React from 'react';
 import { Platform, useColorScheme, View } from 'react-native';
 
 import { AuthProvider } from '@/contexts/auth-context';
-import { ProveedorActivoProvider, useProveedorActivo } from '@/contexts/proveedor-activo-context';
+import { ProveedorActivoProvider } from '@/contexts/proveedor-activo-context';
 import { SolicitudProvider } from '@/contexts/solicitud-context';
-import { textoSobreProveedor, tripletProveedor } from '@/lib/colores-proveedor';
 import { NAV_THEME } from '@/lib/theme';
 
 void SplashScreen.preventAutoHideAsync();
 
-// ¿Estamos en una vista de catálogo? Ahí (y solo ahí) el primario de la app es
-// el color del proveedor activo. En el resto de rutas (admin, cartera,
-// pedidos, login...) el primario es el verde por defecto de global.css.
-function esRutaCatalogo(pathname: string): boolean {
-  return pathname === '/' || pathname === '/catalogo' || pathname.startsWith('/catalogo/');
-}
-
-// Contenido raíz: aplica el tema del proveedor SOLO en las rutas de catálogo.
-// Se decide por ruta (no por elemento) para que ninguna pantalla quede teñida
-// por el proveedor activo fuera del catálogo.
+// Contenido raíz. El primario global es el VERDE por defecto (--primary en
+// global.css). El color del proveedor activo se aplica SOLO dentro de la
+// pantalla de catálogo, que está dentro del contexto de navegación: este
+// layout raíz queda FUERA del Stack, así que aquí no se pueden usar hooks de
+// ruta de expo-router (usePathname/useSegments lanzan "Couldn't find a
+// navigation context").
 function ContenidoRaiz({ scheme }: { scheme: 'light' | 'dark' }) {
-  const pathname = usePathname();
-  const { activo } = useProveedorActivo();
-  const temaProveedor =
-    activo && esRutaCatalogo(pathname) && activo.color
-      ? vars({
-          '--primary': tripletProveedor(activo.color),
-          '--primary-foreground': textoSobreProveedor(activo.color),
-        })
-      : undefined;
-
   return (
     <>
       <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
@@ -46,7 +30,7 @@ function ContenidoRaiz({ scheme }: { scheme: 'light' | 'dark' }) {
           neutro, igual que la maqueta de Google Stitch. En nativo estas
           clases web: no tienen efecto. */}
       <View className="flex-1 web:items-center web:bg-zinc-100 web:dark:bg-zinc-950">
-        <View className="relative w-full flex-1 web:max-w-[430px] web:shadow-2xl" style={temaProveedor}>
+        <View className="relative w-full flex-1 web:max-w-[430px] web:shadow-2xl">
           <Stack screenOptions={{ headerShown: false }} />
           <PortalHost />
         </View>
