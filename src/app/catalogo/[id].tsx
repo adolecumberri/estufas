@@ -16,6 +16,7 @@ import { useSolicitud } from '@/contexts/solicitud-context';
 import { useAuth } from '@/hooks/use-auth';
 import { useProducto } from '@/hooks/use-producto';
 import { formatEUR, formatPct } from '@/lib/format';
+import { volverA } from '@/lib/navegacion';
 import { fuenteImagen } from '@/lib/imagenes';
 import { useColoresIcono } from '@/lib/theme';
 
@@ -31,7 +32,7 @@ export default function ProductoDetalle() {
   const { id, origen: origenParam } = useLocalSearchParams<{ id: string; origen?: string }>();
   const origen = origenParam ?? 'Catálogo';
   const insets = useSafeAreaInsets();
-  const { session } = useAuth();
+  const { session, perfil } = useAuth();
   const { clienteObjetivoId, anadir, aviso, limpiarAviso } = useSolicitud();
   const { producto, cargando, error } = useProducto(id, clienteObjetivoId);
   const colores = useColoresIcono();
@@ -68,7 +69,7 @@ export default function ProductoDetalle() {
         <Text className="text-center text-muted-foreground">
           {error ?? 'Producto no disponible.'}
         </Text>
-        <Button variant="outline" onPress={() => router.back()}>
+        <Button variant="outline" onPress={() => volverA('/')}>
           <Text>Volver</Text>
         </Button>
       </View>
@@ -117,7 +118,7 @@ export default function ProductoDetalle() {
         {/* 1. Cabecera: volver + origen */}
         <View className="flex-row items-center gap-1 px-2">
           <Pressable
-            onPress={() => router.back()}
+            onPress={() => volverA('/')}
             className="rounded-md p-2 active:bg-accent"
             accessibilityLabel="Volver"
           >
@@ -194,9 +195,13 @@ export default function ProductoDetalle() {
           )}
         </View>
 
-        {/* 6. Cantidad y añadir (solo con sesión iniciada) */}
+        {/* 6. Cantidad y añadir (solo con sesión iniciada; admin solo lectura) */}
         <View className="mt-4 px-4">
-          {session ? (
+          {session && perfil?.rol === 'admin' ? (
+            <Text className="text-sm text-muted-foreground">
+              Vista de administración: solo lectura
+            </Text>
+          ) : session ? (
             <View className="flex-row items-center gap-3">
               <View className="flex-row items-center rounded-[10px] border border-input">
                 <Pressable

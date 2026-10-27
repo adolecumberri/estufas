@@ -1,4 +1,8 @@
 import '@/global.css';
+// Registro de interop de expo-image (className → style). Debe importarse antes
+// de renderizar cualquier <Image> de expo-image; de lo contrario las imágenes
+// no reciben tamaño y quedan invisibles.
+import '@/lib/interop-expo-image';
 
 import { PortalHost } from '@rn-primitives/portal';
 import { Stack, ThemeProvider } from 'expo-router';
@@ -9,10 +13,35 @@ import * as React from 'react';
 import { Platform, useColorScheme, View } from 'react-native';
 
 import { AuthProvider } from '@/contexts/auth-context';
+import { ProveedorActivoProvider } from '@/contexts/proveedor-activo-context';
 import { SolicitudProvider } from '@/contexts/solicitud-context';
 import { NAV_THEME } from '@/lib/theme';
 
 void SplashScreen.preventAutoHideAsync();
+
+// Contenido raíz. El primario global es el VERDE por defecto (--primary en
+// global.css). El color del proveedor activo se aplica SOLO dentro de la
+// pantalla de catálogo, que está dentro del contexto de navegación: este
+// layout raíz queda FUERA del Stack, así que aquí no se pueden usar hooks de
+// ruta de expo-router (usePathname/useSegments lanzan "Couldn't find a
+// navigation context").
+function ContenidoRaiz({ scheme }: { scheme: 'light' | 'dark' }) {
+  return (
+    <>
+      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+      {/* Marco del diseño Stitch: en escritorio la app se muestra como una
+          columna centrada de ancho móvil (max-w-[430px]) sobre un fondo
+          neutro, igual que la maqueta de Google Stitch. En nativo estas
+          clases web: no tienen efecto. */}
+      <View className="flex-1 web:items-center web:bg-zinc-100 web:dark:bg-zinc-950">
+        <View className="relative w-full flex-1 web:max-w-[430px] web:shadow-2xl">
+          <Stack screenOptions={{ headerShown: false }} />
+          <PortalHost />
+        </View>
+      </View>
+    </>
+  );
+}
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -40,17 +69,9 @@ export default function RootLayout() {
     <ThemeProvider value={NAV_THEME[scheme]}>
       <AuthProvider>
         <SolicitudProvider>
-          <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-          {/* Marco del diseño Stitch: en escritorio la app se muestra como una
-              columna centrada de ancho móvil (max-w-[430px]) sobre un fondo
-              neutro, igual que la maqueta de Google Stitch. En nativo estas
-              clases web: no tienen efecto. */}
-          <View className="flex-1 web:items-center web:bg-zinc-100 web:dark:bg-zinc-950">
-            <View className="relative w-full flex-1 web:max-w-[430px] web:shadow-2xl">
-              <Stack screenOptions={{ headerShown: false }} />
-              <PortalHost />
-            </View>
-          </View>
+          <ProveedorActivoProvider>
+            <ContenidoRaiz scheme={scheme} />
+          </ProveedorActivoProvider>
         </SolicitudProvider>
       </AuthProvider>
     </ThemeProvider>

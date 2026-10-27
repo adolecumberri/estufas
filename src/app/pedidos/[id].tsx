@@ -28,6 +28,7 @@ import { useCatalogo } from '@/hooks/use-catalogo';
 import { useAccionesPedido, usePedido } from '@/hooks/use-pedidos';
 import { obtenerProducto } from '@/lib/catalogo-local';
 import { formatEUR, formatFecha, formatFechaHora } from '@/lib/format';
+import { volverA } from '@/lib/navegacion';
 import { fuenteImagen } from '@/lib/imagenes';
 import { useColoresIcono } from '@/lib/theme';
 
@@ -46,11 +47,12 @@ export default function PedidoDetalle() {
   const [trabajando, setTrabajando] = React.useState(false);
 
   if (!session) return <Redirect href="/acceso" />;
+  // El admin no gestiona pedidos: si llega por URL, vuelve a su panel.
+  if (perfil?.rol === 'admin') return <Redirect href="/admin" />;
 
   const esComercial = perfil?.rol === 'comercial';
-  const esAdmin = perfil?.rol === 'admin';
   const esCliente = perfil?.rol === 'cliente';
-  const puedeGestionar = esComercial || esAdmin;
+  const puedeGestionar = esComercial;
 
   const varianteEstado = (estado: EstadoPedido) => {
     switch (estado) {
@@ -122,7 +124,7 @@ export default function PedidoDetalle() {
         {error ? (
           <Text className="px-8 text-center text-muted-foreground">{error}</Text>
         ) : (
-          <ActivityIndicator color="hsl(24.6 95% 53.1%)" />
+          <ActivityIndicator color="hsl(124.3 17.7% 31%)" />
         )}
       </View>
     );
@@ -142,7 +144,7 @@ export default function PedidoDetalle() {
         {/* 1. Cabecera: volver + Detalle de Gestión + nº + estado */}
         <View className="flex-row items-center gap-2">
           <Pressable
-            onPress={() => router.back()}
+            onPress={() => volverA('/pedidos')}
             className="rounded-[10px] bg-accent p-2 active:bg-accent"
             accessibilityLabel="Volver al listado de pedidos"
           >
