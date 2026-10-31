@@ -26,7 +26,7 @@ const hostSupabaseLocal =
 
 export const SUPABASE = {
   // Local: supabase start. En producción: variables de entorno EXPO_PUBLIC_*.
-  url: process.env.EXPO_PUBLIC_SUPABASE_URL ?? `http://${hostSupabaseLocal}:55321`,
+  url: process.env.EXPO_PUBLIC_SUPABASE_URL ?? `http://${hostSupabaseLocal}:8450`,
   anonKey:
     process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ??
     // Clave anon del stack local de Supabase (pública, solo desarrollo).

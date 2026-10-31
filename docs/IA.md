@@ -85,11 +85,11 @@ Notas de esta máquina:
 
 - Docker Desktop tiene habilitado `tcp://127.0.0.1:2375`; si el CLI de Supabase
   falla con `npipe … permission denied`, usar `$env:DOCKER_HOST = "tcp://127.0.0.1:2375"`.
-- Supabase local: API en `http://127.0.0.1:55321` (Swagger: `/rest/v1/`),
-  Studio en `http://127.0.0.1:55323`, Postgres directo en `127.0.0.1:55322`. (Puertos 55321-55324: los 5432x están en el rango excluido por Windows.)
+- Supabase local: API en `http://127.0.0.1:8450` (Swagger: `/rest/v1/`),
+  Studio en `http://127.0.0.1:55323`, Postgres directo en `127.0.0.1:55322`. (Los 5432x están en el rango de puertos excluido por Windows; la API escucha directamente en 8450, sin portproxy.)
 - Para probar desde un móvil en la LAN existe el puente `netsh portproxy
-  8450 → 127.0.0.1:55321` y `.env.local` (gitignored) apunta a él. No borrarlo.
-- **Aviso de seguridad**: el puente HTTP (`8450 → 127.0.0.1:55321`) expone en
+  8450 es la propia API` y `.env.local` (gitignored) apunta a él.
+- **Aviso de seguridad**: la API local (`8450`) escucha en 0.0.0.0 y expone en
   claro por la LAN el tráfico de auth (`signInWithPassword`/`signUp`); es solo
   para desarrollo en una red de confianza/aislada. Nunca usar credenciales
   reales a través de él; en producción usar HTTPS (Supabase cloud o túnel/VPN

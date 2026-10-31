@@ -4,14 +4,16 @@
 # NOTA (Windows): los puertos 54321-54324 caen dentro de los rangos de puertos
 # EXCLUIDOS que Windows reserva dinámicamente (p. ej. 54244-54343), así que
 # Docker no puede publicarlos ("bind: Intento de acceso a un socket no
-# permitido por sus permisos de acceso"). Por eso se usa la franja libre
-# 55321-55324. El portproxy 8450 (móvil/Tailscale) apunta a la API 55321:
-#   netsh interface portproxy add v4tov4 listenport=8450 connectport=55321 connectaddress=127.0.0.1
+# permitido por sus permisos de acceso"). Por eso:
+#   - API en 8450: es el puerto al que ya apuntan la app y el móvil
+#     (http://<IP-PC>:8450). Antes había un portproxy 8450->54321; ahora la API
+#     escucha directamente ahí (liberar 8450 con liberar-8450.bat una vez).
+#   - DB y Studio en 55322/55323 (franja libre; solo se usan desde el PC).
 project_id = "estufas"
 
 [api]
 enabled = true
-port = 55321
+port = 8450
 schemas = ["public", "graphql_public"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000

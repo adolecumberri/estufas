@@ -30,8 +30,8 @@ npm start                   # Expo Go / emuladores
 # (57). Los datos llegan vía el host de Metro automáticamente (src/constants).
 
 # Si el móvil no alcanza Supabase (Docker Desktop en Windows no expone
-# 55321 a la LAN), crear un puente de red (PowerShell admin) y un .env.local:
-#   netsh interface portproxy add v4tov4 listenport=8450 listenaddress=0.0.0.0 connectport=55321 connectaddress=127.0.0.1
+# 8450 a la LAN) y un .env.local:
+#   (la API ya escucha directamente en 8450: ver supabase/config.toml)
 #   New-NetFirewallRule -DisplayName "Supabase bridge 8450" -Direction Inbound -Protocol TCP -LocalPort 8450 -Action Allow -Profile Private,Public
 #   .env.local -> EXPO_PUBLIC_SUPABASE_URL=http://<IP-DEL-PC>:8450
 
@@ -71,8 +71,8 @@ npx supabase test db     # tests pgTAP (supabase/tests)
 > **Nota Windows (puertos de Supabase):** Windows reserva dinámicamente rangos
 > que incluyen 54321-54324 (p. ej. 54244-54343), así que Docker no puede
 > publicarlos (`bind: ... no permitido por sus permisos de acceso`). El stack
-> usa **55321-55324** (ver `supabase/config.toml`) y el puente del móvil se
-> reapunta con `reapuntar-8450.bat` (admin).
+> usa **8450** para la API (ver `supabase/config.toml`; el móvil ya apunta ahí) y
+> liberar el 8450 se hace una vez con `liberar-8450.bat` (admin).
 >
 > **Nota Windows (CLI de Supabase):** si `supabase start` falla con
 > `permission denied while trying to connect to the docker API at npipe://...`,

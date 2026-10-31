@@ -104,7 +104,7 @@ Nombres: proyecto `estufas`, app "Brasa y Verde", UI en español.
 
 ## 8. Backend (Supabase/Postgres)
 
-- Stack local Docker (Kong/API 55321, Postgres 55322, Studio 55323; 5432x está excluido por Windows); desde el móvil
+- Stack local Docker (API 8450, Postgres 55322, Studio 55323; 5432x está excluido por Windows); desde el móvil
   vía Tailscale `http://100.64.220.67:8450` (`.env.local`).
 - **18 migraciones** (`0001`…`0019`, sin `0015`):
   - `0001` esquema base (usuarios/RLS-friendly, productos, precios, recursos,
