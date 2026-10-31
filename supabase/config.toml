@@ -1,25 +1,32 @@
 # Configuración local de Supabase (supabase start / db reset / test db).
 # Requiere Docker Desktop. Ver README para alternativas sin Docker.
+#
+# NOTA (Windows): los puertos 54321-54324 caen dentro de los rangos de puertos
+# EXCLUIDOS que Windows reserva dinámicamente (p. ej. 54244-54343), así que
+# Docker no puede publicarlos ("bind: Intento de acceso a un socket no
+# permitido por sus permisos de acceso"). Por eso se usa la franja libre
+# 55321-55324. El portproxy 8450 (móvil/Tailscale) apunta a la API 55321:
+#   netsh interface portproxy add v4tov4 listenport=8450 connectport=55321 connectaddress=127.0.0.1
 project_id = "estufas"
 
 [api]
 enabled = true
-port = 54321
+port = 55321
 schemas = ["public", "graphql_public"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
 
 [db]
-port = 54322
+port = 55322
 major_version = 17
 
 [studio]
 enabled = true
-port = 54323
+port = 55323
 
 [inbucket]
 enabled = true
-port = 54324
+port = 55324
 
 [storage]
 enabled = true

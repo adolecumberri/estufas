@@ -20,7 +20,7 @@ Aplicación de catálogo de productos y gestión comercial (PRD en [`docs/PRD.md
 npm install
 
 # 2. Backend local (requiere Docker en marcha)
-npx supabase start          # arranca Postgres+Auth+Studio en http://127.0.0.1:54323
+npx supabase start          # arranca Postgres+Auth+Studio en http://127.0.0.1:55323
 
 # 3. Frontend
 npm run web                 # navegador
@@ -30,8 +30,8 @@ npm start                   # Expo Go / emuladores
 # (57). Los datos llegan vía el host de Metro automáticamente (src/constants).
 
 # Si el móvil no alcanza Supabase (Docker Desktop en Windows no expone
-# 54321 a la LAN), crear un puente de red (PowerShell admin) y un .env.local:
-#   netsh interface portproxy add v4tov4 listenport=8450 listenaddress=0.0.0.0 connectport=54321 connectaddress=127.0.0.1
+# 55321 a la LAN), crear un puente de red (PowerShell admin) y un .env.local:
+#   netsh interface portproxy add v4tov4 listenport=8450 listenaddress=0.0.0.0 connectport=55321 connectaddress=127.0.0.1
 #   New-NetFirewallRule -DisplayName "Supabase bridge 8450" -Direction Inbound -Protocol TCP -LocalPort 8450 -Action Allow -Profile Private,Public
 #   .env.local -> EXPO_PUBLIC_SUPABASE_URL=http://<IP-DEL-PC>:8450
 
