@@ -1,17 +1,19 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { ChevronLeft, FilePlus2, Flame, ReceiptText, User, Wallet } from 'lucide-react-native';
+import { FilePlus2, Flame, ReceiptText, User, Wallet } from 'lucide-react-native';
 import * as React from 'react';
-import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TarjetaCliente } from '@/components/cartera/tarjeta-cliente';
+import { EmptyState, ErrorView, LoadingView } from '@/components/comunes/estados';
+import { Screen } from '@/components/comunes/screen';
+import { ScreenHeader } from '@/components/comunes/screen-header';
+import { SectionTitle } from '@/components/comunes/section-title';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { ESTADOS_PEDIDO, type EstadoPedido } from '@/constants';
 import { useComercialDetalle } from '@/hooks/use-admin';
 import { formatEUR, formatFecha } from '@/lib/format';
-import { volverA } from '@/lib/navegacion';
 import { useColoresIcono } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import type { Pedido, PerfilUsuario } from '@/lib/types';
@@ -60,44 +62,31 @@ export default function AdminComercialDetalle() {
     (p.pedido_lineas ?? []).reduce((acc, l) => acc + l.cantidad, 0);
 
   return (
-    <View className="flex-1 bg-background">
+    <Screen>
       <ScrollView
         showsVerticalScrollIndicator={false}
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 96 + insets.bottom }}
       >
-        <View style={{ paddingTop: insets.top + 8 }} className="gap-4 p-4">
+        <View className="gap-4 p-4">
           {/* Cabecera: nombre y email del comercial */}
-          <View className="flex-row items-center gap-2">
-            <Pressable onPress={() => volverA('/admin/comerciales')} className="rounded-md p-1 active:bg-accent">
-              <ChevronLeft size={24} color={colores.primerPlano} />
-            </Pressable>
-            <View className="flex-1 gap-0.5">
-              <Text className="text-xl font-bold tracking-tight">
-                {comercial ? `${comercial.nombre} ${comercial.apellidos ?? ''}`.trim() : 'Comercial'}
-              </Text>
-              <Text className="text-xs text-muted-foreground">{comercial?.email ?? ''}</Text>
-            </View>
-          </View>
+          <ScreenHeader
+            titulo={comercial ? `${comercial.nombre} ${comercial.apellidos ?? ''}`.trim() : 'Comercial'}
+            subtitulo={comercial?.email ?? ''}
+            respaldo="/admin/comerciales"
+          />
 
           {cargando ? (
-            <View className="items-center py-16">
-              <ActivityIndicator color="hsl(124.3 17.7% 31%)" />
-            </View>
+            <LoadingView />
           ) : error ? (
-            <View className="items-center gap-3 py-16">
-              <Text className="text-center text-destructive">{error}</Text>
-              <Button size="sm" variant="outline" onPress={() => void recargar()}>
-                <Text>Reintentar</Text>
-              </Button>
-            </View>
+            <ErrorView mensaje={error} onReintentar={() => void recargar()} />
           ) : !comercial ? (
-            <Text className="text-muted-foreground">Comercial no encontrado.</Text>
+            <EmptyState titulo="Comercial no encontrado" />
           ) : seccion === 'cartera' ? (
             /* Sección Cartera: clientes del comercial con la tarjeta reutilizable */
             <View className="gap-3">
               <View className="gap-0.5">
-                <Text className="text-base font-semibold">Cartera</Text>
+                <SectionTitle>Cartera</SectionTitle>
                 <Text className="text-xs text-muted-foreground">
                   Vista de administración · solo lectura
                 </Text>
@@ -121,7 +110,7 @@ export default function AdminComercialDetalle() {
             /* Sección Pedidos: mismos datos y filas que la vista anterior */
             <View className="gap-3">
               <View className="gap-0.5">
-                <Text className="text-base font-semibold">Pedidos</Text>
+                <SectionTitle>Pedidos</SectionTitle>
                 <Text className="text-xs text-muted-foreground">
                   Vista de administración · solo lectura
                 </Text>
@@ -204,6 +193,6 @@ export default function AdminComercialDetalle() {
           );
         })}
       </View>
-    </View>
+    </Screen>
   );
 }

@@ -1,18 +1,19 @@
 import { router } from 'expo-router';
-
-import { volverA } from '@/lib/navegacion';
 import {
   Boxes,
-  ChevronLeft,
+  Factory,
   Flame,
   Flower,
   Plus,
   type LucideIcon,
 } from 'lucide-react-native';
 import * as React from 'react';
-import { ActivityIndicator, Modal, Pressable, ScrollView, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { View } from 'react-native';
 
+import { EmptyState, ErrorView, LoadingView } from '@/components/comunes/estados';
+import { ScreenScroll } from '@/components/comunes/screen';
+import { ScreenHeader } from '@/components/comunes/screen-header';
+import { FormField, FormModal } from '@/components/ui';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -21,7 +22,6 @@ import { Text } from '@/components/ui/text';
 import { useProveedores } from '@/hooks/use-admin';
 import { temaProveedor } from '@/lib/colores-proveedor';
 import { useColoresIcono } from '@/lib/theme';
-import { cn } from '@/lib/utils';
 import type { Proveedor } from '@/lib/types';
 
 // Icono asociado a cada proveedor: llama (pellets), flor (leña) o cajas por
@@ -33,9 +33,7 @@ function iconoProveedor(icono: string | null | undefined): LucideIcon {
   return Boxes;
 }
 
-
 export default function AdminProveedores() {
-  const insets = useSafeAreaInsets();
   const colores = useColoresIcono();
 
   const { proveedores, cargando, error, recargar, crearProveedor, actualizarProveedor } =
@@ -122,40 +120,33 @@ export default function AdminProveedores() {
 
   return (
     <>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        className="flex-1 bg-background"
-        contentContainerStyle={{ paddingBottom: 32 }}
-      >
-        <View style={{ paddingTop: insets.top + 8 }} className="gap-4 p-4">
-          <View className="flex-row items-center gap-2">
-            <Pressable onPress={() => volverA('/admin')} className="rounded-md p-1 active:bg-accent">
-              <ChevronLeft size={24} color={colores.primerPlano} />
-            </Pressable>
-            <Text className="flex-1 text-xl font-bold tracking-tight">Proveedores</Text>
+      <ScreenScroll>
+        <ScreenHeader
+          titulo="Proveedores"
+          respaldo="/admin"
+          accion={
             <Button size="sm" onPress={abrirModal}>
               <Plus size={16} color={colores.primarioClaro} />
               <Text>Nuevo proveedor</Text>
             </Button>
-          </View>
+          }
+        />
 
-          {/* Lista de proveedores */}
-          {cargando ? (
-            <View className="items-center py-16">
-              <ActivityIndicator color="hsl(124.3 17.7% 31%)" />
-            </View>
-          ) : error ? (
-            <Text className="text-muted-foreground">{error}</Text>
-          ) : proveedores.length === 0 ? (
-            <Text className="text-muted-foreground">No hay proveedores todavía.</Text>
-          ) : (
-            <View className="gap-3">
-              {mensajeLista && <Text className="text-sm text-muted-foreground">{mensajeLista}</Text>}
-              {proveedores.map((p) => {
-                const Icono = iconoProveedor(p.icono);
-                const tema = temaProveedor(p.color);
-                return (
-                <Card key={p.id} className="rounded-[10px] p-4">
+        {/* Lista de proveedores */}
+        {cargando ? (
+          <LoadingView />
+        ) : error ? (
+          <ErrorView mensaje={error} />
+        ) : proveedores.length === 0 ? (
+          <EmptyState titulo="Sin proveedores registrados" icono={Factory} />
+        ) : (
+          <View className="gap-3">
+            {mensajeLista && <Text className="text-sm text-muted-foreground">{mensajeLista}</Text>}
+            {proveedores.map((p) => {
+              const Icono = iconoProveedor(p.icono);
+              const tema = temaProveedor(p.color);
+              return (
+                <Card key={p.id} className="rounded-lg p-4">
                   <CardContent className="gap-2">
                     <View className="flex-row items-start justify-between gap-2">
                       <View className="flex-1 gap-1">
@@ -241,68 +232,60 @@ export default function AdminProveedores() {
                     )}
                   </CardContent>
                 </Card>
-                );
-              })}
-            </View>
-          )}
-        </View>
-      </ScrollView>
-
-      {/* Modal: nuevo proveedor (mismo patrón que el de "Nuevo comercial"). */}
-      <Modal
-        transparent
-        animationType="fade"
-        visible={modalAbierto}
-        onRequestClose={() => setModalAbierto(false)}
-      >
-        <View className="flex-1">
-          <Pressable
-            accessibilityLabel="Cerrar formulario"
-            className="absolute inset-0 bg-black/50"
-            onPress={() => setModalAbierto(false)}
-          />
-          <View className="flex-1 items-center justify-center p-4">
-            <Card className="w-full max-w-md rounded-[10px]">
-              <CardContent className="gap-2">
-                <Text className="font-semibold">Nuevo proveedor</Text>
-                <Input
-                  value={nombre}
-                  onChangeText={setNombre}
-                  placeholder="Nombre (obligatorio)"
-                  className="h-9 text-sm"
-                />
-                <Input value={nif} onChangeText={setNif} placeholder="NIF" className="h-9 text-sm" />
-                <Input
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="Email"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  className="h-9 text-sm"
-                />
-                <Input
-                  value={telefono}
-                  onChangeText={setTelefono}
-                  placeholder="Teléfono"
-                  keyboardType="phone-pad"
-                  className="h-9 text-sm"
-                />
-                <View className="flex-row justify-end gap-2 pt-1">
-                  <Button size="sm" variant="outline" onPress={() => setModalAbierto(false)}>
-                    <Text>Cancelar</Text>
-                  </Button>
-                  <Button size="sm" disabled={creando} onPress={() => void crear()}>
-                    <Text>{creando ? 'Creando…' : 'Crear'}</Text>
-                  </Button>
-                </View>
-                {mensajeCrear && (
-                  <Text className="text-xs text-muted-foreground">{mensajeCrear}</Text>
-                )}
-              </CardContent>
-            </Card>
+              );
+            })}
           </View>
-        </View>
-      </Modal>
+        )}
+      </ScreenScroll>
+
+      {/* Modal: nuevo proveedor */}
+      <FormModal
+        visible={modalAbierto}
+        titulo="Nuevo proveedor"
+        onCerrar={() => setModalAbierto(false)}
+        acciones={
+          <>
+            <Button size="sm" variant="outline" onPress={() => setModalAbierto(false)}>
+              <Text>Cancelar</Text>
+            </Button>
+            <Button size="sm" disabled={creando} onPress={() => void crear()}>
+              <Text>{creando ? 'Creando…' : 'Crear'}</Text>
+            </Button>
+          </>
+        }
+      >
+        <FormField etiqueta="Nombre" requerido>
+          <Input
+            value={nombre}
+            onChangeText={setNombre}
+            placeholder="Nombre"
+            className="h-9 text-sm"
+          />
+        </FormField>
+        <FormField etiqueta="NIF">
+          <Input value={nif} onChangeText={setNif} placeholder="NIF" className="h-9 text-sm" />
+        </FormField>
+        <FormField etiqueta="Email">
+          <Input
+            value={email}
+            onChangeText={setEmail}
+            placeholder="Email"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            className="h-9 text-sm"
+          />
+        </FormField>
+        <FormField etiqueta="Teléfono">
+          <Input
+            value={telefono}
+            onChangeText={setTelefono}
+            placeholder="Teléfono"
+            keyboardType="phone-pad"
+            className="h-9 text-sm"
+          />
+        </FormField>
+        {mensajeCrear && <Text className="text-xs text-muted-foreground">{mensajeCrear}</Text>}
+      </FormModal>
     </>
   );
 }
