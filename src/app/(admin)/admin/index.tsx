@@ -1,4 +1,4 @@
-import { Redirect, router } from 'expo-router';
+import { router } from 'expo-router';
 import { ChevronLeft, Factory, Users } from 'lucide-react-native';
 import * as React from 'react';
 import { Pressable, View } from 'react-native';
@@ -6,7 +6,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Text } from '@/components/ui/text';
-import { useAuth } from '@/hooks/use-auth';
 import { volverA } from '@/lib/navegacion';
 import { useColoresIcono } from '@/lib/theme';
 
@@ -17,11 +16,7 @@ const SECCIONES = [
 
 export default function Admin() {
   const insets = useSafeAreaInsets();
-  const { session, perfil } = useAuth();
   const colores = useColoresIcono();
-
-  if (!session) return <Redirect href="/acceso" />;
-  if (perfil && perfil.rol !== 'admin') return <Redirect href="/pedidos" />;
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top + 8 }}>

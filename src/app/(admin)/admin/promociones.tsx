@@ -1,4 +1,4 @@
-import { Redirect, router } from 'expo-router';
+import { router } from 'expo-router';
 
 import { volverA } from '@/lib/navegacion';
 import { ChevronLeft } from 'lucide-react-native';
@@ -12,14 +12,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
-import { useAuth } from '@/hooks/use-auth';
 import { usePromocionesAdmin } from '@/hooks/use-admin';
 import { formatFecha, formatPct } from '@/lib/format';
 import { useColoresIcono } from '@/lib/theme';
 
 export default function AdminPromociones() {
   const insets = useSafeAreaInsets();
-  const { session, perfil } = useAuth();
   const { promociones, cargando, recargar, crear, alternar } = usePromocionesAdmin();
   const colores = useColoresIcono();
 
@@ -27,9 +25,6 @@ export default function AdminPromociones() {
   const [descripcion, setDescripcion] = React.useState('');
   const [pct, setPct] = React.useState('');
   const [mensaje, setMensaje] = React.useState<string | null>(null);
-
-  if (!session) return <Redirect href="/acceso" />;
-  if (perfil && perfil.rol !== 'admin') return <Redirect href="/pedidos" />;
 
   const guardar = async () => {
     const numero = Number(pct.replace(',', '.'));

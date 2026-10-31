@@ -1,4 +1,4 @@
-import { Redirect, router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { ChevronLeft, FilePlus2, Flame, ReceiptText, User, Wallet } from 'lucide-react-native';
 import * as React from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { ESTADOS_PEDIDO, type EstadoPedido } from '@/constants';
 import { useComercialDetalle } from '@/hooks/use-admin';
-import { useAuth } from '@/hooks/use-auth';
 import { formatEUR, formatFecha } from '@/lib/format';
 import { volverA } from '@/lib/navegacion';
 import { useColoresIcono } from '@/lib/theme';
@@ -51,14 +50,10 @@ export default function AdminComercialDetalle() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
   const colores = useColoresIcono();
-  const { session, perfil } = useAuth();
   const { comercial, clientes, pedidos, cargando, error, recargar } = useComercialDetalle(id);
 
   // Vista activa del "app del comercial": Cartera por defecto.
   const [seccion, setSeccion] = React.useState<SeccionPreview>('cartera');
-
-  if (!session) return <Redirect href="/acceso" />;
-  if (perfil && perfil.rol !== 'admin') return <Redirect href="/pedidos" />;
 
   const totalDe = (p: Pedido) => (p.pedido_lineas ?? []).reduce((acc, l) => acc + l.total_linea, 0);
   const productosDe = (p: Pedido) =>

@@ -1,4 +1,4 @@
-import { Redirect, router } from 'expo-router';
+import { router } from 'expo-router';
 
 import { volverA } from '@/lib/navegacion';
 import { ChevronLeft } from 'lucide-react-native';
@@ -12,23 +12,18 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
-import { useAuth } from '@/hooks/use-auth';
 import { useProductosAdmin } from '@/hooks/use-admin';
 import { formatEUR } from '@/lib/format';
 import { useColoresIcono } from '@/lib/theme';
 
 export default function AdminProductos() {
   const insets = useSafeAreaInsets();
-  const { session, perfil } = useAuth();
   const { productos, cargando, error, recargar, alternarPublicacion, actualizarPrecio } =
     useProductosAdmin();
   const colores = useColoresIcono();
 
   const [precios, setPrecios] = React.useState<Record<string, string>>({});
   const [mensaje, setMensaje] = React.useState<string | null>(null);
-
-  if (!session) return <Redirect href="/acceso" />;
-  if (perfil && perfil.rol !== 'admin') return <Redirect href="/pedidos" />;
 
   const precioVigente = (producto: (typeof productos)[number]) => {
     const abiertos = (producto.producto_precios ?? []).filter((p) => !p.fecha_fin);

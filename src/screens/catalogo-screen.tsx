@@ -135,8 +135,11 @@ export default function CatalogoScreen({
           <Pressable
             onPress={() => {
               // En la ruta dedicada el "quitar filtro" vuelve al catálogo
-              // general (el banner solo existe en esa ruta).
-              router.replace('/');
+              // general (el banner solo existe en esa ruta). El typegen de
+              // rutas está desactualizado tras los grupos y no incluye '/':
+              // el cast mantiene el typecheck verde (se regenera al arrancar
+              // el dev server).
+              router.replace('/' as never);
             }}
             className="rounded-md p-0.5 active:bg-accent"
             accessibilityLabel="Quitar filtro de proveedor"

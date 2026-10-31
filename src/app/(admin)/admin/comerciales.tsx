@@ -1,4 +1,4 @@
-import { Redirect, router } from 'expo-router';
+import { router } from 'expo-router';
 
 import { volverA } from '@/lib/navegacion';
 import {
@@ -25,7 +25,6 @@ import {
   useCrearComercial,
   useProveedores,
 } from '@/hooks/use-admin';
-import { useAuth } from '@/hooks/use-auth';
 import { temaProveedor } from '@/lib/colores-proveedor';
 import { useColoresIcono } from '@/lib/theme';
 import { cn } from '@/lib/utils';
@@ -127,7 +126,6 @@ function FilaComercial({
 
 export default function AdminComerciales() {
   const insets = useSafeAreaInsets();
-  const { session, perfil } = useAuth();
   const colores = useColoresIcono();
 
   const { comerciales, clientesPorComercial, cargando, error, recargar } = useComerciales();
@@ -140,9 +138,6 @@ export default function AdminComerciales() {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [mensaje, setMensaje] = React.useState<string | null>(null);
-
-  if (!session) return <Redirect href="/acceso" />;
-  if (perfil && perfil.rol !== 'admin') return <Redirect href="/pedidos" />;
 
   const crear = async () => {
     const nombreTrim = nombre.trim();

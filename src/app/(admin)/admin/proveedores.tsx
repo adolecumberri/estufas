@@ -1,4 +1,4 @@
-import { Redirect, router } from 'expo-router';
+import { router } from 'expo-router';
 
 import { volverA } from '@/lib/navegacion';
 import {
@@ -19,7 +19,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import { useProveedores } from '@/hooks/use-admin';
-import { useAuth } from '@/hooks/use-auth';
 import { temaProveedor } from '@/lib/colores-proveedor';
 import { useColoresIcono } from '@/lib/theme';
 import { cn } from '@/lib/utils';
@@ -37,7 +36,6 @@ function iconoProveedor(icono: string | null | undefined): LucideIcon {
 
 export default function AdminProveedores() {
   const insets = useSafeAreaInsets();
-  const { session, perfil } = useAuth();
   const colores = useColoresIcono();
 
   const { proveedores, cargando, error, recargar, crearProveedor, actualizarProveedor } =
@@ -60,9 +58,6 @@ export default function AdminProveedores() {
   const [editNif, setEditNif] = React.useState('');
   const [editEmail, setEditEmail] = React.useState('');
   const [editTelefono, setEditTelefono] = React.useState('');
-
-  if (!session) return <Redirect href="/acceso" />;
-  if (perfil && perfil.rol !== 'admin') return <Redirect href="/pedidos" />;
 
   const abrirModal = () => {
     setMensajeCrear(null);

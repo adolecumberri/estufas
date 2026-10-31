@@ -1,4 +1,4 @@
-import { Redirect, router } from 'expo-router';
+import { router } from 'expo-router';
 
 import { volverA } from '@/lib/navegacion';
 import { ChevronLeft } from 'lucide-react-native';
@@ -12,7 +12,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
 import { ROLES, TIPOS_CLIENTE } from '@/constants';
-import { useAuth } from '@/hooks/use-auth';
 import { useUsuarios } from '@/hooks/use-admin';
 import { useDescuentos } from '@/hooks/use-comercial';
 import { formatPct } from '@/lib/format';
@@ -20,15 +19,11 @@ import { useColoresIcono } from '@/lib/theme';
 
 export default function AdminUsuarios() {
   const insets = useSafeAreaInsets();
-  const { session, perfil } = useAuth();
   const { usuarios, cargando, recargar, asignarComercial } = useUsuarios();
   const { asignarGeneral } = useDescuentos();
   const colores = useColoresIcono();
 
   const [mensaje, setMensaje] = React.useState<string | null>(null);
-
-  if (!session) return <Redirect href="/acceso" />;
-  if (perfil && perfil.rol !== 'admin') return <Redirect href="/pedidos" />;
 
   const comerciales = usuarios.filter((u) => u.rol === 'comercial');
   const clientes = usuarios.filter((u) => u.rol === 'cliente');

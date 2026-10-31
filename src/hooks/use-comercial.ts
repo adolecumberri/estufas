@@ -1,5 +1,7 @@
 import * as React from 'react';
 
+import { useAuth } from '@/hooks/use-auth';
+import { resolverAlcanceCliente } from '@/lib/alcance';
 import { supabase } from '@/lib/supabase';
 import type { Combustible, ComercialProveedor, DescuentoClienteCombustible, DescuentoClienteProducto, PerfilUsuario, Promocion, Proveedor } from '@/lib/types';
 
@@ -34,34 +36,54 @@ export function useCartera() {
 }
 
 export function useCliente(id: string | undefined) {
+  const { perfil } = useAuth();
   const [cliente, setCliente] = React.useState<PerfilUsuario | null>(null);
   const [descuentos, setDescuentos] = React.useState<DescuentoClienteProducto[]>([]);
   const [descuentosCombustible, setDescuentosCombustible] = React.useState<DescuentoClienteCombustible[]>([]);
   const [cargando, setCargando] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
   const recargar = React.useCallback(async () => {
     if (!id) return;
     setCargando(true);
+    setError(null);
+    // Anillo 3: validar el alcance ANTES de consultar. El anillo 1 (RLS) ya
+    // bloquearía la lectura, pero así el error es legible ('Sin acceso a este
+    // cliente') y no se hacen llamadas inútiles.
+    const { clienteId, error: errorAlcance } = await resolverAlcanceCliente(id, perfil);
+    if (!clienteId) {
+      setCliente(null);
+      setDescuentos([]);
+      setDescuentosCombustible([]);
+      setCargando(false);
+      setError(errorAlcance ?? 'Sin acceso a este cliente');
+      return;
+    }
     const [resCliente, resDescuentos, resDescuentosCombustible] = await Promise.all([
-      supabase.from('usuarios').select('*').eq('id', id).single(),
-      supabase.from('descuentos_cliente_producto').select('*').eq('cliente_id', id).eq('borrado', false),
-      supabase.from('descuentos_cliente_combustible').select('*').eq('cliente_id', id).eq('borrado', false),
+      supabase.from('usuarios').select('*').eq('id', clienteId).single(),
+      supabase.from('descuentos_cliente_producto').select('*').eq('cliente_id', clienteId).eq('borrado', false),
+      supabase.from('descuentos_cliente_combustible').select('*').eq('cliente_id', clienteId).eq('borrado', false),
     ]);
     setCargando(false);
-    if (!resCliente.error) setCliente(resCliente.data as PerfilUsuario);
+    if (resCliente.error) {
+      setError(resCliente.error.message);
+    } else {
+      setCliente(resCliente.data as PerfilUsuario);
+    }
     if (!resDescuentos.error) setDescuentos((resDescuentos.data ?? []) as DescuentoClienteProducto[]);
     if (!resDescuentosCombustible.error)
       setDescuentosCombustible((resDescuentosCombustible.data ?? []) as DescuentoClienteCombustible[]);
-  }, [id]);
+  }, [id, perfil]);
 
   React.useEffect(() => {
     setCliente(null);
     setDescuentos([]);
     setDescuentosCombustible([]);
+    setError(null);
     void recargar();
   }, [recargar]);
 
-  return { cliente, descuentos, descuentosCombustible, cargando, recargar };
+  return { cliente, descuentos, descuentosCombustible, cargando, error, recargar };
 }
 
 // Descuentos: los aplica el comercial de la cartera o el admin (RPC).
