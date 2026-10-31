@@ -50,15 +50,16 @@ ON CONFLICT (id) DO NOTHING;
 -- Con la migración 0010 el trigger de registro SIEMPRE crea perfiles 'cliente'
 -- (el rol de los metadatos se ignora por seguridad). Los perfiles elevados del
 -- seed se ascienden aquí explícitamente, como hace el flujo de administración.
-INSERT INTO usuarios (id, nombre, apellidos, email, rol, tipo_cliente, pais_facturacion)
+INSERT INTO usuarios (id, nombre, apellidos, email, rol, tipo_cliente, pais_facturacion, es_catalogo_general)
 VALUES
 ('11111111-1111-4111-8111-111111111111', 'Administrador', NULL,
- 'admin@estufas.local', 'admin', NULL, 'ES'),
+ 'admin@estufas.local', 'admin', NULL, 'ES', FALSE),
 ('22222222-2222-4222-8222-222222222222', 'Comercial', 'Prueba',
- 'comercial@estufas.local', 'comercial', NULL, 'ES')
+ 'comercial@estufas.local', 'comercial', NULL, 'ES', TRUE)
 ON CONFLICT (id) DO UPDATE
 SET rol = EXCLUDED.rol,
     tipo_cliente = EXCLUDED.tipo_cliente;
+    es_catalogo_general = EXCLUDED.es_catalogo_general;
 
 INSERT INTO auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at)
 SELECT
@@ -201,6 +202,8 @@ WHERE referencia IN ('LP-9', 'TF-12', 'LL-7', 'EF-8', 'TF-70', 'LA-5', 'TF-X');
 INSERT INTO comercial_proveedor (comercial_id, proveedor_id) VALUES
 ('22222222-2222-4222-8222-222222222222', '91000000-0000-4000-8000-000000000004')
 ON CONFLICT (comercial_id, proveedor_id) DO NOTHING;
+
+INSERT INTO comercial_proveedor (comercial_id, proveedor_id) VALUES ('22222222-2222-4222-8222-222222222222', '91000000-0000-4000-8000-000000000005') ON CONFLICT (comercial_id, proveedor_id) DO NOTHING;
 
 -- Galerías.
 INSERT INTO producto_recurso (producto_id, recurso_id, tipo_en_producto, orden) VALUES

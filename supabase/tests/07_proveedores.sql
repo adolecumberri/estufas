@@ -30,6 +30,15 @@ SELECT throws_ok(
     'no se mezclan proveedores en un pedido'
 );
 
+-- 1b. El seed marca al 2222 como catálogo general (0020) con TODOS los
+--     proveedores: aquí se le quita Fansa para probar el rechazo por no
+--     habilitado (el test 4 se lo devolverá).
+SELECT tests.authenticate_as('11111111-1111-4111-8111-111111111111');
+SELECT desasignar_proveedor_comercial(
+    '22222222-2222-4222-8222-222222222222',
+    '91000000-0000-4000-8000-000000000005'
+);
+SELECT tests.authenticate_as('33333333-3333-4333-8333-333333333333');
 -- 2. Fansa no está habilitado para el comercial 2222 (FAN-001 rechazado).
 SELECT throws_ok(
     $q$ SELECT * FROM crear_pedido(NULL,
