@@ -68,6 +68,12 @@ npx supabase test db     # tests pgTAP (supabase/tests)
 > el bytecode sin problema. Los builds de desarrollo (`expo run:android`) no
 > usan bytecode y no se ven afectados.
 >
+> **Nota Windows (puertos de Supabase):** Windows reserva dinámicamente rangos
+> que incluyen 54321-54324 (p. ej. 54244-54343), así que Docker no puede
+> publicarlos (`bind: ... no permitido por sus permisos de acceso`). El stack
+> usa **55321-55324** (ver `supabase/config.toml`) y el puente del móvil se
+> reapunta con `reapuntar-8450.bat` (admin).
+>
 > **Nota Windows (CLI de Supabase):** si `supabase start` falla con
 > `permission denied while trying to connect to the docker API at npipe://...`,
 > activa en Docker Desktop *Settings → General → "Expose daemon on
