@@ -3,12 +3,12 @@ import * as React from 'react';
 import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { TarjetaCliente } from '@/components/cartera/tarjeta-cliente';
-import { NavInferior } from '@/components/navegacion/nav-inferior';
-import { Text } from '@/components/ui/text';
-import { useAuth } from '@/hooks/use-auth';
-import { useCartera } from '@/hooks/use-comercial';
-import { supabase } from '@/lib/supabase';
+import { TarjetaCliente } from '@/features/cartera/componentes/tarjeta-cliente';
+import { NavInferior } from '@/shared/navegacion/nav-inferior';
+import { Text } from '@/shared/ui/text';
+import { useAuth } from '@/features/auth/use-auth';
+import { useCartera } from '@/features/cartera/hooks/use-comercial';
+import { supabase } from '@/shared/lib/supabase';
 
 // Resumen por cliente para las tarjetas: descuentos específicos y por
 // combustible VIGENTES + número de pedidos visibles. useCartera no expone
@@ -90,7 +90,7 @@ export default function Cartera() {
           {/* El admin entra en LECTURA (no gestiona descuentos ni confirma),
               pero puede abrir la ficha de un cliente y crearle una solicitud. */}
           {perfil?.rol === 'admin' ? (
-            <View className="rounded-[10px] border border-primary/40 bg-primary/10 p-3">
+            <View className="rounded-lg border border-primary/40 bg-primary/10 p-3">
               <Text className="text-sm">Vista de solo lectura del comercial</Text>
             </View>
           ) : null}

@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 
-import { GuardRuta } from '@/components/seguridad/guard-ruta';
+import { GuardRuta } from '@/shared/seguridad/guard-ruta';
 
 // Grupo del carrito: el anónimo PUEDE llenar el carrito local (no se le
 // redirige al login); el admin entra para preparar la solicitud de un cliente

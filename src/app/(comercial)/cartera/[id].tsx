@@ -14,22 +14,22 @@ import * as React from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
-import { Text } from '@/components/ui/text';
-import { COMBUSTIBLES, ESTADOS_PEDIDO, TIPOS_CLIENTE } from '@/constants';
-import type { CombustibleId } from '@/constants';
-import { useSolicitud } from '@/contexts/solicitud-context';
-import { usePermisos } from '@/hooks/use-permisos';
-import { useCatalogo } from '@/hooks/use-catalogo';
-import { useCliente, useDescuentos } from '@/hooks/use-comercial';
-import { usePedidos } from '@/hooks/use-pedidos';
-import { formatEUR, formatPct } from '@/lib/format';
-import { volverA } from '@/lib/navegacion';
-import { useColoresIcono } from '@/lib/theme';
+import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Input } from '@/shared/ui/input';
+import { Separator } from '@/shared/ui/separator';
+import { Text } from '@/shared/ui/text';
+import { COMBUSTIBLES, ESTADOS_PEDIDO, TIPOS_CLIENTE } from '@/shared/constantes';
+import type { CombustibleId } from '@/shared/constantes';
+import { useSolicitud } from '@/features/carrito/contexto';
+import { usePermisos } from '@/shared/seguridad/use-permisos';
+import { useCatalogo } from '@/features/catalogo/hooks/use-catalogo';
+import { useCliente, useDescuentos } from '@/features/cartera/hooks/use-comercial';
+import { usePedidos } from '@/features/pedidos/hooks/use-pedidos';
+import { formatEUR, formatPct } from '@/shared/lib/format';
+import { volverA } from '@/shared/lib/navegacion';
+import { useColoresIcono } from '@/shared/lib/theme';
 
 const DESCRIPCIONES_COMBUSTIBLE: Record<CombustibleId, string> = {
   pellets: 'Canalizadas, Aire y Autónomas',
@@ -175,7 +175,7 @@ export default function ClienteDetalle() {
         </View>
 
         {/* Tarjeta del cliente */}
-        <Card className="rounded-[10px]">
+        <Card className="rounded-lg">
           <CardContent className="gap-1.5">
             <View className="flex-row items-start justify-between gap-2">
               <View className="flex-1 gap-0.5">
@@ -220,7 +220,7 @@ export default function ClienteDetalle() {
         ) : null}
 
         {/* Descuento general de cartera */}
-        <Card className="rounded-[10px]">
+        <Card className="rounded-lg">
           <CardHeader className="gap-2">
             <View className="flex-row items-center justify-between gap-2">
               <View className="flex-row items-center gap-2">
@@ -316,7 +316,7 @@ export default function ClienteDetalle() {
           {COMBUSTIBLES.map((c) => {
             const descuento = descuentosCombustible.find((d) => d.combustible === c.id);
             return (
-              <Card key={c.id} className="rounded-[10px]">
+              <Card key={c.id} className="rounded-lg">
                 <CardContent className="gap-3">
                   <View className="flex-row items-center justify-between gap-2">
                     <View className="flex-row items-center gap-2">
@@ -405,7 +405,7 @@ export default function ClienteDetalle() {
           {descuentos.map((d) => {
             const producto = catalogo.productos.find((p) => p.producto_id === d.producto_id);
             return (
-              <Card key={d.id} className="rounded-[10px]">
+              <Card key={d.id} className="rounded-lg">
                 <CardContent className="gap-2">
                   <View className="flex-row items-start justify-between gap-2">
                     <View className="flex-1 gap-0.5">
@@ -450,7 +450,7 @@ export default function ClienteDetalle() {
           })}
 
           {anadiendo ? (
-            <Card className="rounded-[10px]">
+            <Card className="rounded-lg">
               <CardContent className="gap-3">
                 <Text className="text-sm font-semibold">Añadir descuento por producto</Text>
                 <Text className="text-xs text-muted-foreground">
@@ -575,7 +575,7 @@ export default function ClienteDetalle() {
         </View>
 
         {/* Pedidos del cliente */}
-        <Card className="rounded-[10px]">
+        <Card className="rounded-lg">
           <CardHeader>
             <CardTitle className="text-base font-semibold">Pedidos del cliente</CardTitle>
           </CardHeader>

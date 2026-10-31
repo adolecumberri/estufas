@@ -10,19 +10,19 @@ import {
 import * as React from 'react';
 import { View } from 'react-native';
 
-import { EmptyState, ErrorView, LoadingView } from '@/components/comunes/estados';
-import { ScreenScroll } from '@/components/comunes/screen';
-import { ScreenHeader } from '@/components/comunes/screen-header';
-import { FormField, FormModal } from '@/components/ui';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Text } from '@/components/ui/text';
-import { useProveedores } from '@/hooks/use-admin';
-import { temaProveedor } from '@/lib/colores-proveedor';
-import { useColoresIcono } from '@/lib/theme';
-import type { Proveedor } from '@/lib/types';
+import { EmptyState, ErrorView, LoadingView } from '@/shared/componentes/estados';
+import { ScreenScroll } from '@/shared/componentes/screen';
+import { ScreenHeader } from '@/shared/componentes/screen-header';
+import { FormField, FormModal } from '@/shared/ui';
+import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent } from '@/shared/ui/card';
+import { Input } from '@/shared/ui/input';
+import { Text } from '@/shared/ui/text';
+import { useProveedores } from '@/features/admin/hooks/use-admin';
+import { temaProveedor } from '@/shared/lib/colores-proveedor';
+import { useColoresIcono } from '@/shared/lib/theme';
+import type { Proveedor } from '@/shared/lib/types';
 
 // Icono asociado a cada proveedor: llama (pellets), flor (leña) o cajas por
 // defecto. (Duplicada a propósito en admin/comerciales.tsx para no crear un

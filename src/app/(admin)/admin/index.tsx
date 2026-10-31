@@ -2,11 +2,11 @@ import { router } from 'expo-router';
 import { Factory, Users } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 
-import { ListCard } from '@/components/comunes/list-card';
-import { Screen } from '@/components/comunes/screen';
-import { ScreenHeader } from '@/components/comunes/screen-header';
-import { Text } from '@/components/ui/text';
-import { useColoresIcono } from '@/lib/theme';
+import { ListCard } from '@/shared/componentes/list-card';
+import { Screen } from '@/shared/componentes/screen';
+import { ScreenHeader } from '@/shared/componentes/screen-header';
+import { Text } from '@/shared/ui/text';
+import { useColoresIcono } from '@/shared/lib/theme';
 
 const SECCIONES = [
   { titulo: 'Comerciales', descripcion: 'Comerciales, sus clientes y accesos a proveedores', icono: Users, ruta: '/admin/comerciales' },

@@ -4,14 +4,14 @@ import * as React from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Text } from '@/components/ui/text';
-import { APP } from '@/constants';
-import { useAuth } from '@/hooks/use-auth';
-import { useColoresIcono } from '@/lib/theme';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Input } from '@/shared/ui/input';
+import { Label } from '@/shared/ui/label';
+import { Text } from '@/shared/ui/text';
+import { APP } from '@/shared/constantes';
+import { useAuth } from '@/features/auth/use-auth';
+import { useColoresIcono } from '@/shared/lib/theme';
 
 export default function Acceso() {
   const insets = useSafeAreaInsets();
@@ -75,7 +75,7 @@ export default function Acceso() {
               <Label nativeID="email">Email</Label>
               <Input
                 id="email"
-                className="h-11 rounded-[10px] sm:h-11"
+                className="h-11 rounded-lg sm:h-11"
                 autoCapitalize="none"
                 keyboardType="email-address"
                 autoComplete="email"
@@ -88,7 +88,7 @@ export default function Acceso() {
               <Label nativeID="password">Contraseña</Label>
               <Input
                 id="password"
-                className="h-11 rounded-[10px] sm:h-11"
+                className="h-11 rounded-lg sm:h-11"
                 secureTextEntry
                 value={password}
                 onChangeText={setPassword}

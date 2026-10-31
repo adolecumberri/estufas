@@ -11,19 +11,19 @@ import * as React from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { NavInferior } from '@/components/navegacion/nav-inferior';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Text } from '@/components/ui/text';
-import { ESTADOS_PEDIDO, type EstadoPedido } from '@/constants';
-import { useAuth } from '@/hooks/use-auth';
-import { useCartera } from '@/hooks/use-comercial';
-import { useAccionesPedido, usePedidos } from '@/hooks/use-pedidos';
-import { formatEUR, formatFecha } from '@/lib/format';
-import { useColoresIcono } from '@/lib/theme';
-import { cn } from '@/lib/utils';
-import type { Pedido } from '@/lib/types';
+import { NavInferior } from '@/shared/navegacion/nav-inferior';
+import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
+import { Card } from '@/shared/ui/card';
+import { Text } from '@/shared/ui/text';
+import { ESTADOS_PEDIDO, type EstadoPedido } from '@/shared/constantes';
+import { useAuth } from '@/features/auth/use-auth';
+import { useCartera } from '@/features/cartera/hooks/use-comercial';
+import { useAccionesPedido, usePedidos } from '@/features/pedidos/hooks/use-pedidos';
+import { formatEUR, formatFecha } from '@/shared/lib/format';
+import { useColoresIcono } from '@/shared/lib/theme';
+import { cn } from '@/shared/lib/utils';
+import type { Pedido } from '@/shared/lib/types';
 
 // Chips de filtro: "Todos" más un chip por cada estado del enum real.
 const FILTROS = ['todos', ...(Object.keys(ESTADOS_PEDIDO) as EstadoPedido[])] as const;
@@ -201,7 +201,7 @@ export default function Pedidos() {
                       const numProductos = productosDe(p);
                       const cliente = clienteDe(p);
                       return (
-                        <Card key={p.id} className="gap-3 rounded-[10px] p-3.5">
+                        <Card key={p.id} className="gap-3 rounded-lg p-3.5">
                           <View className="flex-row items-start justify-between gap-2">
                             <View className="flex-row items-center gap-2">
                               <Text className="text-sm font-semibold">Pedido nº {p.numero_pedido}</Text>
@@ -295,7 +295,7 @@ export default function Pedidos() {
                         onPress={() => router.push(`/pedidos/${p.id}`)}
                         className="active:opacity-80"
                       >
-                        <Card className="gap-2 rounded-[10px] p-3.5">
+                        <Card className="gap-2 rounded-lg p-3.5">
                           <View className="flex-row items-center justify-between gap-2">
                             <View className="flex-row items-center gap-2">
                               <Text className="text-sm font-semibold">Pedido nº {p.numero_pedido}</Text>

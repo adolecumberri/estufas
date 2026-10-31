@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 
-import { GuardRuta } from '@/components/seguridad/guard-ruta';
+import { GuardRuta } from '@/shared/seguridad/guard-ruta';
 
 // Grupo del cliente: pedidos propios. Entran cliente y comercial (crear
 // propio / confirmar); el admin queda fuera porque la cascada le retira

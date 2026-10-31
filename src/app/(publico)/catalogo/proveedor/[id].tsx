@@ -1,7 +1,7 @@
 import { useLocalSearchParams } from 'expo-router';
 import * as React from 'react';
 
-import CatalogoScreen from '@/screens/catalogo-screen';
+import CatalogoScreen from '@/features/catalogo/screens/catalogo-screen';
 
 // Catálogo de un proveedor concreto (/catalogo/proveedor/[id]).
 // Reutiliza la MISMA pantalla del catálogo (sin duplicar views): el filtro por

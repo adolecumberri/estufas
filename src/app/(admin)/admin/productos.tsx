@@ -1,17 +1,17 @@
 import * as React from 'react';
 import { View } from 'react-native';
 
-import { ErrorView, LoadingView } from '@/components/comunes/estados';
-import { ScreenScroll } from '@/components/comunes/screen';
-import { ScreenHeader } from '@/components/comunes/screen-header';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
-import { Text } from '@/components/ui/text';
-import { useProductosAdmin } from '@/hooks/use-admin';
-import { formatEUR } from '@/lib/format';
+import { ErrorView, LoadingView } from '@/shared/componentes/estados';
+import { ScreenScroll } from '@/shared/componentes/screen';
+import { ScreenHeader } from '@/shared/componentes/screen-header';
+import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent } from '@/shared/ui/card';
+import { Input } from '@/shared/ui/input';
+import { Separator } from '@/shared/ui/separator';
+import { Text } from '@/shared/ui/text';
+import { useProductosAdmin } from '@/features/admin/hooks/use-admin';
+import { formatEUR } from '@/shared/lib/format';
 
 export default function AdminProductos() {
   const { productos, cargando, error, recargar, alternarPublicacion, actualizarPrecio } =

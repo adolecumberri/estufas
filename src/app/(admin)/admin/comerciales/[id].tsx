@@ -4,19 +4,19 @@ import * as React from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { TarjetaCliente } from '@/components/cartera/tarjeta-cliente';
-import { EmptyState, ErrorView, LoadingView } from '@/components/comunes/estados';
-import { Screen } from '@/components/comunes/screen';
-import { ScreenHeader } from '@/components/comunes/screen-header';
-import { SectionTitle } from '@/components/comunes/section-title';
-import { Badge } from '@/components/ui/badge';
-import { Text } from '@/components/ui/text';
-import { ESTADOS_PEDIDO, type EstadoPedido } from '@/constants';
-import { useComercialDetalle } from '@/hooks/use-admin';
-import { formatEUR, formatFecha } from '@/lib/format';
-import { useColoresIcono } from '@/lib/theme';
-import { cn } from '@/lib/utils';
-import type { Pedido, PerfilUsuario } from '@/lib/types';
+import { TarjetaCliente } from '@/features/cartera/componentes/tarjeta-cliente';
+import { EmptyState, ErrorView, LoadingView } from '@/shared/componentes/estados';
+import { Screen } from '@/shared/componentes/screen';
+import { ScreenHeader } from '@/shared/componentes/screen-header';
+import { SectionTitle } from '@/shared/componentes/section-title';
+import { Badge } from '@/shared/ui/badge';
+import { Text } from '@/shared/ui/text';
+import { ESTADOS_PEDIDO, type EstadoPedido } from '@/shared/constantes';
+import { useComercialDetalle } from '@/features/admin/hooks/use-admin';
+import { formatEUR, formatFecha } from '@/shared/lib/format';
+import { useColoresIcono } from '@/shared/lib/theme';
+import { cn } from '@/shared/lib/utils';
+import type { Pedido, PerfilUsuario } from '@/shared/lib/types';
 
 // Misma variante de Badge por estado que en la lista de pedidos del comercial.
 const varianteEstado = (estado: EstadoPedido) => {

@@ -1,17 +1,17 @@
 import * as React from 'react';
 import { View } from 'react-native';
 
-import { LoadingView } from '@/components/comunes/estados';
-import { ScreenScroll } from '@/components/comunes/screen';
-import { ScreenHeader } from '@/components/comunes/screen-header';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
-import { Text } from '@/components/ui/text';
-import { usePromocionesAdmin } from '@/hooks/use-admin';
-import { formatFecha, formatPct } from '@/lib/format';
+import { LoadingView } from '@/shared/componentes/estados';
+import { ScreenScroll } from '@/shared/componentes/screen';
+import { ScreenHeader } from '@/shared/componentes/screen-header';
+import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Input } from '@/shared/ui/input';
+import { Separator } from '@/shared/ui/separator';
+import { Text } from '@/shared/ui/text';
+import { usePromocionesAdmin } from '@/features/admin/hooks/use-admin';
+import { formatFecha, formatPct } from '@/shared/lib/format';
 
 export default function AdminPromociones() {
   const { promociones, cargando, recargar, crear, alternar } = usePromocionesAdmin();

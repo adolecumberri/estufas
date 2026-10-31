@@ -1,18 +1,18 @@
 import * as React from 'react';
 import { View } from 'react-native';
 
-import { LoadingView } from '@/components/comunes/estados';
-import { ScreenScroll } from '@/components/comunes/screen';
-import { ScreenHeader } from '@/components/comunes/screen-header';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Text } from '@/components/ui/text';
-import { ROLES, TIPOS_CLIENTE } from '@/constants';
-import { useUsuarios } from '@/hooks/use-admin';
-import { useDescuentos } from '@/hooks/use-comercial';
-import { formatPct } from '@/lib/format';
+import { LoadingView } from '@/shared/componentes/estados';
+import { ScreenScroll } from '@/shared/componentes/screen';
+import { ScreenHeader } from '@/shared/componentes/screen-header';
+import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent } from '@/shared/ui/card';
+import { Separator } from '@/shared/ui/separator';
+import { Text } from '@/shared/ui/text';
+import { ROLES, TIPOS_CLIENTE } from '@/shared/constantes';
+import { useUsuarios } from '@/features/admin/hooks/use-admin';
+import { useDescuentos } from '@/features/cartera/hooks/use-comercial';
+import { formatPct } from '@/shared/lib/format';
 
 export default function AdminUsuarios() {
   const { usuarios, cargando, recargar, asignarComercial } = useUsuarios();

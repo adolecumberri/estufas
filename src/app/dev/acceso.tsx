@@ -3,16 +3,16 @@
 // docs/USUARIOS_PRUEBA.md). Fuera de __DEV__ no existe: redirige al catálogo.
 import { Redirect, router } from 'expo-router';
 
-import { volverA } from '@/lib/navegacion';
+import { volverA } from '@/shared/lib/navegacion';
 import { ChevronLeft } from 'lucide-react-native';
 import * as React from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Card, CardContent } from '@/components/ui/card';
-import { Text } from '@/components/ui/text';
-import { supabase } from '@/lib/supabase';
-import { useColoresIcono } from '@/lib/theme';
+import { Card, CardContent } from '@/shared/ui/card';
+import { Text } from '@/shared/ui/text';
+import { supabase } from '@/shared/lib/supabase';
+import { useColoresIcono } from '@/shared/lib/theme';
 
 interface PerfilDev {
   id: string;
@@ -151,7 +151,7 @@ export default function DevAcceso() {
               onPress={() => void entrar(p)}
               className="active:opacity-80"
             >
-              <Card className="rounded-[10px] p-3">
+              <Card className="rounded-lg p-3">
                 <CardContent className="gap-1 px-3">
                   <View className="flex-row items-center justify-between gap-2">
                     <Text className="font-medium">{p.nombre}</Text>

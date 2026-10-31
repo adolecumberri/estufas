@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 
-import { GuardRuta } from '@/components/seguridad/guard-ruta';
+import { GuardRuta } from '@/shared/seguridad/guard-ruta';
 
 // Grupo admin: panel de administración (comerciales, proveedores, y las
 // pantallas de gestión heredadas). Solo el admin.

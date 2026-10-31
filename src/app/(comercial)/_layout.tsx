@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 
-import { GuardRuta } from '@/components/seguridad/guard-ruta';
+import { GuardRuta } from '@/shared/seguridad/guard-ruta';
 
 // Grupo comercial: cartera de clientes. El comercial gestiona; el admin
 // entra EN LECTURA (cartera:ver_clientes por cascada) — en fase 4 podrá

@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 
-import { GuardRuta } from '@/components/seguridad/guard-ruta';
+import { GuardRuta } from '@/shared/seguridad/guard-ruta';
 
 // Grupo público: catálogo general, acceso y registro. Sin restricciones
 // (el anónimo entra de pleno derecho).

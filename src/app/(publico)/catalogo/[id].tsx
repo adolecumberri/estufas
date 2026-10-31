@@ -5,20 +5,20 @@ import * as React from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Text } from '@/components/ui/text';
-import { ORIGENES_DESCUENTO } from '@/constants';
-import { useSolicitud } from '@/contexts/solicitud-context';
-import { useAuth } from '@/hooks/use-auth';
-import { useProducto } from '@/hooks/use-producto';
-import { formatEUR, formatPct } from '@/lib/format';
-import { volverA } from '@/lib/navegacion';
-import { fuenteImagen } from '@/lib/imagenes';
-import { useColoresIcono } from '@/lib/theme';
+import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Separator } from '@/shared/ui/separator';
+import { Skeleton } from '@/shared/ui/skeleton';
+import { Text } from '@/shared/ui/text';
+import { ORIGENES_DESCUENTO } from '@/shared/constantes';
+import { useSolicitud } from '@/features/carrito/contexto';
+import { useAuth } from '@/features/auth/use-auth';
+import { useProducto } from '@/features/catalogo/hooks/use-producto';
+import { formatEUR, formatPct } from '@/shared/lib/format';
+import { volverA } from '@/shared/lib/navegacion';
+import { fuenteImagen } from '@/features/catalogo/lib/imagenes';
+import { useColoresIcono } from '@/shared/lib/theme';
 
 // Formatea un valor flexible de la ficha técnica (JSONB productos.datos).
 function formatearValorDato(valor: string | number | boolean | null, unidad: string | null): string {
@@ -131,7 +131,7 @@ export default function ProductoDetalle() {
             banner que en /solicitud y el catálogo, para que el rechazo al
             añadir se vea también desde la ficha. */}
         {aviso && (
-          <View className="mx-4 mt-2 flex-row items-start gap-2 rounded-[10px] border border-primary/40 bg-primary/10 p-3">
+          <View className="mx-4 mt-2 flex-row items-start gap-2 rounded-lg border border-primary/40 bg-primary/10 p-3">
             <Text className="flex-1 text-sm">{aviso}</Text>
             <Pressable
               onPress={limpiarAviso}
@@ -203,7 +203,7 @@ export default function ProductoDetalle() {
             </Text>
           ) : session ? (
             <View className="flex-row items-center gap-3">
-              <View className="flex-row items-center rounded-[10px] border border-input">
+              <View className="flex-row items-center rounded-lg border border-input">
                 <Pressable
                   onPress={() => setCantidad((c) => Math.max(1, c - 1))}
                   className="p-3 active:bg-accent"

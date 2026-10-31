@@ -11,15 +11,15 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Text } from '@/components/ui/text';
-import { APP, TIPOS_CLIENTE, type TipoCliente } from '@/constants';
-import { useAuth } from '@/hooks/use-auth';
-import { useColoresIcono } from '@/lib/theme';
-import { cn } from '@/lib/utils';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Input } from '@/shared/ui/input';
+import { Label } from '@/shared/ui/label';
+import { Text } from '@/shared/ui/text';
+import { APP, TIPOS_CLIENTE, type TipoCliente } from '@/shared/constantes';
+import { useAuth } from '@/features/auth/use-auth';
+import { useColoresIcono } from '@/shared/lib/theme';
+import { cn } from '@/shared/lib/utils';
 
 export default function Registro() {
   const insets = useSafeAreaInsets();
@@ -90,7 +90,7 @@ export default function Registro() {
             </View>
           </CardHeader>
           <CardContent className="gap-4">
-            <View className="flex-row gap-1 rounded-[10px] border border-border bg-muted p-1">
+            <View className="flex-row gap-1 rounded-lg border border-border bg-muted p-1">
               {(Object.keys(TIPOS_CLIENTE) as TipoCliente[]).map((t) => (
                 <Pressable
                   key={t}
@@ -118,7 +118,7 @@ export default function Registro() {
               <Label nativeID="nombre">Nombre</Label>
               <Input
                 id="nombre"
-                className="h-11 rounded-[10px] sm:h-11"
+                className="h-11 rounded-lg sm:h-11"
                 value={nombre}
                 onChangeText={setNombre}
                 placeholder="Tu nombre"
@@ -128,7 +128,7 @@ export default function Registro() {
               <Label nativeID="apellidos">Apellidos</Label>
               <Input
                 id="apellidos"
-                className="h-11 rounded-[10px] sm:h-11"
+                className="h-11 rounded-lg sm:h-11"
                 value={apellidos}
                 onChangeText={setApellidos}
                 placeholder="Tus apellidos"
@@ -140,7 +140,7 @@ export default function Registro() {
                   <Label nativeID="razon">Razón social</Label>
                   <Input
                     id="razon"
-                    className="h-11 rounded-[10px] sm:h-11"
+                    className="h-11 rounded-lg sm:h-11"
                     value={razonSocial}
                     onChangeText={setRazonSocial}
                     placeholder="Nombre de la empresa"
@@ -150,7 +150,7 @@ export default function Registro() {
                   <Label nativeID="nif">NIF/CIF</Label>
                   <Input
                     id="nif"
-                    className="h-11 rounded-[10px] sm:h-11"
+                    className="h-11 rounded-lg sm:h-11"
                     value={nifCif}
                     onChangeText={setNifCif}
                     placeholder="B12345678"
@@ -163,7 +163,7 @@ export default function Registro() {
               <Label nativeID="email">Email</Label>
               <Input
                 id="email"
-                className="h-11 rounded-[10px] sm:h-11"
+                className="h-11 rounded-lg sm:h-11"
                 autoCapitalize="none"
                 keyboardType="email-address"
                 autoComplete="email"
@@ -176,7 +176,7 @@ export default function Registro() {
               <Label nativeID="telefono">Teléfono (opcional)</Label>
               <Input
                 id="telefono"
-                className="h-11 rounded-[10px] sm:h-11"
+                className="h-11 rounded-lg sm:h-11"
                 keyboardType="phone-pad"
                 value={telefono}
                 onChangeText={setTelefono}
@@ -187,7 +187,7 @@ export default function Registro() {
               <Label nativeID="password">Contraseña</Label>
               <Input
                 id="password"
-                className="h-11 rounded-[10px] sm:h-11"
+                className="h-11 rounded-lg sm:h-11"
                 autoComplete="new-password"
                 secureTextEntry
                 value={password}

@@ -5,20 +5,20 @@ import * as React from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { NavInferior } from '@/components/navegacion/nav-inferior';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Text } from '@/components/ui/text';
-import { useSolicitud } from '@/contexts/solicitud-context';
-import { useAuth } from '@/hooks/use-auth';
-import { useAccionesPedido, usePedido } from '@/hooks/use-pedidos';
-import { formatEUR } from '@/lib/format';
-import { volverA } from '@/lib/navegacion';
-import { fuenteImagen } from '@/lib/imagenes';
-import { useColoresIcono } from '@/lib/theme';
+import { NavInferior } from '@/shared/navegacion/nav-inferior';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent } from '@/shared/ui/card';
+import { Input } from '@/shared/ui/input';
+import { Label } from '@/shared/ui/label';
+import { Separator } from '@/shared/ui/separator';
+import { Text } from '@/shared/ui/text';
+import { useSolicitud } from '@/features/carrito/contexto';
+import { useAuth } from '@/features/auth/use-auth';
+import { useAccionesPedido, usePedido } from '@/features/pedidos/hooks/use-pedidos';
+import { formatEUR } from '@/shared/lib/format';
+import { volverA } from '@/shared/lib/navegacion';
+import { fuenteImagen } from '@/features/catalogo/lib/imagenes';
+import { useColoresIcono } from '@/shared/lib/theme';
 
 export default function Solicitud() {
   const insets = useSafeAreaInsets();
@@ -128,7 +128,7 @@ export default function Solicitud() {
 
           {/* Aviso global del carrito (p. ej. intento de mezclar proveedores) */}
           {aviso && (
-            <View className="flex-row items-start gap-2 rounded-[10px] border border-primary/40 bg-primary/10 p-3">
+            <View className="flex-row items-start gap-2 rounded-lg border border-primary/40 bg-primary/10 p-3">
               <Text className="flex-1 text-sm">{aviso}</Text>
               <Pressable
                 onPress={limpiarAviso}
@@ -141,7 +141,7 @@ export default function Solicitud() {
           )}
 
           {(perfil?.rol === 'comercial' || perfil?.rol === 'admin') && !params.editar && (
-            <Card className="rounded-[10px] border-primary/40 bg-primary/10">
+            <Card className="rounded-lg border-primary/40 bg-primary/10">
               <CardContent className="flex-row items-center gap-3">
                 <UserRound size={18} color={colores.tenue} />
                 {clienteObjetivoId ? (
@@ -168,7 +168,7 @@ export default function Solicitud() {
           )}
 
           {lineas.length === 0 ? (
-            <Card className="rounded-[10px]">
+            <Card className="rounded-lg">
               <CardContent className="items-center gap-2 py-8">
                 <Text className="text-muted-foreground">Tu solicitud está vacía.</Text>
                 <Button onPress={() => router.replace('/')}>
@@ -179,7 +179,7 @@ export default function Solicitud() {
           ) : (
             <View className="gap-3">
               {lineas.map((l) => (
-                <Card key={l.producto_id} className="rounded-[10px] p-3">
+                <Card key={l.producto_id} className="rounded-lg p-3">
                   <CardContent className="flex-row gap-3">
                     <Image
                       source={fuenteImagen(l.imagen_url) ?? undefined}
@@ -205,7 +205,7 @@ export default function Solicitud() {
                         </Text>
                       )}
                       <View className="mt-1 flex-row items-center gap-3">
-                        <View className="flex-row items-center rounded-[10px] border border-border">
+                        <View className="flex-row items-center rounded-lg border border-border">
                           <Pressable
                             onPress={() => cambiarCantidad(l.producto_id, -1)}
                             className="p-1.5 active:bg-accent"

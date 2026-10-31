@@ -2,7 +2,7 @@ import '@/global.css';
 // Registro de interop de expo-image (className → style). Debe importarse antes
 // de renderizar cualquier <Image> de expo-image; de lo contrario las imágenes
 // no reciben tamaño y quedan invisibles.
-import '@/lib/interop-expo-image';
+import '@/shared/lib/interop-expo-image';
 
 import { PortalHost } from '@rn-primitives/portal';
 import { Stack, ThemeProvider } from 'expo-router';
@@ -12,10 +12,10 @@ import * as SystemUI from 'expo-system-ui';
 import * as React from 'react';
 import { Platform, useColorScheme, View } from 'react-native';
 
-import { AuthProvider } from '@/contexts/auth-context';
-import { ProveedorActivoProvider } from '@/contexts/proveedor-activo-context';
-import { SolicitudProvider } from '@/contexts/solicitud-context';
-import { NAV_THEME } from '@/lib/theme';
+import { AuthProvider } from '@/features/auth/contexto';
+import { ProveedorActivoProvider } from '@/features/catalogo/proveedor-activo-contexto';
+import { SolicitudProvider } from '@/features/carrito/contexto';
+import { NAV_THEME } from '@/shared/lib/theme';
 
 void SplashScreen.preventAutoHideAsync();
 

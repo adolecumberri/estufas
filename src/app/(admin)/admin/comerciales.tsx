@@ -11,25 +11,25 @@ import {
 import * as React from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 
-import { EmptyState, ErrorView, LoadingView } from '@/components/comunes/estados';
-import { ScreenScroll } from '@/components/comunes/screen';
-import { ScreenHeader } from '@/components/comunes/screen-header';
-import { FormField, FormModal } from '@/components/ui';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
-import { Text } from '@/components/ui/text';
+import { EmptyState, ErrorView, LoadingView } from '@/shared/componentes/estados';
+import { ScreenScroll } from '@/shared/componentes/screen';
+import { ScreenHeader } from '@/shared/componentes/screen-header';
+import { FormField, FormModal } from '@/shared/ui';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent } from '@/shared/ui/card';
+import { Input } from '@/shared/ui/input';
+import { Separator } from '@/shared/ui/separator';
+import { Text } from '@/shared/ui/text';
 import {
   useAsignacionesProveedores,
   useComerciales,
   useCrearComercial,
   useProveedores,
-} from '@/hooks/use-admin';
-import { temaProveedor } from '@/lib/colores-proveedor';
-import { useColoresIcono } from '@/lib/theme';
-import { cn } from '@/lib/utils';
-import type { PerfilUsuario, Proveedor } from '@/lib/types';
+} from '@/features/admin/hooks/use-admin';
+import { temaProveedor } from '@/shared/lib/colores-proveedor';
+import { useColoresIcono } from '@/shared/lib/theme';
+import { cn } from '@/shared/lib/utils';
+import type { PerfilUsuario, Proveedor } from '@/shared/lib/types';
 
 // Icono asociado a cada proveedor: llama (pellets), flor (leña) o cajas por
 // defecto. (Duplicada a propósito en admin/proveedores.tsx para no crear un

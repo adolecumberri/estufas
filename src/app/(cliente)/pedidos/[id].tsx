@@ -16,21 +16,21 @@ import * as React from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
-import { Text } from '@/components/ui/text';
-import { ESTADOS_PEDIDO, ORIGENES_DESCUENTO, ROLES, TIPOS_CLIENTE, type EstadoPedido } from '@/constants';
-import { useAuth } from '@/hooks/use-auth';
-import { useCatalogo } from '@/hooks/use-catalogo';
-import { useAccionesPedido, usePedido } from '@/hooks/use-pedidos';
-import { obtenerProducto } from '@/lib/catalogo-local';
-import { formatEUR, formatFecha, formatFechaHora } from '@/lib/format';
-import { volverA } from '@/lib/navegacion';
-import { fuenteImagen } from '@/lib/imagenes';
-import { useColoresIcono } from '@/lib/theme';
+import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { Input } from '@/shared/ui/input';
+import { Separator } from '@/shared/ui/separator';
+import { Text } from '@/shared/ui/text';
+import { ESTADOS_PEDIDO, ORIGENES_DESCUENTO, ROLES, TIPOS_CLIENTE, type EstadoPedido } from '@/shared/constantes';
+import { useAuth } from '@/features/auth/use-auth';
+import { useCatalogo } from '@/features/catalogo/hooks/use-catalogo';
+import { useAccionesPedido, usePedido } from '@/features/pedidos/hooks/use-pedidos';
+import { obtenerProducto } from '@/features/catalogo/lib/catalogo-local';
+import { formatEUR, formatFecha, formatFechaHora } from '@/shared/lib/format';
+import { volverA } from '@/shared/lib/navegacion';
+import { fuenteImagen } from '@/features/catalogo/lib/imagenes';
+import { useColoresIcono } from '@/shared/lib/theme';
 
 export default function PedidoDetalle() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -141,7 +141,7 @@ export default function PedidoDetalle() {
         <View className="flex-row items-center gap-2">
           <Pressable
             onPress={() => volverA('/pedidos')}
-            className="rounded-[10px] bg-accent p-2 active:bg-accent"
+            className="rounded-lg bg-accent p-2 active:bg-accent"
             accessibilityLabel="Volver al listado de pedidos"
           >
             <ArrowLeft size={20} color={colores.primerPlano} />
@@ -171,7 +171,7 @@ export default function PedidoDetalle() {
             return (
               <View
                 key={l.id}
-                className="relative aspect-[4/3] w-44 overflow-hidden rounded-[10px] bg-muted"
+                className="relative aspect-[4/3] w-44 overflow-hidden rounded-lg bg-muted"
               >
                 <Image
                   source={fuenteImagen(ficha?.imagen_url ?? null)}
@@ -191,7 +191,7 @@ export default function PedidoDetalle() {
         </ScrollView>
 
         {/* 3. Fecha de registro + ID */}
-        <Card className="rounded-[10px]">
+        <Card className="rounded-lg">
           <CardContent className="gap-1">
             <View className="flex-row items-center justify-between gap-2">
               <View className="flex-row items-center gap-2">
@@ -240,7 +240,7 @@ export default function PedidoDetalle() {
 
         {/* 4. Cliente (visible para comercial/admin) */}
         {puedeGestionar && pedido.cliente && (
-          <Card className="rounded-[10px]">
+          <Card className="rounded-lg">
             <CardContent className="gap-2">
               <View className="flex-row items-center justify-between gap-2">
                 <View className="flex-row items-center gap-1.5">
@@ -285,7 +285,7 @@ export default function PedidoDetalle() {
         )}
 
         {/* 5. Líneas de Producto + resumen */}
-        <Card className="rounded-[10px] p-3">
+        <Card className="rounded-lg p-3">
           <CardHeader className="px-3 pt-1">
             <View className="flex-row items-center justify-between gap-2">
               <CardTitle className="text-base">Líneas de Producto</CardTitle>
@@ -299,7 +299,7 @@ export default function PedidoDetalle() {
               const ficha = fichasLinea.get(l.producto_id);
               const infoLinea = [ficha?.marca, ficha?.tipo].filter(Boolean).join(' · ');
               return (
-                <View key={l.id} className="gap-1.5 rounded-[10px] bg-muted p-3">
+                <View key={l.id} className="gap-1.5 rounded-lg bg-muted p-3">
                   <View className="flex-row items-start justify-between gap-2">
                     <View className="flex-1 flex-row items-center gap-1.5">
                       <Text className="rounded bg-accent px-1.5 py-0.5 text-xs font-medium">
@@ -400,14 +400,14 @@ export default function PedidoDetalle() {
                 Bonificado {formatEUR(0)}
               </Text>
             </View>
-            <View className="flex-row items-center justify-between rounded-[10px] bg-muted p-3">
+            <View className="flex-row items-center justify-between rounded-lg bg-muted p-3">
               <View className="gap-0.5">
                 <Text className="text-xs uppercase tracking-wider text-muted-foreground">
                   Total (sin impuestos)
                 </Text>
                 <Text className="text-2xl font-bold">{formatEUR(total)}</Text>
               </View>
-              <View className="h-10 w-10 items-center justify-center rounded-[10px] bg-primary/10">
+              <View className="h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                 <Banknote size={20} color={colores.primario} />
               </View>
             </View>
@@ -488,7 +488,7 @@ export default function PedidoDetalle() {
         </View>
 
         {/* 7. Historial de estados */}
-        <Card className="rounded-[10px]">
+        <Card className="rounded-lg">
           <CardHeader>
             <View className="flex-row items-center justify-between gap-2">
               <View className="flex-row items-center gap-2">
