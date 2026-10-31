@@ -1,7 +1,8 @@
 import * as React from 'react';
 
+import { rpcSegura } from '@/lib/supabase-seguro';
 import { supabase } from '@/lib/supabase';
-import type { HistorialEstado, LineaPedido, Pedido } from '@/lib/types';
+import type { HistorialEstado, LineaPedido, Pedido, PerfilUsuario } from '@/lib/types';
 
 // Pedidos del usuario autenticado (RLS devuelve solo los visibles por rol).
 export function usePedidos() {
@@ -32,9 +33,17 @@ export function usePedidos() {
 }
 
 export interface DetallePedido {
-  pedido: Pedido;
+  pedido: PedidoConCreador;
   lineas: LineaPedido[];
   historial: HistorialEstado[];
+}
+
+// Pedido + atribución del creador (fn_pedido_detalle devuelve todas las
+// columnas de pedidos más creado_por_nombre y creado_por_rol). Los campos
+// extra son opcionales: si el RPC no estuviera, se usa la lectura directa.
+export interface PedidoConCreador extends Pedido {
+  creado_por_nombre?: string | null;
+  creado_por_rol?: string | null;
 }
 
 export function usePedido(id: string | undefined) {
@@ -46,21 +55,43 @@ export function usePedido(id: string | undefined) {
     if (!id) return;
     setCargando(true);
     setError(null);
-    const [resPedido, resLineas, resHistorial] = await Promise.all([
-      supabase
+
+    // Atribución del creador: fn_pedido_detalle (alcance: cliente su pedido,
+    // comercial su cartera, admin todo). El RPC no trae el embed de cliente,
+    // así que se consulta aparte para la ficha del cliente en el detalle.
+    const resDetalle = await rpcSegura<PedidoConCreador[]>('fn_pedido_detalle', { p_pedido: id });
+    const filaRpc = resDetalle.data?.[0] ?? null;
+
+    let pedido: PedidoConCreador;
+    if (filaRpc) {
+      const { data: filaCliente } = await supabase
+        .from('usuarios')
+        .select('id,nombre,apellidos,razon_social,email,telefono,nif_cif,tipo_cliente')
+        .eq('id', filaRpc.cliente_id)
+        .maybeSingle();
+      const cliente = (filaCliente as unknown as PerfilUsuario | null) ?? undefined;
+      pedido = { ...filaRpc, cliente };
+    } else {
+      // Fallback: lectura directa de la tabla (si el RPC no existiera).
+      const { data, error: errPedido } = await supabase
         .from('pedidos')
         .select('*, cliente:usuarios!pedidos_cliente_id_fkey(id,nombre,apellidos,razon_social,email,telefono,nif_cif)')
         .eq('id', id)
-        .single(),
+        .single();
+      if (errPedido) {
+        setCargando(false);
+        setError(errPedido.message);
+        return;
+      }
+      pedido = data as PedidoConCreador;
+    }
+
+    const [resLineas, resHistorial] = await Promise.all([
       supabase.from('pedido_lineas').select('*').eq('pedido_id', id).eq('borrado', false).order('created_at'),
       supabase.from('pedido_historial_estados').select('*').eq('pedido_id', id).order('fecha_cambio', { ascending: false }),
     ]);
     setCargando(false);
-    if (resPedido.error) {
-      setError(resPedido.error.message);
-      return;
-    }
-    const pedido = resPedido.data as Pedido;
+
     // El nombre del proveedor ya no puede leerse vía embed (RLS de 0011:
     // la tabla proveedores solo la lee el admin); se resuelve por el RPC de
     // nombres visibles (SECURITY DEFINER) según el rol del llamante.
@@ -71,6 +102,7 @@ export function usePedido(id: string | undefined) {
       );
       if (fila) pedido.proveedor = { nombre: fila.nombre };
     }
+
     setDetalle({
       pedido,
       lineas: (resLineas.data ?? []) as LineaPedido[],

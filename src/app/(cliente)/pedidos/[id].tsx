@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { Redirect, router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import {
   ArrowLeft,
   BadgeCheck,
@@ -22,7 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
-import { ESTADOS_PEDIDO, ORIGENES_DESCUENTO, TIPOS_CLIENTE, type EstadoPedido } from '@/constants';
+import { ESTADOS_PEDIDO, ORIGENES_DESCUENTO, ROLES, TIPOS_CLIENTE, type EstadoPedido } from '@/constants';
 import { useAuth } from '@/hooks/use-auth';
 import { useCatalogo } from '@/hooks/use-catalogo';
 import { useAccionesPedido, usePedido } from '@/hooks/use-pedidos';
@@ -35,7 +35,7 @@ import { useColoresIcono } from '@/lib/theme';
 export default function PedidoDetalle() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { session, perfil } = useAuth();
+  const { perfil } = useAuth();
   const { detalle, cargando, error, recargar } = usePedido(id);
   const { cancelar, confirmar, avanzar, ajustarDescuento } = useAccionesPedido();
   const catalogo = useCatalogo();
@@ -45,10 +45,6 @@ export default function PedidoDetalle() {
   const [pctAjuste, setPctAjuste] = React.useState('');
   const [mensaje, setMensaje] = React.useState<string | null>(null);
   const [trabajando, setTrabajando] = React.useState(false);
-
-  if (!session) return <Redirect href="/acceso" />;
-  // El admin no gestiona pedidos: si llega por URL, vuelve a su panel.
-  if (perfil?.rol === 'admin') return <Redirect href="/admin" />;
 
   const esComercial = perfil?.rol === 'comercial';
   const esCliente = perfil?.rol === 'cliente';
@@ -209,6 +205,22 @@ export default function PedidoDetalle() {
                 ID: #ORD-{pedido.id.slice(0, 6).toUpperCase()}
               </Text>
             </View>
+            {/* Atribución del creador (fn_pedido_detalle): quién registró el
+                pedido — el cliente, su comercial o el admin. */}
+            {pedido.creado_por_nombre ? (
+              <View className="flex-row items-center justify-between gap-2">
+                <Text className="text-xs text-muted-foreground">Creado por</Text>
+                <Text className="text-sm">
+                  {pedido.creado_por_nombre}
+                  {pedido.creado_por_rol
+                    ? ` (${
+                        ROLES[pedido.creado_por_rol as keyof typeof ROLES]?.etiqueta ??
+                        pedido.creado_por_rol
+                      })`
+                    : ''}
+                </Text>
+              </View>
+            ) : null}
             {pedido.observaciones && (
               <>
                 <Text className="mt-2 text-xs text-muted-foreground">Observaciones</Text>

@@ -1,4 +1,4 @@
-import { Redirect, router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import {
   ChevronLeft,
   CircleCheck,
@@ -23,7 +23,7 @@ import { Text } from '@/components/ui/text';
 import { COMBUSTIBLES, ESTADOS_PEDIDO, TIPOS_CLIENTE } from '@/constants';
 import type { CombustibleId } from '@/constants';
 import { useSolicitud } from '@/contexts/solicitud-context';
-import { useAuth } from '@/hooks/use-auth';
+import { usePermisos } from '@/hooks/use-permisos';
 import { useCatalogo } from '@/hooks/use-catalogo';
 import { useCliente, useDescuentos } from '@/hooks/use-comercial';
 import { usePedidos } from '@/hooks/use-pedidos';
@@ -42,8 +42,11 @@ const CHIPS_PRODUCTO = [0, 8, 12, 15, 20];
 export default function ClienteDetalle() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { session, perfil } = useAuth();
   const { setClienteObjetivoId } = useSolicitud();
+  // Comercial Y admin pueden abrir una solicitud para este cliente; el resto
+  // del alcance lo valida el backend (RLS/RPC, anillo 1).
+  const { puede } = usePermisos();
+  const puedeGestionar = puede('pedidos:crear_para_cliente');
   const { cliente, descuentos, descuentosCombustible, cargando, recargar } = useCliente(id);
   const {
     asignarGeneral,
@@ -73,13 +76,6 @@ export default function ClienteDetalle() {
       setPctGeneral(String(cliente.descuento_porcentaje));
     }
   }, [cliente]);
-
-  if (!session) return <Redirect href="/acceso" />;
-  // El admin no gestiona cartera de clientes: vuelve a su panel.
-  if (perfil?.rol === 'admin') return <Redirect href="/admin" />;
-
-  const puedeGestionar = perfil?.rol === 'comercial';
-  if (perfil && !puedeGestionar) return <Redirect href="/pedidos" />;
 
   const pedidosDelCliente = pedidos.filter((p) => p.cliente_id === id);
 
@@ -136,8 +132,10 @@ export default function ClienteDetalle() {
   };
 
   const empezarPedido = () => {
+    // Fija el cliente objetivo (cubo del borrador) y abre la solicitud:
+    // funciona igual para comercial y admin (creado_por lo registra el RPC).
     setClienteObjetivoId(id ?? null);
-    router.replace('/');
+    router.replace('/solicitud');
   };
 
   if (cargando || !cliente) {
@@ -215,9 +213,11 @@ export default function ClienteDetalle() {
           </CardContent>
         </Card>
 
-        <Button onPress={empezarPedido}>
-          <Text>Crear pedido para este cliente</Text>
-        </Button>
+        {puedeGestionar ? (
+          <Button onPress={empezarPedido}>
+            <Text>Crear pedido para este cliente</Text>
+          </Button>
+        ) : null}
 
         {/* Descuento general de cartera */}
         <Card className="rounded-[10px]">

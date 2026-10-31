@@ -1,4 +1,4 @@
-import { Redirect, router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import {
   Building2,
   CheckCircle2,
@@ -32,7 +32,7 @@ type Filtro = (typeof FILTROS)[number];
 export default function Pedidos() {
   const insets = useSafeAreaInsets();
   const colores = useColoresIcono();
-  const { session, perfil } = useAuth();
+  const { perfil } = useAuth();
   const { pedidos, cargando: cargandoPedidos, error: errorPedidos, recargar } = usePedidos();
   const { clientes } = useCartera();
   const { confirmar } = useAccionesPedido();
@@ -54,11 +54,6 @@ export default function Pedidos() {
       void recargar();
     }, [recargar])
   );
-
-  if (!session) return <Redirect href="/acceso" />;
-  // El admin no tiene pedidos propios ni cartera: su ámbito es Comerciales y
-  // Proveedores (pestaña Admin), no la gestión de pedidos.
-  if (perfil?.rol === 'admin') return <Redirect href="/admin" />;
 
   const esComercialOAdmin = perfil?.rol === 'comercial';
   // Subtítulo de la cabecera según el rol (el cliente solo ve su email).

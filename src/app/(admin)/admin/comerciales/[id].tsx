@@ -106,8 +106,14 @@ export default function AdminComercialDetalle() {
                 <Text className="text-sm text-muted-foreground">Sin clientes asignados</Text>
               ) : (
                 clientes.map((c) => (
-                  /* El admin no entra en el detalle del cliente: sin acción. */
-                  <TarjetaCliente key={c.id} cliente={c} onPress={() => {}} />
+                  /* El admin abre la ficha del cliente (cartera) para ver sus
+                     condiciones y crearle una solicitud de pedido. La tarjeta
+                     ya trae chevron y es un Pressable accesible. */
+                  <TarjetaCliente
+                    key={c.id}
+                    cliente={c}
+                    onPress={() => router.push(`/cartera/${c.id}`)}
+                  />
                 ))
               )}
             </View>

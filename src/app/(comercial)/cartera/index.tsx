@@ -1,4 +1,4 @@
-import { Redirect, router } from 'expo-router';
+import { router } from 'expo-router';
 import * as React from 'react';
 import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -24,7 +24,7 @@ interface ContadoresCartera {
 
 export default function Cartera() {
   const insets = useSafeAreaInsets();
-  const { session, perfil } = useAuth();
+  const { perfil } = useAuth();
   const { clientes, cargando, error } = useCartera();
   const [contadores, setContadores] = React.useState<ContadoresCartera | null>(null);
 
@@ -71,14 +71,6 @@ export default function Cartera() {
     };
   }, []);
 
-  if (!session) return <Redirect href="/acceso" />;
-  // El admin no gestiona cartera de clientes: su ámbito es Comerciales y
-  // Proveedores (pestaña Admin).
-  if (perfil?.rol === 'admin') return <Redirect href="/admin" />;
-  if (perfil && perfil.rol !== 'comercial') {
-    return <Redirect href="/pedidos" />;
-  }
-
   return (
     <>
       <ScrollView
@@ -94,6 +86,14 @@ export default function Cartera() {
               <Text className="text-xs text-muted-foreground">{perfil?.email}</Text>
             </View>
           </View>
+
+          {/* El admin entra en LECTURA (no gestiona descuentos ni confirma),
+              pero puede abrir la ficha de un cliente y crearle una solicitud. */}
+          {perfil?.rol === 'admin' ? (
+            <View className="rounded-[10px] border border-primary/40 bg-primary/10 p-3">
+              <Text className="text-sm">Vista de solo lectura del comercial</Text>
+            </View>
+          ) : null}
 
           {cargando ? (
             <View className="items-center py-16">

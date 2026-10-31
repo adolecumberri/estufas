@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { Redirect, router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Minus, Plus, Trash2, UserRound, X } from 'lucide-react-native';
 import * as React from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
@@ -22,7 +22,7 @@ import { useColoresIcono } from '@/lib/theme';
 
 export default function Solicitud() {
   const insets = useSafeAreaInsets();
-  const { session, perfil } = useAuth();
+  const { perfil } = useAuth();
   const {
     lineas,
     clienteObjetivoId,
@@ -67,15 +67,13 @@ export default function Solicitud() {
     setCargado(true);
   }, [params.editar, detalle, cargado, reemplazar]);
 
-  if (!session) return <Redirect href="/acceso" />;
-
   const enviar = async () => {
     setError(null);
     if (lineas.length === 0) {
       setError('Añade al menos un producto.');
       return;
     }
-    if (perfil?.rol === 'comercial' && !clienteObjetivoId && !params.editar) {
+    if ((perfil?.rol === 'comercial' || perfil?.rol === 'admin') && !clienteObjetivoId && !params.editar) {
       setError('Selecciona el cliente para el que creas el pedido.');
       return;
     }
@@ -142,7 +140,7 @@ export default function Solicitud() {
             </View>
           )}
 
-          {perfil?.rol === 'comercial' && !params.editar && (
+          {(perfil?.rol === 'comercial' || perfil?.rol === 'admin') && !params.editar && (
             <Card className="rounded-[10px] border-primary/40 bg-primary/10">
               <CardContent className="flex-row items-center gap-3">
                 <UserRound size={18} color={colores.tenue} />
