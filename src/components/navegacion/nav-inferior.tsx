@@ -16,19 +16,41 @@ import { Text } from '@/components/ui/text';
 import { RUTAS } from '@/constants';
 import { useSolicitud } from '@/contexts/solicitud-context';
 import { useAuth } from '@/hooks/use-auth';
+import { usePermisos } from '@/hooks/use-permisos';
+import type { Cap } from '@/lib/permisos';
 import { useColoresIcono } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 
 type PestanaNav = 'catalogo' | 'solicitud' | 'pedidos' | 'cartera' | 'admin' | 'acceso';
 
-type Pestana = { id: PestanaNav; etiqueta: string; icono: LucideIcon; ruta: Href };
+type Pestana = {
+  id: PestanaNav;
+  etiqueta: string;
+  icono: LucideIcon;
+  ruta: Href;
+  // Capacidad(es) exigida(s) para ver la pestaña (matriz
+  // docs/ARQUITECTURA_ROLES.md §4). Varias capacidades = basta una (OR).
+  caps?: Cap[];
+};
 
 const PESTANAS: Pestana[] = [
-  { id: 'catalogo', etiqueta: 'Catálogo', icono: Flame, ruta: RUTAS.catalogo },
-  { id: 'solicitud', etiqueta: 'Solicitud', icono: FilePlus2, ruta: '/solicitud' },
-  { id: 'pedidos', etiqueta: 'Pedidos', icono: ReceiptText, ruta: RUTAS.pedidos },
-  { id: 'cartera', etiqueta: 'Cartera', icono: Wallet, ruta: RUTAS.cartera },
-  { id: 'admin', etiqueta: 'Admin', icono: ShieldCheck, ruta: RUTAS.admin },
+  {
+    id: 'catalogo',
+    etiqueta: 'Catálogo',
+    icono: Flame,
+    ruta: RUTAS.catalogo,
+    caps: ['catalogo:ver_general', 'catalogo:ver_proveedores_propios'],
+  },
+  { id: 'solicitud', etiqueta: 'Solicitud', icono: FilePlus2, ruta: '/solicitud', caps: ['carrito:usar'] },
+  {
+    id: 'pedidos',
+    etiqueta: 'Pedidos',
+    icono: ReceiptText,
+    ruta: RUTAS.pedidos,
+    caps: ['pedidos:crear_propio', 'pedidos:confirmar'],
+  },
+  { id: 'cartera', etiqueta: 'Cartera', icono: Wallet, ruta: RUTAS.cartera, caps: ['cartera:ver_clientes'] },
+  { id: 'admin', etiqueta: 'Admin', icono: ShieldCheck, ruta: RUTAS.admin, caps: ['admin:acceder'] },
 ];
 
 // Sin sesión solo se ofrecen catálogo e inicio de sesión: añadir al pedido o
@@ -40,9 +62,9 @@ const PESTANAS_ANONIMAS: Pestana[] = [
 
 // Barra de pestañas inferior compartida (diseño Stitch): fondo semántico,
 // acento ámbar en la pestaña activa y punto indicador en "Solicitud" cuando
-// el carrito tiene líneas. Cartera solo se muestra a comercial/admin y la
-// pestaña Admin (5ª, acceso al panel de administración) solo al admin: el
-// acceso de administración vive aquí, no en la cabecera superior.
+// el carrito tiene líneas. Cada pestaña exige su capacidad (anillo 3): el
+// resultado equivale al comportamiento anterior — admin solo Catálogo+Admin,
+// clientes sin Cartera, comercial con todo (salvo Admin).
 export function NavInferior({
   activa,
 }: {
@@ -50,25 +72,20 @@ export function NavInferior({
 }) {
   const insets = useSafeAreaInsets();
   const { lineas } = useSolicitud();
-  const { session, perfil } = useAuth();
+  const { session } = useAuth();
+  const { puede, soloLectura } = usePermisos();
   const colores = useColoresIcono();
 
-  const pestanas = React.useMemo(
-    () =>
-      session
-        ? PESTANAS.filter((p) => {
-            // El admin no compra ni gestiona pedidos/cartera: su ámbito es
-            // Catálogo (solo lectura) + Admin.
-            if (perfil?.rol === 'admin') {
-              return p.id === 'catalogo' || p.id === 'admin';
-            }
-            if (p.id === 'cartera') return perfil?.rol === 'comercial';
-            if (p.id === 'admin') return false;
-            return true;
-          })
-        : PESTANAS_ANONIMAS,
-    [session, perfil]
-  );
+  const pestanas = React.useMemo(() => {
+    if (!session) return PESTANAS_ANONIMAS;
+    return PESTANAS.filter((p) => {
+      if (!p.caps || !p.caps.some((c) => puede(c))) return false;
+      // La cartera del admin es solo lectura y su operación vive en /admin:
+      // la pestaña no se muestra (comportamiento actual: Catálogo+Admin).
+      if (p.id === 'cartera' && soloLectura) return false;
+      return true;
+    });
+  }, [session, puede, soloLectura]);
 
   return (
     <View

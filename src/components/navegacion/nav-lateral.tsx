@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { APP, COMBUSTIBLES, RUTAS } from '@/constants';
 import { useAuth } from '@/hooks/use-auth';
+import { usePermisos } from '@/hooks/use-permisos';
 import type { Categoria, Combustible } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
 import { useColoresIcono } from '@/lib/theme';
@@ -34,16 +35,19 @@ export function NavLateral({
   setCategoria: (id: string | null) => void;
 }) {
   const insets = useSafeAreaInsets();
-  const { session, perfil } = useAuth();
+  const { session } = useAuth();
+  const { puede } = usePermisos();
   const colores = useColoresIcono();
 
   // Categorías sin combustible asignado (agnósticas): se muestran siempre,
   // independientemente de la sección de combustible seleccionada.
   const agnosticas = categorias.filter((x) => x.combustible === null);
 
+  // Destino de "Mi cuenta" según capacidades (no por comparación de rol):
+  // admin → su panel; comercial → su cartera; cliente → sus pedidos.
   const destinoCuenta = () => {
-    if (perfil?.rol === 'admin') return RUTAS.admin;
-    if (perfil?.rol === 'comercial') return RUTAS.cartera;
+    if (puede('admin:acceder')) return RUTAS.admin;
+    if (puede('cartera:ver_clientes')) return RUTAS.cartera;
     return RUTAS.pedidos;
   };
 
