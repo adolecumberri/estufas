@@ -4,6 +4,25 @@
 > **El agente DEBE leer este documento y `docs/PRD.md` antes de modificar
 > cualquier archivo** (regla del propio PRD, sección 11).
 
+> **🚫 REGLA DURA (prioridad absoluta):** el agente NUNCA puede instalar,
+> añadir, actualizar, quitar ni "probar" una dependencia (npm/pnpm/yarn/bun/
+> expo install, npx que descargue paquetes, instalaciones globales, binarios
+> nuevos...) sin **autorización literal y explícita del usuario en ese mismo
+> momento**. Un "sí" anterior NO autoriza otra instalación. Si cree que hace
+> falta una dependencia, debe PARAR, explicar el comando exacto y esperar
+> permiso. Detalle y motivo del incidente: [`AGENTS.md`](../AGENTS.md).
+
+## 0. Regla dura: dependencias (prohibición absoluta)
+
+Prohibido ejecutar `npm install/i/uninstall/remove/prune/update/ci`,
+`pnpm add`, `yarn add`, `bun add`, `expo install`, `npx` de paquetes nuevos,
+instalaciones globales o cualquier descarga de binarios/herramientas sin
+autorización **explícita del usuario para ese comando concreto** y en ese
+momento. Tampoco se permite `--no-save` ni "probar" paquetes. Si se necesita
+una dependencia: parar, explicar qué, por qué, el comando exacto, impacto y
+alternativas, y esperar el "sí". Un "sí" anterior no autoriza otra
+instalación. Ver motivo (incidente del 26/10/2026) en [`AGENTS.md`](../AGENTS.md).
+
 ## 1. Qué es este proyecto
 
 Catálogo de productos y gestión comercial ("Estufas") — MVP funcional.
