@@ -323,6 +323,85 @@ export type Database = {
           },
         ];
       };
+      descuentos_cliente_categoria: {
+        Row: {
+          actualizado_at: string;
+          actualizado_por: string | null;
+          borrado: boolean;
+          categoria_id: string;
+          cliente_id: string;
+          creado_at: string;
+          creado_por: string | null;
+          deleted_at: string | null;
+          descuento_porcentaje: number;
+          id: string;
+          proveedor_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          actualizado_at?: string;
+          actualizado_por?: string | null;
+          borrado?: boolean;
+          categoria_id: string;
+          cliente_id: string;
+          creado_at?: string;
+          creado_por?: string | null;
+          deleted_at?: string | null;
+          descuento_porcentaje: number;
+          id?: string;
+          proveedor_id: string;
+        };
+        Update: {
+          actualizado_at?: string;
+          actualizado_por?: string | null;
+          borrado?: boolean;
+          categoria_id?: string;
+          cliente_id?: string;
+          creado_at?: string;
+          creado_por?: string | null;
+          deleted_at?: string | null;
+          descuento_porcentaje?: number;
+          id?: string;
+          proveedor_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'descuentos_cliente_categoria_actualizado_por_fkey';
+            columns: ['actualizado_por'];
+            isOneToOne: false;
+            referencedRelation: 'usuarios';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'descuentos_cliente_categoria_categoria_id_fkey';
+            columns: ['categoria_id'];
+            isOneToOne: false;
+            referencedRelation: 'categorias';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'descuentos_cliente_categoria_cliente_id_fkey';
+            columns: ['cliente_id'];
+            isOneToOne: false;
+            referencedRelation: 'usuarios';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'descuentos_cliente_categoria_creado_por_fkey';
+            columns: ['creado_por'];
+            isOneToOne: false;
+            referencedRelation: 'usuarios';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'descuentos_cliente_categoria_proveedor_id_fkey';
+            columns: ['proveedor_id'];
+            isOneToOne: false;
+            referencedRelation: 'proveedores';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       descuentos_cliente_combustible: {
         Row: {
           borrado: boolean;
@@ -467,6 +546,161 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: 'v_productos_precio_vigente';
             referencedColumns: ['producto_id'];
+          },
+        ];
+      };
+      descuentos_cliente_proveedor: {
+        Row: {
+          actualizado_at: string;
+          actualizado_por: string | null;
+          borrado: boolean;
+          cliente_id: string;
+          creado_at: string;
+          creado_por: string | null;
+          deleted_at: string | null;
+          descuento_porcentaje: number;
+          id: string;
+          proveedor_id: string;
+        };
+        ComputedFields: never;
+        Insert: {
+          actualizado_at?: string;
+          actualizado_por?: string | null;
+          borrado?: boolean;
+          cliente_id: string;
+          creado_at?: string;
+          creado_por?: string | null;
+          deleted_at?: string | null;
+          descuento_porcentaje: number;
+          id?: string;
+          proveedor_id: string;
+        };
+        Update: {
+          actualizado_at?: string;
+          actualizado_por?: string | null;
+          borrado?: boolean;
+          cliente_id?: string;
+          creado_at?: string;
+          creado_por?: string | null;
+          deleted_at?: string | null;
+          descuento_porcentaje?: number;
+          id?: string;
+          proveedor_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'descuentos_cliente_proveedor_actualizado_por_fkey';
+            columns: ['actualizado_por'];
+            isOneToOne: false;
+            referencedRelation: 'usuarios';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'descuentos_cliente_proveedor_cliente_id_fkey';
+            columns: ['cliente_id'];
+            isOneToOne: false;
+            referencedRelation: 'usuarios';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'descuentos_cliente_proveedor_creado_por_fkey';
+            columns: ['creado_por'];
+            isOneToOne: false;
+            referencedRelation: 'usuarios';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'descuentos_cliente_proveedor_proveedor_id_fkey';
+            columns: ['proveedor_id'];
+            isOneToOne: false;
+            referencedRelation: 'proveedores';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
+      descuentos_historial: {
+        Row: {
+          accion: string;
+          actor_id: string | null;
+          actor_rol: Database['public']['Enums']['rol_usuario'] | null;
+          categoria_id: string | null;
+          cliente_id: string;
+          created_at: string;
+          descuento_porcentaje: number | null;
+          id: number;
+          nivel: string;
+          producto_id: string | null;
+          proveedor_id: string | null;
+        };
+        ComputedFields: never;
+        Insert: {
+          accion: string;
+          actor_id?: string | null;
+          actor_rol?: Database['public']['Enums']['rol_usuario'] | null;
+          categoria_id?: string | null;
+          cliente_id: string;
+          created_at?: string;
+          descuento_porcentaje?: number | null;
+          id?: number;
+          nivel: string;
+          producto_id?: string | null;
+          proveedor_id?: string | null;
+        };
+        Update: {
+          accion?: string;
+          actor_id?: string | null;
+          actor_rol?: Database['public']['Enums']['rol_usuario'] | null;
+          categoria_id?: string | null;
+          cliente_id?: string;
+          created_at?: string;
+          descuento_porcentaje?: number | null;
+          id?: number;
+          nivel?: string;
+          producto_id?: string | null;
+          proveedor_id?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'descuentos_historial_actor_id_fkey';
+            columns: ['actor_id'];
+            isOneToOne: false;
+            referencedRelation: 'usuarios';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'descuentos_historial_categoria_id_fkey';
+            columns: ['categoria_id'];
+            isOneToOne: false;
+            referencedRelation: 'categorias';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'descuentos_historial_cliente_id_fkey';
+            columns: ['cliente_id'];
+            isOneToOne: false;
+            referencedRelation: 'usuarios';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'descuentos_historial_producto_id_fkey';
+            columns: ['producto_id'];
+            isOneToOne: false;
+            referencedRelation: 'productos';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'descuentos_historial_producto_id_fkey';
+            columns: ['producto_id'];
+            isOneToOne: false;
+            referencedRelation: 'v_productos_precio_vigente';
+            referencedColumns: ['producto_id'];
+          },
+          {
+            foreignKeyName: 'descuentos_historial_proveedor_id_fkey';
+            columns: ['proveedor_id'];
+            isOneToOne: false;
+            referencedRelation: 'proveedores';
+            referencedColumns: ['id'];
           },
         ];
       };
@@ -1760,6 +1994,15 @@ export type Database = {
         Args: { p_lineas?: Json; p_observaciones?: string; p_pedido: string };
         Returns: undefined;
       };
+      fn_anular_descuento_categoria: {
+        Args: { p_categoria: string; p_cliente: string; p_proveedor: string };
+        Returns: undefined;
+      };
+      fn_anular_descuento_general: { Args: { p_cliente: string }; Returns: undefined };
+      fn_anular_descuento_proveedor: {
+        Args: { p_cliente: string; p_proveedor: string };
+        Returns: undefined;
+      };
       fn_app_user_id: { Args: Record<PropertyKey, never>; Returns: string };
       fn_asignar_comercial_defecto: { Args: Record<PropertyKey, never>; Returns: string };
       fn_calcular_lineas: {
@@ -1919,6 +2162,22 @@ export type Database = {
       fn_rol_usuario: {
         Args: Record<PropertyKey, never>;
         Returns: Database['public']['Enums']['rol_usuario'];
+      };
+      fn_upsert_descuento_categoria: {
+        Args: { p_categoria: string; p_cliente: string; p_porcentaje: number; p_proveedor: string };
+        Returns: undefined;
+      };
+      fn_upsert_descuento_general: {
+        Args: { p_cliente: string; p_porcentaje: number };
+        Returns: undefined;
+      };
+      fn_upsert_descuento_producto: {
+        Args: { p_cliente: string; p_porcentaje: number; p_producto: string };
+        Returns: undefined;
+      };
+      fn_upsert_descuento_proveedor: {
+        Args: { p_cliente: string; p_porcentaje: number; p_proveedor: string };
+        Returns: undefined;
       };
       habilitar_proveedor_comercial: {
         Args: { p_comercial: string; p_habilitado: boolean; p_proveedor: string };

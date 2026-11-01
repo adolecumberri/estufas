@@ -4,11 +4,13 @@ import type { Combustible, DescuentosCuenta, OrigenDescuento } from '@/shared/li
 
 // ============================================================================
 // Reglas de precios del cliente (réplica local del servidor, fn_calcular_precio
-// de supabase/migrations/0006_descuentos_combustible.sql).
+// de supabase/migrations/0025_descuentos_precedencia.sql).
 //
-// Precedencia del servidor (0006, comentario de la función):
-//   producto > combustible > general > promoción (la promoción gana si es
-//   MAYOR que el candidato anterior; los descuentos no se acumulan).
+// Precedencia del servidor (0025, por PRECISIÓN; el % no decide el nivel):
+//   producto > categoría (del proveedor del producto, mejor % si hay varias)
+//   > proveedor > general (>0) > promo (la promo solo gana si es MAYOR; no se
+//   acumulan; 0% específico sustituye). El nivel "combustible" (0006) queda
+//   FUERA de la cadena.
 // ============================================================================
 
 export interface ReglasCuenta {
@@ -16,7 +18,12 @@ export interface ReglasCuenta {
   general_pct: number | null;
   /** Descuento específico por producto (producto_id → pct). */
   productos: Map<string, number>;
-  /** Descuento por combustible (combustible → pct). */
+  /** Descuentos por categoría (0025): clave `proveedor_id:categoria_id` → pct. */
+  categorias: Map<string, number>;
+  /** Descuentos por proveedor (0025): proveedor_id → pct. */
+  proveedores: Map<string, number>;
+  /** Descuento por combustible (0006): conservado por compatibilidad del DTO;
+      YA NO se consulta en la precedencia (0025 lo retira de la cadena). */
   combustibles: Map<string, number>;
   /** Promoción de tienda vigente (la mejor, ya agregada por el servidor). */
   promo_pct: number | null;
@@ -24,16 +31,36 @@ export interface ReglasCuenta {
   proveedores_habilitados: string[];
 }
 
-// Mínimo del producto que necesita la regla de precios.
+// Mínimo del producto que necesita la regla de precios. `proveedor_id` y
+// `categorias` (IDs) son opcionales por compatibilidad: sin ellos solo se
+// aplican los niveles producto/general/promo.
 export interface ProductoParaPrecio {
   producto_id: string;
   combustibles: Combustible[];
+  /** Proveedor del producto (0025: las reglas de categoría/proveedor se acotan a él). */
+  proveedor_id?: string | null;
+  /** IDs de las categorías del producto (0025: reglas de categoría). */
+  categorias?: string[];
 }
 
 export interface ResultadoPrecio {
   precio_final: number;
   descuento_pct: number;
   descuento_origen: OrigenDescuento;
+}
+
+// Orígenes añadidos en 0025. ORIGENES_DESCUENTO de constantes aún no los
+// declara: se tipan aquí y se ajustan al tipo público al salir (un único
+// cast documentado), para no romper a los consumidores mientras tanto.
+type OrigenEfectivo = OrigenDescuento | 'cliente_categoria' | 'cliente_proveedor';
+
+// DTO del RPC fn_descuentos_cuenta con las claves nuevas de 0025 ('categorias'
+// y 'proveedores'). El tipo DescuentosCuenta de types.ts aún no las incluye:
+// aquí se amplían localmente y se leen con fallback (los DTOs cacheados de la
+// versión anterior no las traen).
+interface DescuentosCuentaDTO extends DescuentosCuenta {
+  categorias?: { proveedor_id: string; categoria_id: string; pct: number }[];
+  proveedores?: { proveedor_id: string; pct: number }[];
 }
 
 const CLAVE_REGLAS = 'estufas.cache.reglas.v1';
@@ -54,11 +81,15 @@ const esDenegacionPermisos = (mensaje: string | undefined): boolean =>
   Boolean(mensaje && /sin permiso/i.test(mensaje));
 
 // Convierte el resultado del RPC fn_descuentos_cuenta en las reglas locales.
-function aReglas(datos: DescuentosCuenta | null | undefined): ReglasCuenta | null {
+function aReglas(datos: DescuentosCuentaDTO | null | undefined): ReglasCuenta | null {
   if (!datos) return null;
   return {
     general_pct: typeof datos.general_pct === 'number' ? datos.general_pct : null,
     productos: new Map((datos.productos ?? []).map((d) => [d.producto_id, d.pct])),
+    categorias: new Map(
+      (datos.categorias ?? []).map((d) => [`${d.proveedor_id}:${d.categoria_id}`, d.pct])
+    ),
+    proveedores: new Map((datos.proveedores ?? []).map((d) => [d.proveedor_id, d.pct])),
     combustibles: new Map((datos.combustibles ?? []).map((d) => [d.combustible, d.pct])),
     promo_pct: typeof datos.promo_pct === 'number' ? datos.promo_pct : null,
     proveedores_habilitados: Array.isArray(datos.proveedores_habilitados)
@@ -78,7 +109,7 @@ export async function obtenerReglasCuenta(
   const clave = claveReglas(uid, clienteId);
   // En la caché se guarda el DTO plano del RPC (JSON serializable); los Map
   // de ReglasCuenta no sobreviven a JSON.stringify y se reconstruyen al leer.
-  const enCache = await cacheLeer<DescuentosCuenta>(clave);
+  const enCache = await cacheLeer<DescuentosCuentaDTO>(clave);
   const edad = await cacheEdad(clave);
   const vigente = enCache && edad !== null && edad <= TTL_REGLAS_MS;
   if (vigente && enCache) return aReglas(enCache);
@@ -107,7 +138,7 @@ export async function obtenerReglasCuenta(
       }
       return null;
     }
-    const dto = data as DescuentosCuenta;
+    const dto = data as DescuentosCuentaDTO;
     void cacheEscribir(clave, dto);
     return aReglas(dto);
   } catch {
@@ -120,10 +151,13 @@ export async function obtenerReglasCuenta(
 }
 
 // Aplica las reglas de cuenta a un producto replicando fn_calcular_precio
-// (0006): candidato = producto ?? combustible (mejor entre los combustibles
-// del producto) ?? general (>0) ?? 0; final = MAX(candidato, promo).
-// Origen: cliente_producto | cliente_combustible | cliente_general |
-// promocion_tienda | ninguno, con la MISMA semántica que el servidor.
+// (0025) con la MISMA semántica que el servidor:
+//   1. producto (0% incluido) gana por precisión;
+//   2. si no, categoría: mejor % entre las reglas de categorías ACOTADAS al
+//      proveedor del producto que coinciden con sus categorías;
+//   3. si no, proveedor del producto (0% incluido);
+//   4. si no, general solo si > 0;
+//   5. por último, la promo de tienda gana SOLO si su % es mayor.
 export function aplicarReglas(
   reglas: ReglasCuenta | null,
   producto: ProductoParaPrecio
@@ -131,40 +165,52 @@ export function aplicarReglas(
   if (!reglas) return { descuento_pct: 0, descuento_origen: 'ninguno' };
 
   let pct = 0;
-  let origen: OrigenDescuento = 'ninguno';
+  let origen: OrigenEfectivo = 'ninguno';
 
   const especifico = reglas.productos.get(producto.producto_id);
-  if (especifico !== undefined && especifico !== null) {
+  if (especifico !== undefined) {
+    // 1) Producto específico: gana aunque sea 0% (sustituye a todo lo demás).
     pct = especifico;
     origen = 'cliente_producto';
-  } else {
-    // Combustible: el servidor toma la primera categoría con combustible;
-    // localmente se toma el MEJOR descuento entre los combustibles del
-    // producto (el snapshot trae combustibles[] ya resueltos).
-    let mejorCombustible: number | null = null;
-    for (const c of producto.combustibles) {
-      const d = reglas.combustibles.get(c);
-      if (d !== undefined && d !== null && (mejorCombustible === null || d > mejorCombustible)) {
-        mejorCombustible = d;
+  } else if (producto.proveedor_id) {
+    // 2) Categoría del proveedor del producto (varias → el mayor %).
+    let mejorCategoria: number | null = null;
+    for (const categoriaId of producto.categorias ?? []) {
+      const d = reglas.categorias.get(`${producto.proveedor_id}:${categoriaId}`);
+      if (d !== undefined && (mejorCategoria === null || d > mejorCategoria)) {
+        mejorCategoria = d;
       }
     }
-    if (mejorCombustible !== null) {
-      pct = mejorCombustible;
-      origen = 'cliente_combustible';
-    } else if (reglas.general_pct !== null && reglas.general_pct > 0) {
-      pct = reglas.general_pct;
-      origen = 'cliente_general';
+    if (mejorCategoria !== null) {
+      pct = mejorCategoria;
+      origen = 'cliente_categoria';
+    } else {
+      // 3) Proveedor del producto (0% incluido: sustituye al general).
+      const dProveedor = reglas.proveedores.get(producto.proveedor_id);
+      if (dProveedor !== undefined) {
+        pct = dProveedor;
+        origen = 'cliente_proveedor';
+      } else if (reglas.general_pct !== null && reglas.general_pct > 0) {
+        // 4) General: solo cuenta si es positivo (0 = ninguno).
+        pct = reglas.general_pct;
+        origen = 'cliente_general';
+      }
     }
+  } else if (reglas.general_pct !== null && reglas.general_pct > 0) {
+    // Producto sin proveedor: las reglas de categoría/proveedor no aplican.
+    pct = reglas.general_pct;
+    origen = 'cliente_general';
   }
 
-  // Promoción: gana solo si supera el candidato (no se acumula).
+  // 5) Promo: último recurso; gana SOLO si supera el candidato (no se acumula).
   const promo = reglas.promo_pct ?? 0;
   if (promo > pct) {
     pct = promo;
     origen = 'promocion_tienda';
   }
 
-  return { descuento_pct: pct, descuento_origen: origen };
+  // El tipo público OrigenDescuento aún no declara los orígenes de 0025.
+  return { descuento_pct: pct, descuento_origen: origen as OrigenDescuento };
 }
 
 // Precio final replicando round(precio_base * (1 - pct/100), 2) del servidor.

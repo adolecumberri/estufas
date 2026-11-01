@@ -61,10 +61,12 @@ const AJUSTES: Partial<Record<Rol, { quita?: Cap[]; anade?: Cap[] }>> = {
     quita: ['catalogo:ver_general'], // el cliente no ve el catálogo general
   },
   admin: {
-    // El admin no compra ni pide para sí mismo (usría necesitaría otra cuenta):
-    quita: ['carrito:usar', 'pedidos:crear_propio', 'pedidos:confirmar', 'descuentos:gestionar'],
-    // Pero SÍ ve todo en lectura, incluido el catálogo general.
-    anade: ['catalogo:ver_general'],
+    // El admin no compra ni pide para sí mismo (necesitaría otra cuenta):
+    quita: ['carrito:usar', 'pedidos:crear_propio', 'pedidos:confirmar'],
+    // Pero SÍ ve todo en lectura, incluido el catálogo general, y gestiona
+    // descuentos SOLO desde la ficha de un cliente (el admin no tiene cartera
+    // propia donde gestionarlos).
+    anade: ['catalogo:ver_general', 'descuentos:gestionar'],
   },
 };
 
