@@ -27,6 +27,15 @@ Registro cronológico de decisiones y cambios relevantes.
   export android), hook pre-commit sin dependencias (`.githooks/pre-commit`),
   tipos generados de Supabase (`src/shared/lib/database.types.ts`), ADRs
   0001-0004 y `docs/FEATURES.md`.
+- **Descuentos por proveedor** (ADR 0005): backend 0024-0026 (tablas
+  `descuentos_cliente_proveedor`/`descuentos_cliente_categoria` +
+  `descuentos_historial` con actor real y rol, precedencia producto >
+  categoría acotada al proveedor > proveedor > general, combustible retirado a
+  legacy, RPCs de upsert/anular con alcance admin/comercial); tests pgTAP 11
+  (precedencia + auditoría) y 06 reescrito al estado legacy; UI en la ficha de
+  cliente (admin con capacidad); `precios.ts` + `catalogo-local.ts` replican la
+  cadena en el cálculo offline (fleco: proveedor_id y categorías del producto
+  se pasan a `ProductoParaPrecio`).
 
 ## Historia previa (resumen)
 

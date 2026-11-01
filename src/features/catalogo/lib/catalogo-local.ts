@@ -398,6 +398,10 @@ export function filaAProductoCatalogo(
     {
       producto_id: fila.producto_id,
       combustibles,
+      // 0025: las reglas de categoría/proveedor se acotan al proveedor del
+      // producto y a sus categorías (el snapshot ya trae ambos).
+      proveedor_id: fila.proveedor_id ?? null,
+      categorias: parseJson<string[]>(fila.categorias) ?? [],
     }
   );
   return {
