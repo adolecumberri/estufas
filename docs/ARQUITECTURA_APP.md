@@ -182,11 +182,39 @@ Cada paso: `npm run typecheck` + prueba en móvil, commits pequeños.
 
 # 3. Estado de ejecución
 
-- **Fase 1 (roles)**: en marcha — `shared/seguridad/capacidades.ts` +
-  `use-permisos` + nav por capacidad (se hace en `src/lib/permisos.ts` +
-  `src/hooks/use-permisos.ts` para no romper imports; se moverá a
-  `shared/seguridad` en el paso 2 de migración).
-- **Auditoría UI**: en curso → `docs/AUDITORIA_UI.md` (inventario y plan de
-  primitivas).
-- **Siguiente decisión**: aprobar esta estructura y empezar por el paso 1
-  (`shared/`) o por el paso 2 (seguridad) según prioridad.
+Actualizado 01/11/2026.
+
+## Hecho
+
+- **Roles (fases 1-4 + backend)**: capacidades en cascada (`shared/seguridad/
+  capacidades.ts` + `use-permisos`), nav por capacidad, grupos de rutas con
+  `GuardRuta`, alcance de cliente (`shared/lib/alcance.ts`), `rpcSegura`,
+  selector de proveedor con aviso y carrito en login. Backend 0020-0023
+  (catálogo general = comercial por defecto, asignación automática,
+  `fn_proveedores_visibles`, actor del pedido y `fn_pedido_detalle`). pgTAP
+  63/63.
+- **Estructura por features**: `app → features → shared` operativa; carpetas
+  antiguas (`components/ui`, `components/catalogo`, `hooks`, `contexts`, `lib`,
+  `screens`, `constants`) eliminadas. 102 archivos con imports reescritos.
+- **Sistema de diseño 1-2/3**: tokens de radio unificados (`rounded-lg` = 10 px);
+  14 primitivas en `shared/ui` + `shared/componentes`; **admin** (7 pantallas)
+  migrado a `Screen`/`ScreenHeader`/`FormModal`/`EmptyState`/`LoadingView`/
+  `ErrorView`/`ListCard`.
+
+## Pendiente
+
+1. **Sistema de diseño 3/3**: migrar a primitivas las pantallas restantes —
+   pedidos (`(cliente)`), cartera (`(comercial)`), catálogo (`(publico)` +
+   `features/catalogo/screens`), solicitud (`(carrito)`), acceso/registro y
+   `dev/acceso`. Regla: al tocar cada pantalla, usar las primitivas y borrar
+   duplicación.
+2. **Descuentos por proveedor** (deuda de modelo): `descuentos_cliente_proveedor`,
+   `proveedor_id` en descuentos de combustible, precedencia
+   (producto > combustible prov/global > general prov/global > promo), RPCs,
+   reglas locales (`precios.ts`) y tests. Decisión cerrada: "Condiciones por
+   proveedor".
+3. **Verificación en móvil** de los flujos nuevos (login, roles, catálogo
+   general vs proveedor, popup de proveedor con carrito, carrito al entrar,
+   admin abriendo solicitud para cliente).
+4. **CI/tests de app** (no hay E2E ni pipeline; solo pgTAP + typecheck).
+
