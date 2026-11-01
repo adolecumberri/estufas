@@ -6,7 +6,7 @@ import * as React from 'react';
 import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import banner from '../../assets/images/banner.jpg';
+import banner from '../../../../assets/images/banner.jpg';
 
 import { Buscador } from '@/features/catalogo/componentes/buscador';
 import { EncabezadoCatalogo } from '@/features/catalogo/componentes/encabezado';

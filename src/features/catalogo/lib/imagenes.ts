@@ -1,10 +1,10 @@
-import ef8 from '../../assets/images/productos/ef8.jpg';
-import la5 from '../../assets/images/productos/la5.jpg';
-import ll7 from '../../assets/images/productos/ll7.jpg';
-import lp9 from '../../assets/images/productos/lp9.jpg';
-import tf12 from '../../assets/images/productos/tf12.jpg';
-import tf70 from '../../assets/images/productos/tf70.jpg';
-import placeholderProducto from '../../assets/images/placeholder-producto.png';
+import ef8 from '../../../../assets/images/productos/ef8.jpg';
+import la5 from '../../../../assets/images/productos/la5.jpg';
+import ll7 from '../../../../assets/images/productos/ll7.jpg';
+import lp9 from '../../../../assets/images/productos/lp9.jpg';
+import tf12 from '../../../../assets/images/productos/tf12.jpg';
+import tf70 from '../../../../assets/images/productos/tf70.jpg';
+import placeholderProducto from '../../../../assets/images/placeholder-producto.png';
 
 // Las imágenes de desarrollo del seed apuntan a picsum.photos (internet
 // externo): desde el móvil en la LAN pueden no cargar. Los seeds conocidos se
