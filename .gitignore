@@ -51,6 +51,7 @@ coverage
 .cli-home/
 
 .tmp/
+.tmp-verify/
 
 # supabase CLI local runtime state
 supabase/.temp/

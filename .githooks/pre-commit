@@ -1,0 +1,5 @@
+#!/bin/sh
+# Pre-commit sin dependencias: solo la verificación mínima rápida.
+# Activar una vez con: git config core.hooksPath .githooks
+set -e
+npm run typecheck

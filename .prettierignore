@@ -1,0 +1,6 @@
+node_modules
+.expo
+.tmp-verify
+assets
+docs/*.html
+package-lock.json

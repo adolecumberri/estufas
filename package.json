@@ -9,7 +9,11 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "export:web": "expo export --platform web",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "expo lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "verify": "npm run typecheck && npm run lint && npx expo export --platform android --no-bytecode --output-dir .tmp-verify && node -e \"require('fs').rmSync('.tmp-verify',{recursive:true,force:true})\""
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
@@ -51,6 +55,9 @@
   "devDependencies": {
     "@babel/core": "^7.26.0",
     "@types/react": "~19.2.0",
+    "eslint": "^9.39.5",
+    "eslint-config-expo": "^58.0.4",
+    "prettier": "^3.9.10",
     "tailwindcss": "^3.4.14",
     "typescript": "~6.0.3"
   }

@@ -107,3 +107,23 @@ npx supabase test db  # pgTAP (si se tocó SQL) — debe pasar (63 asserts)
   error del agente, asumirlo y revertirlo.
 - Reportar verificaciones reales (comandos ejecutados y su resultado), no
   suposiciones.
+
+## 7. Definition of Done
+
+Un cambio solo está terminado cuando:
+
+1. `npm run typecheck` pasa limpio.
+2. `npm run lint` pasa (0 errores; los warnings, si los hay, están
+   justificados en el reporte o en `eslint.config.js`).
+3. Si se tocó SQL: la migración está aplicada en local
+   (`npx supabase migration up --local`) y `npx supabase test db` pasa
+   completo (63 asserts).
+4. `npm run format:check` se ejecuta de forma informativa (no se reformatea
+   todo el repo sin avisar; los cambios nuevos deben estar formateados).
+5. El código respeta la estructura `app → features → shared`, usa primitivas
+   y tokens (sin literales de color ni cards/cabeceras/modales a mano) y
+   `volverA()` para navegar atrás.
+6. Los documentos se actualizan cuando cambia una regla (PRD, ADRs,
+   `docs/FEATURES.md`, `docs/BITACORA.md`).
+7. El reporte incluye qué se verificó de verdad (comandos y resultados), no
+   suposiciones.
