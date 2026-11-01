@@ -27,6 +27,7 @@ import { Text } from '@/shared/ui/text';
 import { COMBUSTIBLES, ESTADOS_PEDIDO, TIPOS_CLIENTE } from '@/shared/constantes';
 import type { CombustibleId } from '@/shared/constantes';
 import { useSolicitud } from '@/features/carrito/contexto';
+import { DescuentosProveedor } from '@/features/cartera/componentes/descuentos-proveedor';
 import { usePermisos } from '@/shared/seguridad/use-permisos';
 import { useCatalogo } from '@/features/catalogo/hooks/use-catalogo';
 import { useCliente, useDescuentos } from '@/features/cartera/hooks/use-comercial';
@@ -274,6 +275,10 @@ export default function ClienteDetalle() {
               </View>
             </CardContent>
           </Card>
+
+          {/* Descuentos por proveedor (reglas por proveedor y categoría +
+              historial de cambios; solo si el rol puede gestionar descuentos) */}
+          <DescuentosProveedor clienteId={id} categorias={catalogo.categorias} />
 
           {/* Por categoría técnica (descuento por combustible) */}
           <View className="gap-2">
