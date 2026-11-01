@@ -24,7 +24,10 @@ export async function cacheLeer<T>(clave: string): Promise<T | null> {
 
 export async function cacheEscribir<T>(clave: string, dato: T): Promise<void> {
   try {
-    await AsyncStorage.setItem(clave, JSON.stringify({ dato, ts: Date.now() } satisfies EntradaCache));
+    await AsyncStorage.setItem(
+      clave,
+      JSON.stringify({ dato, ts: Date.now() } satisfies EntradaCache)
+    );
   } catch {
     // sin almacenamiento disponible
   }

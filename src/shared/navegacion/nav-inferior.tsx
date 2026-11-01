@@ -41,7 +41,13 @@ const PESTANAS: Pestana[] = [
     ruta: RUTAS.catalogo,
     caps: ['catalogo:ver_general', 'catalogo:ver_proveedores_propios'],
   },
-  { id: 'solicitud', etiqueta: 'Solicitud', icono: FilePlus2, ruta: '/solicitud', caps: ['carrito:usar'] },
+  {
+    id: 'solicitud',
+    etiqueta: 'Solicitud',
+    icono: FilePlus2,
+    ruta: '/solicitud',
+    caps: ['carrito:usar'],
+  },
   {
     id: 'pedidos',
     etiqueta: 'Pedidos',
@@ -49,8 +55,20 @@ const PESTANAS: Pestana[] = [
     ruta: RUTAS.pedidos,
     caps: ['pedidos:crear_propio', 'pedidos:confirmar'],
   },
-  { id: 'cartera', etiqueta: 'Cartera', icono: Wallet, ruta: RUTAS.cartera, caps: ['cartera:ver_clientes'] },
-  { id: 'admin', etiqueta: 'Admin', icono: ShieldCheck, ruta: RUTAS.admin, caps: ['admin:acceder'] },
+  {
+    id: 'cartera',
+    etiqueta: 'Cartera',
+    icono: Wallet,
+    ruta: RUTAS.cartera,
+    caps: ['cartera:ver_clientes'],
+  },
+  {
+    id: 'admin',
+    etiqueta: 'Admin',
+    icono: ShieldCheck,
+    ruta: RUTAS.admin,
+    caps: ['admin:acceder'],
+  },
 ];
 
 // Sin sesión solo se ofrecen catálogo e inicio de sesión: añadir al pedido o

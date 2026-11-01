@@ -76,8 +76,8 @@ npx supabase test db     # tests pgTAP (supabase/tests)
 >
 > **Nota Windows (CLI de Supabase):** si `supabase start` falla con
 > `permission denied while trying to connect to the docker API at npipe://...`,
-> activa en Docker Desktop *Settings → General → "Expose daemon on
-> tcp://localhost:2375 without TLS"* y ejecuta
+> activa en Docker Desktop _Settings → General → "Expose daemon on
+> tcp://localhost:2375 without TLS"_ y ejecuta
 > `$env:DOCKER_HOST = "tcp://127.0.0.1:2375"` antes del comando.
 
 ## Estructura

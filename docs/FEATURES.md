@@ -1,10 +1,10 @@
 # Estado por features
 
-| Feature | Estado | Docs | Tests | Commits |
-|---|---|---|---|---|
-| Roles en cascada (capacidades, rutas, alcance, "Creado por") | ✅ Completado | `docs/ARQUITECTURA_ROLES.md`, ADR 0001/0002 | pgTAP `10_roles_cascada.sql` (11 asserts) | rama main (2026-11-01) |
-| Sistema de diseño (primitivas + tokens + auditoría) | ✅ Completado | `docs/AUDITORIA_UI.md`, ADR 0004, AGENTS.md §4 | typecheck + lint | rama main (2026-11-01) |
-| Reestructura por features (`src/shared` + `src/features`) | ✅ Completado | ADR 0004, AGENTS.md §1 | typecheck + lint | rama main (2026-11-01) |
-| Descuentos por proveedor | ⛔ Pendiente | por escribir (decisión de negocio abierta) | — | — |
+| Feature                                                      | Estado        | Docs                                           | Tests                                     | Commits                |
+| ------------------------------------------------------------ | ------------- | ---------------------------------------------- | ----------------------------------------- | ---------------------- |
+| Roles en cascada (capacidades, rutas, alcance, "Creado por") | ✅ Completado | `docs/ARQUITECTURA_ROLES.md`, ADR 0001/0002    | pgTAP `10_roles_cascada.sql` (11 asserts) | rama main (2026-11-01) |
+| Sistema de diseño (primitivas + tokens + auditoría)          | ✅ Completado | `docs/AUDITORIA_UI.md`, ADR 0004, AGENTS.md §4 | typecheck + lint                          | rama main (2026-11-01) |
+| Reestructura por features (`src/shared` + `src/features`)    | ✅ Completado | ADR 0004, AGENTS.md §1                         | typecheck + lint                          | rama main (2026-11-01) |
+| Descuentos por proveedor                                     | ⛔ Pendiente  | por escribir (decisión de negocio abierta)     | —                                         | —                      |
 
 Leyenda: ✅ cerrado y verificado · ⛔ pendiente de decisión/implementación.

@@ -171,7 +171,11 @@ export default function Registro() {
             disabled={enviando}
             onPress={() => void crearCuenta()}
           >
-            {enviando ? <ActivityIndicator color={colores.primarioClaro} /> : <Text>Crear cuenta</Text>}
+            {enviando ? (
+              <ActivityIndicator color={colores.primarioClaro} />
+            ) : (
+              <Text>Crear cuenta</Text>
+            )}
           </Button>
           <Pressable
             accessibilityRole="link"

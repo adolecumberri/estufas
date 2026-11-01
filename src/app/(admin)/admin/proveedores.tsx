@@ -1,12 +1,5 @@
 import { router } from 'expo-router';
-import {
-  Boxes,
-  Factory,
-  Flame,
-  Flower,
-  Plus,
-  type LucideIcon,
-} from 'lucide-react-native';
+import { Boxes, Factory, Flame, Flower, Plus, type LucideIcon } from 'lucide-react-native';
 import * as React from 'react';
 import { View } from 'react-native';
 
@@ -225,7 +218,11 @@ export default function AdminProveedores() {
                           keyboardType="phone-pad"
                           className="h-9 text-sm"
                         />
-                        <Button size="sm" variant="secondary" onPress={() => void guardarEdicion(p.id)}>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onPress={() => void guardarEdicion(p.id)}
+                        >
                           <Text>Guardar</Text>
                         </Button>
                       </View>

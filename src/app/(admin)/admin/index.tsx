@@ -9,8 +9,18 @@ import { Text } from '@/shared/ui/text';
 import { useColoresIcono } from '@/shared/lib/theme';
 
 const SECCIONES = [
-  { titulo: 'Comerciales', descripcion: 'Comerciales, sus clientes y accesos a proveedores', icono: Users, ruta: '/admin/comerciales' },
-  { titulo: 'Proveedores', descripcion: 'Catálogo multi-empresa y comerciales', icono: Factory, ruta: '/admin/proveedores' },
+  {
+    titulo: 'Comerciales',
+    descripcion: 'Comerciales, sus clientes y accesos a proveedores',
+    icono: Users,
+    ruta: '/admin/comerciales',
+  },
+  {
+    titulo: 'Proveedores',
+    descripcion: 'Catálogo multi-empresa y comerciales',
+    icono: Factory,
+    ruta: '/admin/proveedores',
+  },
 ] as const;
 
 export default function Admin() {

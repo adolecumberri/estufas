@@ -75,7 +75,9 @@ export function usePedido(id: string | undefined) {
       // Fallback: lectura directa de la tabla (si el RPC no existiera).
       const { data, error: errPedido } = await supabase
         .from('pedidos')
-        .select('*, cliente:usuarios!pedidos_cliente_id_fkey(id,nombre,apellidos,razon_social,email,telefono,nif_cif)')
+        .select(
+          '*, cliente:usuarios!pedidos_cliente_id_fkey(id,nombre,apellidos,razon_social,email,telefono,nif_cif)'
+        )
         .eq('id', id)
         .single();
       if (errPedido) {
@@ -87,8 +89,17 @@ export function usePedido(id: string | undefined) {
     }
 
     const [resLineas, resHistorial] = await Promise.all([
-      supabase.from('pedido_lineas').select('*').eq('pedido_id', id).eq('borrado', false).order('created_at'),
-      supabase.from('pedido_historial_estados').select('*').eq('pedido_id', id).order('fecha_cambio', { ascending: false }),
+      supabase
+        .from('pedido_lineas')
+        .select('*')
+        .eq('pedido_id', id)
+        .eq('borrado', false)
+        .order('created_at'),
+      supabase
+        .from('pedido_historial_estados')
+        .select('*')
+        .eq('pedido_id', id)
+        .order('fecha_cambio', { ascending: false }),
     ]);
     setCargando(false);
 
@@ -121,19 +132,30 @@ export function usePedido(id: string | undefined) {
 // Acciones sobre pedidos (todas pasan por RPC: permisos y transacciones en BD).
 export function useAccionesPedido() {
   const crear = React.useCallback(
-    async (opciones: { cliente_id?: string | null; lineas: { producto_id: string; cantidad: number }[]; observaciones?: string }) => {
+    async (opciones: {
+      cliente_id?: string | null;
+      lineas: { producto_id: string; cantidad: number }[];
+      observaciones?: string;
+    }) => {
       const { data, error } = await supabase.rpc('crear_pedido', {
         p_cliente_id: opciones.cliente_id ?? null,
         p_lineas: opciones.lineas,
         p_observaciones: opciones.observaciones ?? null,
       });
-      return { pedido: (data?.[0] as { pedido_id: string; numero_pedido: number } | undefined) ?? null, error: error?.message ?? null };
+      return {
+        pedido: (data?.[0] as { pedido_id: string; numero_pedido: number } | undefined) ?? null,
+        error: error?.message ?? null,
+      };
     },
     []
   );
 
   const editar = React.useCallback(
-    async (pedidoId: string, lineas: { producto_id: string; cantidad: number }[], observaciones?: string) => {
+    async (
+      pedidoId: string,
+      lineas: { producto_id: string; cantidad: number }[],
+      observaciones?: string
+    ) => {
       const { error } = await supabase.rpc('editar_pedido', {
         p_pedido: pedidoId,
         p_lineas: lineas,
@@ -145,28 +167,44 @@ export function useAccionesPedido() {
   );
 
   const cancelar = React.useCallback(async (pedidoId: string, nota?: string) => {
-    const { error } = await supabase.rpc('cancelar_pedido', { p_pedido: pedidoId, p_nota: nota ?? null });
-    return { error: error?.message ?? null };
-  }, []);
-
-  const confirmar = React.useCallback(async (pedidoId: string, nota?: string) => {
-    const { error } = await supabase.rpc('confirmar_pedido', { p_pedido: pedidoId, p_nota: nota ?? null });
-    return { error: error?.message ?? null };
-  }, []);
-
-  const avanzar = React.useCallback(async (pedidoId: string, estado: 'en_preparacion' | 'completado', nota?: string) => {
-    const { error } = await supabase.rpc('avanzar_pedido', { p_pedido: pedidoId, p_estado: estado, p_nota: nota ?? null });
-    return { error: error?.message ?? null };
-  }, []);
-
-  const ajustarDescuento = React.useCallback(async (lineaId: string, descuentoPct: number, nota?: string) => {
-    const { error } = await supabase.rpc('ajustar_descuento_linea', {
-      p_linea_id: lineaId,
-      p_descuento_pct: descuentoPct,
+    const { error } = await supabase.rpc('cancelar_pedido', {
+      p_pedido: pedidoId,
       p_nota: nota ?? null,
     });
     return { error: error?.message ?? null };
   }, []);
+
+  const confirmar = React.useCallback(async (pedidoId: string, nota?: string) => {
+    const { error } = await supabase.rpc('confirmar_pedido', {
+      p_pedido: pedidoId,
+      p_nota: nota ?? null,
+    });
+    return { error: error?.message ?? null };
+  }, []);
+
+  const avanzar = React.useCallback(
+    async (pedidoId: string, estado: 'en_preparacion' | 'completado', nota?: string) => {
+      const { error } = await supabase.rpc('avanzar_pedido', {
+        p_pedido: pedidoId,
+        p_estado: estado,
+        p_nota: nota ?? null,
+      });
+      return { error: error?.message ?? null };
+    },
+    []
+  );
+
+  const ajustarDescuento = React.useCallback(
+    async (lineaId: string, descuentoPct: number, nota?: string) => {
+      const { error } = await supabase.rpc('ajustar_descuento_linea', {
+        p_linea_id: lineaId,
+        p_descuento_pct: descuentoPct,
+        p_nota: nota ?? null,
+      });
+      return { error: error?.message ?? null };
+    },
+    []
+  );
 
   return { crear, editar, cancelar, confirmar, avanzar, ajustarDescuento };
 }

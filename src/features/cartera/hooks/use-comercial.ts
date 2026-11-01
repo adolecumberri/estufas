@@ -3,7 +3,15 @@ import * as React from 'react';
 import { useAuth } from '@/features/auth/use-auth';
 import { resolverAlcanceCliente } from '@/shared/lib/alcance';
 import { supabase } from '@/shared/lib/supabase';
-import type { Combustible, ComercialProveedor, DescuentoClienteCombustible, DescuentoClienteProducto, PerfilUsuario, Promocion, Proveedor } from '@/shared/lib/types';
+import type {
+  Combustible,
+  ComercialProveedor,
+  DescuentoClienteCombustible,
+  DescuentoClienteProducto,
+  PerfilUsuario,
+  Promocion,
+  Proveedor,
+} from '@/shared/lib/types';
 
 // Cartera comercial: clientes asignados (RLS lo garantiza) y sus pedidos.
 export function useCartera() {
@@ -39,7 +47,9 @@ export function useCliente(id: string | undefined) {
   const { perfil } = useAuth();
   const [cliente, setCliente] = React.useState<PerfilUsuario | null>(null);
   const [descuentos, setDescuentos] = React.useState<DescuentoClienteProducto[]>([]);
-  const [descuentosCombustible, setDescuentosCombustible] = React.useState<DescuentoClienteCombustible[]>([]);
+  const [descuentosCombustible, setDescuentosCombustible] = React.useState<
+    DescuentoClienteCombustible[]
+  >([]);
   const [cargando, setCargando] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -61,8 +71,16 @@ export function useCliente(id: string | undefined) {
     }
     const [resCliente, resDescuentos, resDescuentosCombustible] = await Promise.all([
       supabase.from('usuarios').select('*').eq('id', clienteId).single(),
-      supabase.from('descuentos_cliente_producto').select('*').eq('cliente_id', clienteId).eq('borrado', false),
-      supabase.from('descuentos_cliente_combustible').select('*').eq('cliente_id', clienteId).eq('borrado', false),
+      supabase
+        .from('descuentos_cliente_producto')
+        .select('*')
+        .eq('cliente_id', clienteId)
+        .eq('borrado', false),
+      supabase
+        .from('descuentos_cliente_combustible')
+        .select('*')
+        .eq('cliente_id', clienteId)
+        .eq('borrado', false),
     ]);
     setCargando(false);
     if (resCliente.error) {
@@ -70,9 +88,12 @@ export function useCliente(id: string | undefined) {
     } else {
       setCliente(resCliente.data as PerfilUsuario);
     }
-    if (!resDescuentos.error) setDescuentos((resDescuentos.data ?? []) as DescuentoClienteProducto[]);
+    if (!resDescuentos.error)
+      setDescuentos((resDescuentos.data ?? []) as DescuentoClienteProducto[]);
     if (!resDescuentosCombustible.error)
-      setDescuentosCombustible((resDescuentosCombustible.data ?? []) as DescuentoClienteCombustible[]);
+      setDescuentosCombustible(
+        (resDescuentosCombustible.data ?? []) as DescuentoClienteCombustible[]
+      );
   }, [id, perfil]);
 
   React.useEffect(() => {
@@ -97,7 +118,12 @@ export function useDescuentos() {
   }, []);
 
   const asignarProducto = React.useCallback(
-    async (clienteId: string, productoId: string, descuentoPct: number, fechaFin?: string | null) => {
+    async (
+      clienteId: string,
+      productoId: string,
+      descuentoPct: number,
+      fechaFin?: string | null
+    ) => {
       const { error } = await supabase.rpc('asignar_descuento_cliente_producto', {
         p_cliente_id: clienteId,
         p_producto_id: productoId,
@@ -118,7 +144,12 @@ export function useDescuentos() {
   }, []);
 
   const asignarCombustible = React.useCallback(
-    async (clienteId: string, combustible: Combustible, descuentoPct: number, fechaFin?: string | null) => {
+    async (
+      clienteId: string,
+      combustible: Combustible,
+      descuentoPct: number,
+      fechaFin?: string | null
+    ) => {
       const { error } = await supabase.rpc('asignar_descuento_cliente_combustible', {
         p_cliente_id: clienteId,
         p_combustible: combustible,
@@ -130,13 +161,16 @@ export function useDescuentos() {
     []
   );
 
-  const anularCombustible = React.useCallback(async (clienteId: string, combustible: Combustible) => {
-    const { error } = await supabase.rpc('anular_descuento_cliente_combustible', {
-      p_cliente_id: clienteId,
-      p_combustible: combustible,
-    });
-    return { error: error?.message ?? null };
-  }, []);
+  const anularCombustible = React.useCallback(
+    async (clienteId: string, combustible: Combustible) => {
+      const { error } = await supabase.rpc('anular_descuento_cliente_combustible', {
+        p_cliente_id: clienteId,
+        p_combustible: combustible,
+      });
+      return { error: error?.message ?? null };
+    },
+    []
+  );
 
   return { asignarGeneral, asignarProducto, anularProducto, asignarCombustible, anularCombustible };
 }

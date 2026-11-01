@@ -79,7 +79,9 @@ function TarjetaProducto({
             </View>
             {producto.etiqueta_energetica && (
               <View className="absolute right-2 top-2 rounded bg-emerald-600 px-1.5 py-0.5">
-                <Text className="text-[10px] font-bold text-white">{producto.etiqueta_energetica}</Text>
+                <Text className="text-[10px] font-bold text-white">
+                  {producto.etiqueta_energetica}
+                </Text>
               </View>
             )}
             {producto.descuento_pct > 0 && (

@@ -18,12 +18,12 @@ Nombres: proyecto `estufas`, app "Brasa y Verde", UI en español.
 
 ## 2. Roles y acceso
 
-| Rol | Qué puede hacer |
-|---|---|
-| **Anónimo** | Ver catálogo (eligiendo proveedor), buscar, fichas. Sin carrito ni "Añadir". |
-| **Cliente** (`particular` / `empresa`) | Catálogo de los proveedores habilitados a su comercial, carrito propio, crear pedidos, ver sus pedidos. |
-| **Comercial** | Catálogo de sus proveedores, cartera de SUS clientes, pedidos de su cartera, descuentos por cliente, crear pedidos para un cliente. También puede pedir para sí mismo (carrito propio). |
-| **Admin** | SOLO lectura del catálogo (sin carrito) + panel: gestionar comerciales (crear, ver clientes/pedidos, accesos a proveedores) y proveedores (crear/editar, catálogo, icono/color). Sin cartera ni pedidos propios. |
+| Rol                                    | Qué puede hacer                                                                                                                                                                                                  |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Anónimo**                            | Ver catálogo (eligiendo proveedor), buscar, fichas. Sin carrito ni "Añadir".                                                                                                                                     |
+| **Cliente** (`particular` / `empresa`) | Catálogo de los proveedores habilitados a su comercial, carrito propio, crear pedidos, ver sus pedidos.                                                                                                          |
+| **Comercial**                          | Catálogo de sus proveedores, cartera de SUS clientes, pedidos de su cartera, descuentos por cliente, crear pedidos para un cliente. También puede pedir para sí mismo (carrito propio).                          |
+| **Admin**                              | SOLO lectura del catálogo (sin carrito) + panel: gestionar comerciales (crear, ver clientes/pedidos, accesos a proveedores) y proveedores (crear/editar, catálogo, icono/color). Sin cartera ni pedidos propios. |
 
 - Registro público: **siempre crea cliente** (migración 0010 fuerza el rol; no
   se puede autoasignar admin desde los metadatos).

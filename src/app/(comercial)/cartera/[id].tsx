@@ -50,13 +50,8 @@ export default function ClienteDetalle() {
   const { puede } = usePermisos();
   const puedeGestionar = puede('pedidos:crear_para_cliente');
   const { cliente, descuentos, descuentosCombustible, cargando, error, recargar } = useCliente(id);
-  const {
-    asignarGeneral,
-    asignarProducto,
-    anularProducto,
-    asignarCombustible,
-    anularCombustible,
-  } = useDescuentos();
+  const { asignarGeneral, asignarProducto, anularProducto, asignarCombustible, anularCombustible } =
+    useDescuentos();
   const { pedidos } = usePedidos();
   const catalogo = useCatalogo(id);
   const colores = useColoresIcono();
@@ -179,7 +174,10 @@ export default function ClienteDetalle() {
                   ) : null}
                 </View>
                 <View className="flex-row items-center gap-1">
-                  <CircleCheck size={14} color={cliente.activo ? colores.primario : colores.tenue} />
+                  <CircleCheck
+                    size={14}
+                    color={cliente.activo ? colores.primario : colores.tenue}
+                  />
                   <Text
                     className={
                       cliente.activo
@@ -223,7 +221,9 @@ export default function ClienteDetalle() {
                     <CardTitle className="text-base font-semibold">
                       Descuento General de Cartera
                     </CardTitle>
-                    <Text className="text-xs text-muted-foreground">Base para todos los pedidos</Text>
+                    <Text className="text-xs text-muted-foreground">
+                      Base para todos los pedidos
+                    </Text>
                   </View>
                 </View>
                 {cliente.descuento_porcentaje > 0 ? (
@@ -264,11 +264,7 @@ export default function ClienteDetalle() {
                   </View>
                 </FormField>
                 <View className="flex-row items-center gap-3">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onPress={() => void guardarGeneral()}
-                  >
+                  <Button size="sm" variant="secondary" onPress={() => void guardarGeneral()}>
                     <Text>Aplicar</Text>
                   </Button>
                   <Text className="text-xs text-muted-foreground">

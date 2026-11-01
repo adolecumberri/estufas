@@ -136,7 +136,9 @@ function parseJson<T>(texto: string | null): T | null {
 
 export async function obtenerVersionLocal(): Promise<number | null> {
   const db = obtenerBd();
-  const fila = db.getFirstSync<{ value: string }>('SELECT value FROM meta WHERE key = ?', ['version']);
+  const fila = db.getFirstSync<{ value: string }>('SELECT value FROM meta WHERE key = ?', [
+    'version',
+  ]);
   const numero = fila ? Number(fila.value) : NaN;
   return Number.isFinite(numero) ? numero : null;
 }
@@ -150,7 +152,9 @@ export function reemplazarSnapshot(snapshot: SnapshotCatalogo): void {
   const nombreCategoria = new Map(snapshot.categorias.map((c) => [c.id, c.nombre]));
 
   db.withTransactionSync(() => {
-    db.execSync('DELETE FROM productos; DELETE FROM categorias; DELETE FROM marcas; DELETE FROM proveedores;');
+    db.execSync(
+      'DELETE FROM productos; DELETE FROM categorias; DELETE FROM marcas; DELETE FROM proveedores;'
+    );
 
     for (const c of snapshot.categorias) {
       db.runSync(
@@ -353,9 +357,14 @@ export function obtenerProducto(id: string): FilaProductoLocal | null {
 // trae categorías y marcas y los hooks las sirven desde aquí.
 export function obtenerCategorias(): Categoria[] {
   const db = obtenerBd();
-  const filas = db.getAllSync<{ id: string; nombre: string; clave: string; grupo: string; orden: number; combustible: string | null }>(
-    'SELECT id, nombre, clave, grupo, orden, combustible FROM categorias ORDER BY orden, nombre'
-  );
+  const filas = db.getAllSync<{
+    id: string;
+    nombre: string;
+    clave: string;
+    grupo: string;
+    orden: number;
+    combustible: string | null;
+  }>('SELECT id, nombre, clave, grupo, orden, combustible FROM categorias ORDER BY orden, nombre');
   return filas.map((f) => ({
     id: f.id,
     nombre: f.nombre,
@@ -378,12 +387,19 @@ const preciosTransporte = (fila: FilaProductoLocal) =>
 
 // Fila local → ProductoCatalogo con el precio calculado por las reglas de la
 // cuenta (calcularPrecioFinal replica fn_calcular_precio).
-export function filaAProductoCatalogo(fila: FilaProductoLocal, reglas: ReglasCuenta | null): ProductoCatalogo {
+export function filaAProductoCatalogo(
+  fila: FilaProductoLocal,
+  reglas: ReglasCuenta | null
+): ProductoCatalogo {
   const combustibles = parseJson<Combustible[]>(fila.combustibles) ?? [];
-  const { precio_final, descuento_pct, descuento_origen } = calcularPrecioFinal(fila.precio_base, reglas, {
-    producto_id: fila.producto_id,
-    combustibles,
-  });
+  const { precio_final, descuento_pct, descuento_origen } = calcularPrecioFinal(
+    fila.precio_base,
+    reglas,
+    {
+      producto_id: fila.producto_id,
+      combustibles,
+    }
+  );
   return {
     producto_id: fila.producto_id,
     referencia: fila.referencia,
@@ -411,7 +427,10 @@ export function filaAProductoCatalogo(fila: FilaProductoLocal, reglas: ReglasCue
 // reconstruyen desde `datos` para que la ficha siga mostrando los datos
 // técnicos); la galería sí llega en el snapshot (misma forma que
 // fn_producto_detalle) y se devuelve tal cual.
-export function filaAProductoDetalle(fila: FilaProductoLocal, reglas: ReglasCuenta | null): ProductoDetalle {
+export function filaAProductoDetalle(
+  fila: FilaProductoLocal,
+  reglas: ReglasCuenta | null
+): ProductoDetalle {
   const base = filaAProductoCatalogo(fila, reglas);
   const datos = parseJson<GrupoDatos[]>(fila.datos) ?? [];
   const caracteristicas: ValorCaracteristica[] = datos.flatMap((g) =>

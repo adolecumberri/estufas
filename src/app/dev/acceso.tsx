@@ -129,7 +129,8 @@ export default function DevAcceso() {
       <ScreenHeader titulo="Acceso rápido (dev)" respaldo="/" />
 
       <Text className="text-xs text-muted-foreground">
-        Cambia de usuario con un toque para probar roles y visibilidad (ver docs/USUARIOS_PRUEBA.md).
+        Cambia de usuario con un toque para probar roles y visibilidad (ver
+        docs/USUARIOS_PRUEBA.md).
       </Text>
 
       {PERFILES.map((p) => (

@@ -1,11 +1,5 @@
 import { router, useFocusEffect } from 'expo-router';
-import {
-  Building2,
-  CheckCircle2,
-  ChevronRight,
-  RefreshCw,
-  User,
-} from 'lucide-react-native';
+import { Building2, CheckCircle2, ChevronRight, RefreshCw, User } from 'lucide-react-native';
 import * as React from 'react';
 import { ActivityIndicator, ScrollView, View } from 'react-native';
 
@@ -61,7 +55,8 @@ export default function Pedidos() {
   // Subtítulo de la cabecera según el rol (el cliente solo ve su email).
   const etiquetaRol = perfil?.rol === 'comercial' ? 'Comercial' : null;
   const pendientes = pedidos.filter((p) => p.estado === 'solicitado');
-  const pedidosFiltrados = filtro === 'todos' ? pedidos : pedidos.filter((p) => p.estado === filtro);
+  const pedidosFiltrados =
+    filtro === 'todos' ? pedidos : pedidos.filter((p) => p.estado === filtro);
 
   // Totales del pedido y cliente asociado (desde la cartera del comercial).
   const totalDe = (p: Pedido) => (p.pedido_lineas ?? []).reduce((acc, l) => acc + l.total_linea, 0);
@@ -108,7 +103,9 @@ export default function Pedidos() {
         <ScreenHeader
           titulo="Pedidos"
           respaldo="/"
-          subtitulo={etiquetaRol ? `${etiquetaRol} · ${perfil?.email ?? ''}` : (perfil?.email ?? '')}
+          subtitulo={
+            etiquetaRol ? `${etiquetaRol} · ${perfil?.email ?? ''}` : (perfil?.email ?? '')
+          }
           accion={
             <IconButton
               icono={RefreshCw}
@@ -181,7 +178,9 @@ export default function Pedidos() {
                         <Card key={p.id} className="gap-3 rounded-lg p-3.5">
                           <View className="flex-row items-start justify-between gap-2">
                             <View className="flex-row items-center gap-2">
-                              <Text className="text-sm font-semibold">Pedido nº {p.numero_pedido}</Text>
+                              <Text className="text-sm font-semibold">
+                                Pedido nº {p.numero_pedido}
+                              </Text>
                               <View className="rounded-full bg-amber-100 px-2 py-0.5 dark:bg-amber-500/15">
                                 <Text className="text-[10px] font-semibold uppercase text-amber-700 dark:text-amber-400">
                                   Requiere validación
@@ -209,7 +208,9 @@ export default function Pedidos() {
                           </View>
                           <View className="flex-row items-center justify-between gap-2 pt-0.5">
                             <View className="gap-0.5">
-                              <Text className="text-xs text-muted-foreground">Total sin impuestos</Text>
+                              <Text className="text-xs text-muted-foreground">
+                                Total sin impuestos
+                              </Text>
                               <Text className="text-lg font-bold tracking-tight">
                                 {formatEUR(totalDe(p))}
                               </Text>
@@ -260,7 +261,9 @@ export default function Pedidos() {
                 Historial de pedidos
               </SectionTitle>
               {pedidosFiltrados.length === 0 ? (
-                <Text className="text-sm text-muted-foreground">No hay pedidos con este estado.</Text>
+                <Text className="text-sm text-muted-foreground">
+                  No hay pedidos con este estado.
+                </Text>
               ) : (
                 <View className="gap-2.5">
                   {pedidosFiltrados.map((p) => {
@@ -274,7 +277,9 @@ export default function Pedidos() {
                       >
                         <View className="flex-row items-center justify-between gap-2">
                           <View className="flex-row items-center gap-2">
-                            <Text className="text-sm font-semibold">Pedido nº {p.numero_pedido}</Text>
+                            <Text className="text-sm font-semibold">
+                              Pedido nº {p.numero_pedido}
+                            </Text>
                             <Badge variant={varianteEstado(p.estado)}>
                               <Text>{ESTADOS_PEDIDO[p.estado].etiqueta}</Text>
                             </Badge>

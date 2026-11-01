@@ -85,11 +85,7 @@ export default function Acceso() {
             />
           </FormField>
           {error && <Text className="text-sm text-destructive">{error}</Text>}
-          <Button
-            className="h-11 w-full sm:h-11"
-            disabled={enviando}
-            onPress={() => void entrar()}
-          >
+          <Button className="h-11 w-full sm:h-11" disabled={enviando} onPress={() => void entrar()}>
             {enviando ? <ActivityIndicator color={colores.primarioClaro} /> : <Text>Entrar</Text>}
           </Button>
           <Pressable
@@ -97,9 +93,7 @@ export default function Acceso() {
             className="self-center py-1"
             onPress={() => router.push('/registro')}
           >
-            <Text className="text-sm font-medium text-primary">
-              ¿No tienes cuenta? Regístrate
-            </Text>
+            <Text className="text-sm font-medium text-primary">¿No tienes cuenta? Regístrate</Text>
           </Pressable>
           <Button variant="ghost" className="w-full" onPress={() => router.replace('/')}>
             <Text className="text-sm text-muted-foreground">Volver al catálogo</Text>
@@ -113,9 +107,7 @@ export default function Acceso() {
               // server. El `as never` mantiene el typecheck verde hasta entonces.
               onPress={() => router.push('/dev/acceso' as never)}
             >
-              <Text className="text-xs text-muted-foreground underline">
-                Acceso rápido (dev)
-              </Text>
+              <Text className="text-xs text-muted-foreground underline">Acceso rápido (dev)</Text>
             </Pressable>
           )}
         </CardContent>

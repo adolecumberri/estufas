@@ -89,7 +89,10 @@ export function useCatalogo(clienteId?: string | null, proveedorId?: string | nu
 
   // Datos base de la cuenta actual: si el catálogo local está disponible y
   // las reglas de precio ya cargadas. null = sincronizando (no se pinta nada).
-  const [datosBase, setDatosBase] = React.useState<{ modoLocal: boolean; reglas: ReglasCuenta | null } | null>(null);
+  const [datosBase, setDatosBase] = React.useState<{
+    modoLocal: boolean;
+    reglas: ReglasCuenta | null;
+  } | null>(null);
 
   const claveProductosActual = claveProductos(
     uid,
@@ -209,7 +212,12 @@ export function useCatalogo(clienteId?: string | null, proveedorId?: string | nu
       const t = setTimeout(() => {
         if (cancelado) return;
         try {
-          const visibles = proveedoresVisibles(uid, perfil?.rol === 'admin', clienteId, datosBase.reglas);
+          const visibles = proveedoresVisibles(
+            uid,
+            perfil?.rol === 'admin',
+            clienteId,
+            datosBase.reglas
+          );
           const { filas, hayMas: mas } = consultarCatalogo({
             busqueda,
             combustible: busqueda.trim() ? null : combustible,
@@ -289,7 +297,18 @@ export function useCatalogo(clienteId?: string | null, proveedorId?: string | nu
       cancelado = true;
       clearTimeout(t);
     };
-  }, [datosBase, busqueda, categoria, marca, pagina, clienteId, combustible, uid, perfil?.rol, proveedorId]);
+  }, [
+    datosBase,
+    busqueda,
+    categoria,
+    marca,
+    pagina,
+    clienteId,
+    combustible,
+    uid,
+    perfil?.rol,
+    proveedorId,
+  ]);
 
   const limpiarFiltros = () => {
     setBusqueda('');

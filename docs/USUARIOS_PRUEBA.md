@@ -7,16 +7,16 @@ usuario con un toque.
 
 ## Resumen de roles y visibilidad
 
-| Usuario | Contraseña | Rol | Proveedores visibles | Notas / qué probar |
-|---|---|---|---|---|
-| (anónimo) | — | anónimo | **Todos** (Eider, Fansa y estufas) | Navega el catálogo completo, busca, fichas. Sin carrito, sin botones Añadir, sin navbar inferior (solo login). |
-| `admin@estufas.local` | `Admin123!` | admin | Todos + gestión | Admin → Proveedores (asignar/desasignar/habilitar proveedores por comercial), productos, cartera de todos, pedidos de todos. |
-| `comercial@estufas.local` | `Comercial123!` | comercial | Eider + estufas (p1, p2) | Comercial original. Cartera con `cliente@` y `empresa@` asignados. |
-| `fansa@estufas.local` | `ComercialFansa123!` | comercial | **Solo Fansa** | Verifica que NO ve Eider ni estufas. |
-| `ambos@estufas.local` | `ComercialAmbos123!` | comercial | Fansa + Eider | Verifica que ve los dos catálogos nuevos. |
-| `cliente@estufas.local` | `Cliente123!` | cliente (particular) | Lo que tenga habilitado su comercial (2222) | Pedidos propios, carrito, descuentos. |
-| `empresa@estufas.local` | `Empresa123!` | cliente (empresa) | Idem comercial 2222 | Descuento general 10% + específico 0% en LP-9 + promo 5% (prueba de precedencia). |
-| `suelto@estufas.local` | `Suelto123!` | cliente **sin comercial** | **Catálogo vacío** (todos los productos tienen proveedor) | Ficha → "Producto no disponible"; pedido con proveedor → "El cliente no tiene comercial asignado". |
+| Usuario                   | Contraseña           | Rol                       | Proveedores visibles                                      | Notas / qué probar                                                                                                           |
+| ------------------------- | -------------------- | ------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| (anónimo)                 | —                    | anónimo                   | **Todos** (Eider, Fansa y estufas)                        | Navega el catálogo completo, busca, fichas. Sin carrito, sin botones Añadir, sin navbar inferior (solo login).               |
+| `admin@estufas.local`     | `Admin123!`          | admin                     | Todos + gestión                                           | Admin → Proveedores (asignar/desasignar/habilitar proveedores por comercial), productos, cartera de todos, pedidos de todos. |
+| `comercial@estufas.local` | `Comercial123!`      | comercial                 | Eider + estufas (p1, p2)                                  | Comercial original. Cartera con `cliente@` y `empresa@` asignados.                                                           |
+| `fansa@estufas.local`     | `ComercialFansa123!` | comercial                 | **Solo Fansa**                                            | Verifica que NO ve Eider ni estufas.                                                                                         |
+| `ambos@estufas.local`     | `ComercialAmbos123!` | comercial                 | Fansa + Eider                                             | Verifica que ve los dos catálogos nuevos.                                                                                    |
+| `cliente@estufas.local`   | `Cliente123!`        | cliente (particular)      | Lo que tenga habilitado su comercial (2222)               | Pedidos propios, carrito, descuentos.                                                                                        |
+| `empresa@estufas.local`   | `Empresa123!`        | cliente (empresa)         | Idem comercial 2222                                       | Descuento general 10% + específico 0% en LP-9 + promo 5% (prueba de precedencia).                                            |
+| `suelto@estufas.local`    | `Suelto123!`         | cliente **sin comercial** | **Catálogo vacío** (todos los productos tienen proveedor) | Ficha → "Producto no disponible"; pedido con proveedor → "El cliente no tiene comercial asignado".                           |
 
 ## Comerciales ↔ proveedores (seed)
 

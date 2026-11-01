@@ -48,7 +48,12 @@ export default function AdminPromociones() {
           <CardTitle className="text-base">Nueva promoción</CardTitle>
         </CardHeader>
         <CardContent className="gap-2">
-          <Input value={nombre} onChangeText={setNombre} placeholder="Nombre" className="h-10 text-sm" />
+          <Input
+            value={nombre}
+            onChangeText={setNombre}
+            placeholder="Nombre"
+            className="h-10 text-sm"
+          />
           <Input
             value={descripcion}
             onChangeText={setDescripcion}
@@ -111,8 +116,8 @@ export default function AdminPromociones() {
           <Separator />
           {mensaje && <Text className="text-sm text-muted-foreground">{mensaje}</Text>}
           <Text className="text-xs text-muted-foreground">
-            Las promociones se aplican tomando el mayor porcentaje entre el descuento del cliente y la
-            promoción vigente (nunca se acumulan).
+            Las promociones se aplican tomando el mayor porcentaje entre el descuento del cliente y
+            la promoción vigente (nunca se acumulan).
           </Text>
         </View>
       )}

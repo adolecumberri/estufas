@@ -59,13 +59,12 @@ ilegible, lo omites o lo marcas para revisión.
      catálogo hasta tener precio (indícalo en "dudas" solo si es dudoso).
 
 7. **Datos técnicos (`datos`)** — contrato JSONB de grupos
+
    ```json
    [
      {
        "grupo": "Datos generales",
-       "filas": [
-         { "clave": "peso", "nombre": "Peso", "valor": "15 kg", "unidad": null }
-       ]
+       "filas": [{ "clave": "peso", "nombre": "Peso", "valor": "15 kg", "unidad": null }]
      }
    ]
    ```
@@ -119,9 +118,7 @@ ilegible, lo omites o lo marcas para revisión.
       "datos": [
         {
           "grupo": "Datos generales",
-          "filas": [
-            { "clave": "peso", "nombre": "Peso", "valor": "15 kg", "unidad": null }
-          ]
+          "filas": [{ "clave": "peso", "nombre": "Peso", "valor": "15 kg", "unidad": null }]
         }
       ],
       "revisar": []
@@ -157,4 +154,4 @@ ilegible, lo omites o lo marcas para revisión.
   (UUIDs del bloque `f2000000-...`), `producto_precios` base con el precio
   camión y `producto_precios_transporte` con los 3 precios.
 - Los INSERTs de seed deben quedar RE-EJECUTABLES (`ON CONFLICT ... DO
-  NOTHING`) para poder aplicarlos también sobre la BD viva.
+NOTHING`) para poder aplicarlos también sobre la BD viva.

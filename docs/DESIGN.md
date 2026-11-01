@@ -50,6 +50,7 @@ catalog look.
 ## Screens (mobile-first)
 
 ### 1. Catalog home (`/`)
+
 - Top bar: app name "Brasa y Verde", cart icon with item-count badge, account icon
   (or login icon when anonymous).
 - Search input (placeholder "Buscar por nombre o referencia").
@@ -61,6 +62,7 @@ catalog look.
 - "Cargar más" button for pagination.
 
 ### 2. Product detail (`/catalogo/[id]`)
+
 - Back arrow + product reference in header.
 - Full-width image carousel (main + gallery).
 - Title, brand, category chips, energy badge.
@@ -72,15 +74,18 @@ catalog look.
 - Quantity stepper (- / n / +) next to an amber "Añadir a la solicitud" button.
 
 ### 3. Login (`/acceso`)
+
 - Centered card: email + password, error message in red, primary "Entrar",
   link "¿No tienes cuenta? Regístrate", ghost "Volver al catálogo".
 
 ### 4. Registration (`/registro`)
+
 - Segmented control "Particular | Empresa"; when Empresa, extra fields
   "Razón social" and "NIF/CIF". Fields: name, surnames, email, phone,
   password. Primary "Crear cuenta".
 
 ### 5. Quote request cart (`/solicitud`)
+
 - Title "Tu solicitud".
 - For reps: banner "Pedido para un cliente asignado" with "Cambiar" button.
 - Line items: thumbnail, name, reference, unit price (with discount note),
@@ -90,6 +95,7 @@ catalog look.
   commercial confirmation.
 
 ### 6. Orders list (`/pedidos`)
+
 - Header "Pedidos" + user email + logout icon.
 - Cards: "Pedido nº N", status badge, date, line count, total.
 - Status badge colors: Solicitado (grey), Confirmado (amber), En preparación
@@ -97,6 +103,7 @@ catalog look.
 - Empty state with "Ver catálogo" button.
 
 ### 7. Order detail (`/pedidos/[id]`)
+
 - Header with number + status badge.
 - Info card (date, notes), lines card (name, ref, unit price, discount origin,
   total), total row.
@@ -107,6 +114,7 @@ catalog look.
   completado"; rep can tap "Ajustar descuento" per line (inline % input).
 
 ### 8. Rep portfolio (`/cartera`) and client detail (`/cartera/[id]`)
+
 - List of assigned clients: name/company, type badge (Particular/Empresa),
   email, current general discount.
 - Client detail: contact card, "Crear pedido para este cliente" CTA, general
@@ -114,6 +122,7 @@ catalog look.
   chips, 0% = exclusion, remove), client's orders.
 
 ### 9. Admin (`/admin`)
+
 - Menu cards: Productos, Promociones, Usuarios (+ logout).
 - **Productos:** list with "Publicado/Borrador" badge, current price, toggle
   publish, inline new-price input + save.
@@ -146,7 +155,7 @@ catalog look.
 
 Entities: usuarios (roles cliente/comercial/admin), marcas, tipos_producto,
 categorias (grouped by Combustible/Instalación/Estilo), productos (reference,
-name, description, energy label, published flag), recursos (images), 
+name, description, energy label, published flag), recursos (images),
 caracteristicas (typed spec dictionary) + producto_caracteristica,
 producto_precios (dated periods), descuentos_cliente_producto,
 promociones_tienda, pedidos (number, state, client, creator, rep),

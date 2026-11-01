@@ -68,11 +68,14 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
   // con líneas sin proveedor). Un pedido no puede mezclar proveedores, así
   // que una sola línea con proveedor define el proveedor efectivo.
   const proveedorDelCarrito = React.useMemo(() => {
-    const lineaConProveedor = lineas.find(
-      (l): l is LineaSolicitud & { proveedor_id: string } => Boolean(l.proveedor_id)
+    const lineaConProveedor = lineas.find((l): l is LineaSolicitud & { proveedor_id: string } =>
+      Boolean(l.proveedor_id)
     );
     if (!lineaConProveedor) return null;
-    return { id: lineaConProveedor.proveedor_id, nombre: lineaConProveedor.proveedor_nombre ?? 'Proveedor' };
+    return {
+      id: lineaConProveedor.proveedor_id,
+      nombre: lineaConProveedor.proveedor_nombre ?? 'Proveedor',
+    };
   }, [lineas]);
 
   // Aviso global del carrito (p. ej. "no mezclar proveedores"). Se auto-limpia
@@ -380,7 +383,19 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
       aviso,
       limpiarAviso,
     }),
-    [lineas, clienteObjetivoId, anadir, quitar, cambiarCantidad, reemplazar, vaciar, total, proveedorDelCarrito, aviso, limpiarAviso]
+    [
+      lineas,
+      clienteObjetivoId,
+      anadir,
+      quitar,
+      cambiarCantidad,
+      reemplazar,
+      vaciar,
+      total,
+      proveedorDelCarrito,
+      aviso,
+      limpiarAviso,
+    ]
   );
 
   return <SolicitudContext.Provider value={value}>{children}</SolicitudContext.Provider>;

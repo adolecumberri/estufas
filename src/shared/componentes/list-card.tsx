@@ -27,13 +27,7 @@ export function ListCard({
 
 // Fila clave/valor dentro de tarjetas de detalle (etiqueta xs muted a la
 // izquierda, valor sm a la derecha).
-export function FilaDetalle({
-  etiqueta,
-  valor,
-}: {
-  etiqueta: string;
-  valor: React.ReactNode;
-}) {
+export function FilaDetalle({ etiqueta, valor }: { etiqueta: string; valor: React.ReactNode }) {
   return (
     <View className="flex-row items-center justify-between gap-2">
       <Text className="text-xs text-muted-foreground">{etiqueta}</Text>

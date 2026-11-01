@@ -22,7 +22,9 @@ const hostDev =
     : (Constants.expoConfig?.hostUri?.split(':')[0] ?? null);
 
 const hostSupabaseLocal =
-  hostDev && !hostDev.startsWith('localhost') && !hostDev.startsWith('127.') ? hostDev : '127.0.0.1';
+  hostDev && !hostDev.startsWith('localhost') && !hostDev.startsWith('127.')
+    ? hostDev
+    : '127.0.0.1';
 
 export const SUPABASE = {
   // Local: supabase start. En producción: variables de entorno EXPO_PUBLIC_*.
@@ -115,4 +117,3 @@ export const AUTH_ERRORS: Record<string, string> = {
 } as const;
 
 export const ERROR_GENERICO = 'Ha ocurrido un error. Inténtalo de nuevo.';
-

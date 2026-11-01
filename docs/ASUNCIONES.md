@@ -47,7 +47,7 @@ están marcados con su número.
   publicación"; el esquema v0.5 no tiene columna propia, así que `activo` es el
   estado publicado y los recursos/relaciones cuelgan de él en RLS.
 - **Precio vigente = periodo abierto de `producto_precios`** (`fecha_inicio <=
-  fn_hoy() < fecha_fin`). Un producto sin precio vigente no aparece en el
+fn_hoy() < fecha_fin`). Un producto sin precio vigente no aparece en el
   catálogo ni puede pedirse. Los precios tienen granularidad diaria: un cambio
   de precio el mismo día actualiza la fila del día.
 - **Redondeo por línea a 2 decimales** (`round`), pendiente de la política

@@ -49,7 +49,11 @@ export function ConfirmDialog({
             <Button variant="outline" size="sm" onPress={onCancelar}>
               <Text>{textoCancelar}</Text>
             </Button>
-            <Button variant={destructivo ? 'destructive' : 'default'} size="sm" onPress={onConfirmar}>
+            <Button
+              variant={destructivo ? 'destructive' : 'default'}
+              size="sm"
+              onPress={onConfirmar}
+            >
               <Text>{textoConfirmar}</Text>
             </Button>
           </View>

@@ -6,7 +6,7 @@ Registro cronológico de decisiones y cambios relevantes.
 
 - **Roles en cascada (app)**: implementadas las 4 fases de ARQUITECTURA_ROLES
   (capacidades/use-permisos, grupos de rutas `(publico)(carrito)(cliente)
-  (comercial)(admin)` con GuardRuta, alcance + supabase-seguro en hooks,
+(comercial)(admin)` con GuardRuta, alcance + supabase-seguro en hooks,
   selector por proveedor y "Creado por" en pedidos). Ver `docs/FEATURES.md`.
 - **Backend 0020-0023**: catálogo general (comercial por defecto +
   `es_catalogo_general`), asignación automática del comercial por defecto,

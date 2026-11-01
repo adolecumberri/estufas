@@ -22,7 +22,10 @@ import { formatEUR, formatPct } from '@/shared/lib/format';
 import { fuenteImagen } from '@/features/catalogo/lib/imagenes';
 
 // Formatea un valor flexible de la ficha técnica (JSONB productos.datos).
-function formatearValorDato(valor: string | number | boolean | null, unidad: string | null): string {
+function formatearValorDato(
+  valor: string | number | boolean | null,
+  unidad: string | null
+): string {
   if (valor === null) return '—';
   if (typeof valor === 'boolean') return valor ? 'Sí' : 'No';
   const base = String(valor);
@@ -70,10 +73,9 @@ export default function ProductoDetalle() {
     );
   }
 
-  const imagenes = [
-    producto.imagen_url,
-    ...producto.galeria.map((g) => g.url),
-  ].filter((u): u is string => Boolean(u));
+  const imagenes = [producto.imagen_url, ...producto.galeria.map((g) => g.url)].filter(
+    (u): u is string => Boolean(u)
+  );
   // Sin ninguna foto (catálogos importados) se muestra el placeholder
   // empaquetado (fuenteImagen(null) lo resuelve).
   const fuentes = imagenes.length > 0 ? imagenes : [null];
@@ -143,192 +145,185 @@ export default function ProductoDetalle() {
       )}
 
       {/* 2. Galería de imágenes */}
-        <ScrollView
-          horizontal
-          pagingEnabled
-          showsVerticalScrollIndicator={false}
-          showsHorizontalScrollIndicator={false}
-        >
-          {fuentes.map((url, i) => (
-            <Image
-              key={`${url}-${i}`}
-              source={fuenteImagen(url)}
-              className="h-80 w-screen bg-muted web:max-w-lg"
-              contentFit="cover"
-              transition={200}
-            />
-          ))}
-        </ScrollView>
+      <ScrollView
+        horizontal
+        pagingEnabled
+        showsVerticalScrollIndicator={false}
+        showsHorizontalScrollIndicator={false}
+      >
+        {fuentes.map((url, i) => (
+          <Image
+            key={`${url}-${i}`}
+            source={fuenteImagen(url)}
+            className="h-80 w-screen bg-muted web:max-w-lg"
+            contentFit="cover"
+            transition={200}
+          />
+        ))}
+      </ScrollView>
 
-        {/* 4. Referencia y marca · tipo */}
-        <View className="mt-2 gap-0.5 px-4">
-          <Text className="text-sm text-muted-foreground">Ref: {producto.referencia}</Text>
-          {producto.proveedor_nombre && (
-            <Text className="text-xs text-muted-foreground">
-              Proveedor: {producto.proveedor_nombre}
-            </Text>
-          )}
-          {(producto.marca || producto.tipo) && (
-            <Text className="text-sm text-muted-foreground">
-              {[producto.marca, producto.tipo].filter(Boolean).join(' · ')}
-            </Text>
-          )}
-        </View>
+      {/* 4. Referencia y marca · tipo */}
+      <View className="mt-2 gap-0.5 px-4">
+        <Text className="text-sm text-muted-foreground">Ref: {producto.referencia}</Text>
+        {producto.proveedor_nombre && (
+          <Text className="text-xs text-muted-foreground">
+            Proveedor: {producto.proveedor_nombre}
+          </Text>
+        )}
+        {(producto.marca || producto.tipo) && (
+          <Text className="text-sm text-muted-foreground">
+            {[producto.marca, producto.tipo].filter(Boolean).join(' · ')}
+          </Text>
+        )}
+      </View>
 
-        {/* 5. Chips de categoría + etiqueta energética */}
-        <View className="mt-2 flex-row flex-wrap gap-1.5 px-4">
-          {producto.categorias.map((c) => (
-            <Badge key={c} variant="secondary">
-              <Text>{c}</Text>
-            </Badge>
-          ))}
-          {producto.etiqueta_energetica && (
-            <Badge className="bg-emerald-600">
-              <Text className="text-white">Energía {producto.etiqueta_energetica}</Text>
-            </Badge>
-          )}
-        </View>
+      {/* 5. Chips de categoría + etiqueta energética */}
+      <View className="mt-2 flex-row flex-wrap gap-1.5 px-4">
+        {producto.categorias.map((c) => (
+          <Badge key={c} variant="secondary">
+            <Text>{c}</Text>
+          </Badge>
+        ))}
+        {producto.etiqueta_energetica && (
+          <Badge className="bg-emerald-600">
+            <Text className="text-white">Energía {producto.etiqueta_energetica}</Text>
+          </Badge>
+        )}
+      </View>
 
-        {/* 4. Cantidad y añadir (solo con sesión iniciada; admin solo lectura) */}
-        <View className="mt-4 px-4">
-          {session && perfil?.rol === 'admin' ? (
-            <Text className="text-sm text-muted-foreground">
-              Vista de administración: solo lectura
-            </Text>
-          ) : session ? (
-            <View className="flex-row items-center gap-3">
-              <StepperCantidad
-                valor={cantidad}
-                onCambiar={(n) => setCantidad(Math.min(999, n))}
-              />
-              <Button className="flex-1" onPress={anadirASolicitud}>
-                <Text>Añadir a la solicitud</Text>
-              </Button>
-            </View>
-          ) : (
-            <Button variant="outline" onPress={() => router.push('/acceso')}>
-              <Text>Inicia sesión para añadir</Text>
+      {/* 4. Cantidad y añadir (solo con sesión iniciada; admin solo lectura) */}
+      <View className="mt-4 px-4">
+        {session && perfil?.rol === 'admin' ? (
+          <Text className="text-sm text-muted-foreground">
+            Vista de administración: solo lectura
+          </Text>
+        ) : session ? (
+          <View className="flex-row items-center gap-3">
+            <StepperCantidad valor={cantidad} onCambiar={(n) => setCantidad(Math.min(999, n))} />
+            <Button className="flex-1" onPress={anadirASolicitud}>
+              <Text>Añadir a la solicitud</Text>
             </Button>
-          )}
-        </View>
+          </View>
+        ) : (
+          <Button variant="outline" onPress={() => router.push('/acceso')}>
+            <Text>Inicia sesión para añadir</Text>
+          </Button>
+        )}
+      </View>
 
-        {/* 7. Precio + características + descripción + aviso de cliente */}
-        <View className="gap-4 p-4">
-          <Card>
-            <CardContent className="gap-1">
-              <View className="flex-row items-baseline gap-2">
-                <Text className="text-2xl font-bold">{formatEUR(producto.precio_final)}</Text>
-                {producto.descuento_pct > 0 && (
-                  <Text className="text-sm text-muted-foreground line-through">
-                    {formatEUR(producto.precio_base)}
-                  </Text>
-                )}
-              </View>
+      {/* 7. Precio + características + descripción + aviso de cliente */}
+      <View className="gap-4 p-4">
+        <Card>
+          <CardContent className="gap-1">
+            <View className="flex-row items-baseline gap-2">
+              <Text className="text-2xl font-bold">{formatEUR(producto.precio_final)}</Text>
               {producto.descuento_pct > 0 && (
-                <Badge variant="secondary" className="self-start">
-                  <Text>
-                    {ORIGENES_DESCUENTO[producto.descuento_origen]?.etiqueta ?? 'Descuento'} ·{' '}
-                    {formatPct(producto.descuento_pct)}
-                  </Text>
-                </Badge>
+                <Text className="text-sm text-muted-foreground line-through">
+                  {formatEUR(producto.precio_base)}
+                </Text>
               )}
-              <Text className="text-xs text-muted-foreground">
-                Los precios no incluyen impuestos.
+            </View>
+            {producto.descuento_pct > 0 && (
+              <Badge variant="secondary" className="self-start">
+                <Text>
+                  {ORIGENES_DESCUENTO[producto.descuento_origen]?.etiqueta ?? 'Descuento'} ·{' '}
+                  {formatPct(producto.descuento_pct)}
+                </Text>
+              </Badge>
+            )}
+            <Text className="text-xs text-muted-foreground">
+              Los precios no incluyen impuestos.
+            </Text>
+          </CardContent>
+        </Card>
+
+        {/* Precios por transporte */}
+        {filasTransporte && filasTransporte.some((f) => f.valor !== null) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Precios por transporte</CardTitle>
+            </CardHeader>
+            <CardContent className="gap-0">
+              {filasTransporte.map((f, i) => (
+                <React.Fragment key={f.etiqueta}>
+                  {i > 0 && <Separator className="my-2" />}
+                  <View className="flex-row items-center justify-between">
+                    <Text className="text-sm text-muted-foreground">{f.etiqueta}</Text>
+                    <Text className="text-sm font-medium">
+                      {f.valor !== null ? formatEUR(f.valor) : '—'}
+                    </Text>
+                  </View>
+                </React.Fragment>
+              ))}
+              <Text className="mt-2 text-xs text-muted-foreground">
+                Según el tipo de transporte del pedido.
               </Text>
             </CardContent>
           </Card>
+        )}
 
-          {/* Precios por transporte */}
-          {filasTransporte && filasTransporte.some((f) => f.valor !== null) && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Precios por transporte</CardTitle>
-              </CardHeader>
-              <CardContent className="gap-0">
-                {filasTransporte.map((f, i) => (
-                  <React.Fragment key={f.etiqueta}>
-                    {i > 0 && <Separator className="my-2" />}
-                    <View className="flex-row items-center justify-between">
-                      <Text className="text-sm text-muted-foreground">{f.etiqueta}</Text>
-                      <Text className="text-sm font-medium">
-                        {f.valor !== null ? formatEUR(f.valor) : '—'}
-                      </Text>
-                    </View>
-                  </React.Fragment>
-                ))}
-                <Text className="mt-2 text-xs text-muted-foreground">
-                  Según el tipo de transporte del pedido.
-                </Text>
-              </CardContent>
-            </Card>
-          )}
+        {/* Datos técnicos (JSONB) con fallback a características */}
+        {producto.datos?.length
+          ? producto.datos.map((g) => (
+              <Card key={g.grupo}>
+                <CardHeader>
+                  <CardTitle className="text-base">{g.grupo}</CardTitle>
+                </CardHeader>
+                <CardContent className="gap-0">
+                  {g.filas.map((f, i) => (
+                    <React.Fragment key={f.clave}>
+                      {i > 0 && <Separator className="my-2" />}
+                      <View className="flex-row items-center justify-between">
+                        <Text className="text-sm text-muted-foreground">{f.nombre}</Text>
+                        <Text className="text-sm font-medium">
+                          {formatearValorDato(f.valor, f.unidad)}
+                        </Text>
+                      </View>
+                    </React.Fragment>
+                  ))}
+                </CardContent>
+              </Card>
+            ))
+          : grupos.map(([grupo, caracteristicas]) => (
+              <Card key={grupo}>
+                <CardHeader>
+                  <CardTitle className="text-base">{grupo}</CardTitle>
+                </CardHeader>
+                <CardContent className="gap-0">
+                  {caracteristicas.map((c, i) => (
+                    <React.Fragment key={c.clave}>
+                      {i > 0 && <Separator className="my-2" />}
+                      <View className="flex-row items-center justify-between">
+                        <Text className="text-sm text-muted-foreground">{c.nombre}</Text>
+                        <Text className="text-sm font-medium">
+                          {typeof c.valor === 'boolean' ? (c.valor ? 'Sí' : 'No') : c.valor}
+                          {typeof c.valor !== 'boolean' && c.unidad ? ` ${c.unidad}` : ''}
+                        </Text>
+                      </View>
+                    </React.Fragment>
+                  ))}
+                </CardContent>
+              </Card>
+            ))}
 
-          {/* Datos técnicos (JSONB) con fallback a características */}
-          {producto.datos?.length
-            ? producto.datos.map((g) => (
-                <Card key={g.grupo}>
-                  <CardHeader>
-                    <CardTitle className="text-base">{g.grupo}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="gap-0">
-                    {g.filas.map((f, i) => (
-                      <React.Fragment key={f.clave}>
-                        {i > 0 && <Separator className="my-2" />}
-                        <View className="flex-row items-center justify-between">
-                          <Text className="text-sm text-muted-foreground">{f.nombre}</Text>
-                          <Text className="text-sm font-medium">
-                            {formatearValorDato(f.valor, f.unidad)}
-                          </Text>
-                        </View>
-                      </React.Fragment>
-                    ))}
-                  </CardContent>
-                </Card>
-              ))
-            : grupos.map(([grupo, caracteristicas]) => (
-                <Card key={grupo}>
-                  <CardHeader>
-                    <CardTitle className="text-base">{grupo}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="gap-0">
-                    {caracteristicas.map((c, i) => (
-                      <React.Fragment key={c.clave}>
-                        {i > 0 && <Separator className="my-2" />}
-                        <View className="flex-row items-center justify-between">
-                          <Text className="text-sm text-muted-foreground">{c.nombre}</Text>
-                          <Text className="text-sm font-medium">
-                            {typeof c.valor === 'boolean'
-                              ? c.valor
-                                ? 'Sí'
-                                : 'No'
-                              : c.valor}
-                            {typeof c.valor !== 'boolean' && c.unidad ? ` ${c.unidad}` : ''}
-                          </Text>
-                        </View>
-                      </React.Fragment>
-                    ))}
-                  </CardContent>
-                </Card>
-              ))}
+        {/* Descripción */}
+        {producto.descripcion && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Descripción</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Text className="leading-relaxed text-foreground">{producto.descripcion}</Text>
+            </CardContent>
+          </Card>
+        )}
 
-          {/* Descripción */}
-          {producto.descripcion && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Descripción</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Text className="leading-relaxed text-foreground">{producto.descripcion}</Text>
-              </CardContent>
-            </Card>
-          )}
-
-          {clienteObjetivoId && (
-            <Text className="text-center text-xs text-muted-foreground">
-              Estás añadiendo productos para un cliente asignado: los precios mostrados son los suyos.
-            </Text>
-          )}
-        </View>
+        {clienteObjetivoId && (
+          <Text className="text-center text-xs text-muted-foreground">
+            Estás añadiendo productos para un cliente asignado: los precios mostrados son los suyos.
+          </Text>
+        )}
+      </View>
     </ScreenScroll>
   );
 }

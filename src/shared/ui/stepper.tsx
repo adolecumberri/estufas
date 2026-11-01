@@ -35,9 +35,19 @@ export function StepperCantidad({
         deshabilitado && 'opacity-50'
       )}
     >
-      <IconButton icono={Minus} onPress={restar} etiquetaAccesibilidad="Reducir cantidad" tamano={16} />
+      <IconButton
+        icono={Minus}
+        onPress={restar}
+        etiquetaAccesibilidad="Reducir cantidad"
+        tamano={16}
+      />
       <Text className="w-8 text-center text-sm font-semibold">{valor}</Text>
-      <IconButton icono={Plus} onPress={sumar} etiquetaAccesibilidad="Aumentar cantidad" tamano={16} />
+      <IconButton
+        icono={Plus}
+        onPress={sumar}
+        etiquetaAccesibilidad="Aumentar cantidad"
+        tamano={16}
+      />
     </View>
   );
 }

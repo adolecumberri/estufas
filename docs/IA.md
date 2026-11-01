@@ -45,16 +45,16 @@ RPC); no hay servidor de aplicación.
 
 ## 3. Ámbitos de escritura (dónde SÍ y dónde NO)
 
-| Área | Archivos | Regla |
-|---|---|---|
-| Pantallas | `src/app/**`, `src/screens/**` | Permitido |
-| Componentes UI | `src/components/ui/**` | Permitido — mantener estilo shadcn (registro de react-native-reusables, `components.json`) |
-| Datos | `src/hooks/**` | **Obligatorio**: toda llamada a Supabase va en un hook; las pantallas NO llaman a supabase directamente |
-| Constantes | `src/constants/index.ts` | Toda constante nueva va aquí |
-| Backend | `supabase/migrations/*.sql` | Solo **archivos NUEVOS numerados** (`0005_…`). **PROHIBIDO editar** `0001`–`0004` (ya aplicados) y prohibido editar la BD desde Studio |
-| Datos de prueba | `supabase/seed.sql` | Permitido |
-| Tests | `supabase/tests/*.sql` (pgTAP) | Obligatorio añadir test para cada regla nueva |
-| Docs | `docs/*.md`, `README.md` | Obligatorio actualizar cuando cambie una regla |
+| Área            | Archivos                       | Regla                                                                                                                                  |
+| --------------- | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Pantallas       | `src/app/**`, `src/screens/**` | Permitido                                                                                                                              |
+| Componentes UI  | `src/components/ui/**`         | Permitido — mantener estilo shadcn (registro de react-native-reusables, `components.json`)                                             |
+| Datos           | `src/hooks/**`                 | **Obligatorio**: toda llamada a Supabase va en un hook; las pantallas NO llaman a supabase directamente                                |
+| Constantes      | `src/constants/index.ts`       | Toda constante nueva va aquí                                                                                                           |
+| Backend         | `supabase/migrations/*.sql`    | Solo **archivos NUEVOS numerados** (`0005_…`). **PROHIBIDO editar** `0001`–`0004` (ya aplicados) y prohibido editar la BD desde Studio |
+| Datos de prueba | `supabase/seed.sql`            | Permitido                                                                                                                              |
+| Tests           | `supabase/tests/*.sql` (pgTAP) | Obligatorio añadir test para cada regla nueva                                                                                          |
+| Docs            | `docs/*.md`, `README.md`       | Obligatorio actualizar cuando cambie una regla                                                                                         |
 
 ## 4. Reglas de negocio NO negociables
 
@@ -88,7 +88,7 @@ Notas de esta máquina:
 - Supabase local: API en `http://127.0.0.1:8450` (Swagger: `/rest/v1/`),
   Studio en `http://127.0.0.1:55323`, Postgres directo en `127.0.0.1:55322`. (Los 5432x están en el rango de puertos excluido por Windows; la API escucha directamente en 8450, sin portproxy.)
 - Para probar desde un móvil en la LAN existe el puente `netsh portproxy
-  8450 es la propia API` y `.env.local` (gitignored) apunta a él.
+8450 es la propia API` y `.env.local` (gitignored) apunta a él.
 - **Aviso de seguridad**: la API local (`8450`) escucha en 0.0.0.0 y expone en
   claro por la LAN el tráfico de auth (`signInWithPassword`/`signUp`); es solo
   para desarrollo en una red de confianza/aislada. Nunca usar credenciales

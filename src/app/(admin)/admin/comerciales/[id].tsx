@@ -71,7 +71,9 @@ export default function AdminComercialDetalle() {
         <View className="gap-4 p-4">
           {/* Cabecera: nombre y email del comercial */}
           <ScreenHeader
-            titulo={comercial ? `${comercial.nombre} ${comercial.apellidos ?? ''}`.trim() : 'Comercial'}
+            titulo={
+              comercial ? `${comercial.nombre} ${comercial.apellidos ?? ''}`.trim() : 'Comercial'
+            }
             subtitulo={comercial?.email ?? ''}
             respaldo="/admin/comerciales"
           />

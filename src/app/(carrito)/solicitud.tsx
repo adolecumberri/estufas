@@ -75,14 +75,22 @@ export default function Solicitud() {
       setError('Añade al menos un producto.');
       return;
     }
-    if ((perfil?.rol === 'comercial' || perfil?.rol === 'admin') && !clienteObjetivoId && !params.editar) {
+    if (
+      (perfil?.rol === 'comercial' || perfil?.rol === 'admin') &&
+      !clienteObjetivoId &&
+      !params.editar
+    ) {
       setError('Selecciona el cliente para el que creas el pedido.');
       return;
     }
     setEnviando(true);
     const lineasParaRpc = lineas.map((l) => ({ producto_id: l.producto_id, cantidad: l.cantidad }));
     if (params.editar) {
-      const { error: err } = await editar(params.editar, lineasParaRpc, observaciones.trim() || undefined);
+      const { error: err } = await editar(
+        params.editar,
+        lineasParaRpc,
+        observaciones.trim() || undefined
+      );
       setEnviando(false);
       if (err) {
         setError(err);
@@ -146,7 +154,9 @@ export default function Solicitud() {
               <Button
                 variant="outline"
                 size="sm"
-                onPress={() => (clienteObjetivoId ? setClienteObjetivoId(null) : router.push('/cartera'))}
+                onPress={() =>
+                  clienteObjetivoId ? setClienteObjetivoId(null) : router.push('/cartera')
+                }
               >
                 <Text>{clienteObjetivoId ? 'Cambiar' : 'Seleccionar'}</Text>
               </Button>
@@ -208,8 +218,13 @@ export default function Solicitud() {
                           <Plus size={14} color={colores.primerPlano} />
                         </Pressable>
                       </View>
-                      <Text className="text-sm font-semibold">{formatEUR(l.precio_final * l.cantidad)}</Text>
-                      <Pressable onPress={() => quitar(l.producto_id)} className="ml-auto p-1.5 active:bg-accent">
+                      <Text className="text-sm font-semibold">
+                        {formatEUR(l.precio_final * l.cantidad)}
+                      </Text>
+                      <Pressable
+                        onPress={() => quitar(l.producto_id)}
+                        className="ml-auto p-1.5 active:bg-accent"
+                      >
                         <Trash2 size={16} color={colores.destructivo} />
                       </Pressable>
                     </View>
@@ -241,7 +256,9 @@ export default function Solicitud() {
             {error && <Text className="text-sm text-destructive">{error}</Text>}
 
             <Button disabled={enviando} onPress={() => void enviar()}>
-              <Text>{enviando ? 'Enviando…' : params.editar ? 'Guardar cambios' : 'Enviar solicitud'}</Text>
+              <Text>
+                {enviando ? 'Enviando…' : params.editar ? 'Guardar cambios' : 'Enviar solicitud'}
+              </Text>
             </Button>
             <Text className="text-center text-xs text-muted-foreground">
               Al enviar, la solicitud queda registrada y un comercial la revisará para confirmarla.

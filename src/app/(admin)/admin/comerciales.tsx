@@ -1,13 +1,5 @@
 import { router } from 'expo-router';
-import {
-  Boxes,
-  Check,
-  Flame,
-  Flower,
-  Plus,
-  Users,
-  type LucideIcon,
-} from 'lucide-react-native';
+import { Boxes, Check, Flame, Flower, Plus, Users, type LucideIcon } from 'lucide-react-native';
 import * as React from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 
@@ -197,12 +189,8 @@ export default function AdminComerciales() {
           <Card className="gap-0 rounded-lg p-0">
             {/* Cabecera de columnas */}
             <View className="flex-row items-center gap-3 border-b border-border px-4 py-3">
-              <Text className="flex-1 text-xs font-semibold text-muted-foreground">
-                Comercial
-              </Text>
-              <Text className="w-36 text-xs font-semibold text-muted-foreground">
-                Proveedores
-              </Text>
+              <Text className="flex-1 text-xs font-semibold text-muted-foreground">Comercial</Text>
+              <Text className="w-36 text-xs font-semibold text-muted-foreground">Proveedores</Text>
               <Text className="w-16 text-right text-xs font-semibold text-muted-foreground">
                 Clientes
               </Text>
@@ -229,9 +217,7 @@ export default function AdminComerciales() {
                       </View>
                       <View className="w-36">
                         {proveedores.length === 0 ? (
-                          <Text className="text-xs text-muted-foreground">
-                            Sin proveedores
-                          </Text>
+                          <Text className="text-xs text-muted-foreground">Sin proveedores</Text>
                         ) : (
                           <FilaComercial comercial={c} proveedores={proveedores} />
                         )}

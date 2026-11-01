@@ -14,7 +14,7 @@ con dos ejes independientes:
 - **Alcance** (`global | mi-comercial | mi-cartera | cliente-concreto`): sobre qué.
 
 La cascada **hereda capacidades**; el alcance **se estrecha** hacia abajo. Las
-excepciones son explícitas (el admin hereda la *vista* del comercial, pero no la
+excepciones son explícitas (el admin hereda la _vista_ del comercial, pero no la
 operación de compra).
 
 ### Relación real de datos
@@ -47,18 +47,21 @@ carrito).
 ## 3. Comportamientos
 
 ### 3.1 Anónimo
+
 - Ve el **Catálogo General** (proveedores del comercial por defecto) y puede
   cambiar entre ellos.
 - Puede **llenar carrito local** (sin sesión).
 - Puede registrarse / iniciar sesión.
 
 ### 3.2 Cliente
+
 - Ve **solo los proveedores de su comercial** (no el catálogo general).
 - Selector de proveedor visible **solo si su comercial tiene >1 proveedor**.
 - Ve su cuenta: datos, histórico de pedidos, solicitudes abiertas, carrito.
 - No ve cartera ni datos de otros clientes.
 
 ### 3.3 Comercial
+
 - Todo lo del cliente **para sí mismo** (carrito propio, pedidos propios).
 - **Cartera**: sus clientes; puede abrir la ficha de cada uno (info, historial,
   descuentos) y **abrirle una solicitud/pedido** (carrito del cliente).
@@ -69,6 +72,7 @@ carrito).
 > comercial crea pedidos **para un cliente** desde la ficha de ese cliente.
 
 ### 3.4 Admin
+
 - **No compra ni pide para sí mismo** (necesitaría otra cuenta) → excepción de
   cascada: `carrito:usar` y operaciones de pedido propias retiradas.
 - **Sí puede** entrar en un comercial → ver su **cartera**, abrir un cliente y
@@ -81,21 +85,21 @@ carrito).
 
 ## 4. Matriz de capacidades
 
-| Capacidad | Anón | Cliente | Comercial | Admin |
-|---|:--:|:--:|:--:|:--:|
-| `catalogo:ver_general` | ✅ | ❌ | ❌ | ✅ (lectura) |
-| `catalogo:ver_proveedores_propios` | — | ✅ | ✅ | ✅ (lectura) |
-| `proveedor:cambiar` | ✅ (todos los del general) | ✅ (solo si >1) | ✅ (los suyos) | ✅ (lectura) |
-| `carrito:usar` (propio) | ✅ local | ✅ | ✅ | ❌ |
-| `pedidos:crear_propio` | ❌ | ✅ | ✅ | ❌ |
-| `pedidos:crear_para_cliente` | ❌ | ❌ | ✅ (su cartera) | ✅ (desde ficha de cliente) |
-| `pedidos:confirmar` | ❌ | ❌ | ✅ (su cartera) | ❌ |
-| `cuenta:ver_propia` / histórico | ❌ | ✅ | ✅ | ✅ |
-| `cartera:ver_clientes` | ❌ | ❌ | ✅ | ✅ (lectura) |
-| `descuentos:gestionar` | ❌ | ❌ | ✅ | ❌ |
-| `comerciales:gestionar` | ❌ | ❌ | ❌ | ✅ |
-| `proveedores:gestionar` | ❌ | ❌ | ❌ | ✅ |
-| `solo_lectura` (modo vista) | — | — | — | ✅ |
+| Capacidad                          |            Anón            |     Cliente     |    Comercial    |            Admin            |
+| ---------------------------------- | :------------------------: | :-------------: | :-------------: | :-------------------------: |
+| `catalogo:ver_general`             |             ✅             |       ❌        |       ❌        |        ✅ (lectura)         |
+| `catalogo:ver_proveedores_propios` |             —              |       ✅        |       ✅        |        ✅ (lectura)         |
+| `proveedor:cambiar`                | ✅ (todos los del general) | ✅ (solo si >1) | ✅ (los suyos)  |        ✅ (lectura)         |
+| `carrito:usar` (propio)            |          ✅ local          |       ✅        |       ✅        |             ❌              |
+| `pedidos:crear_propio`             |             ❌             |       ✅        |       ✅        |             ❌              |
+| `pedidos:crear_para_cliente`       |             ❌             |       ❌        | ✅ (su cartera) | ✅ (desde ficha de cliente) |
+| `pedidos:confirmar`                |             ❌             |       ❌        | ✅ (su cartera) |             ❌              |
+| `cuenta:ver_propia` / histórico    |             ❌             |       ✅        |       ✅        |             ✅              |
+| `cartera:ver_clientes`             |             ❌             |       ❌        |       ✅        |        ✅ (lectura)         |
+| `descuentos:gestionar`             |             ❌             |       ❌        |       ✅        |             ❌              |
+| `comerciales:gestionar`            |             ❌             |       ❌        |       ❌        |             ✅              |
+| `proveedores:gestionar`            |             ❌             |       ❌        |       ❌        |             ✅              |
+| `solo_lectura` (modo vista)        |             —              |        —        |        —        |             ✅              |
 
 ---
 
@@ -125,6 +129,7 @@ Anillo 3 — UI: nav y botones según capacidad; nunca sustituyen a 1
 ```
 
 ### Backend
+
 - RLS: cliente solo sus filas; comercial solo su cartera; admin lectura total.
 - RPC: toda escritura valida rol + alcance + datos. Tests pgTAP de **negativos**
   (cliente→otro cliente, comercial→cliente ajeno, admin→escritura de negocio).
@@ -137,6 +142,7 @@ Anillo 3 — UI: nav y botones según capacidad; nunca sustituyen a 1
   proveedores[] } para estandarizar la app.
 
 ### Rutas (page-safe)
+
 Grupos de Expo Router con guard único por rama (el guard del grupo cubre a sus
 hijas):
 
@@ -150,6 +156,7 @@ hijas):
 `GuardRuta exige="cap"` en el `_layout` de cada grupo; fallback = inicio del rol.
 
 ### "Cada llamada" verificada (app)
+
 - `resolverClienteObjetivo(id)`: valida que el cliente esté en tu alcance
   (propio / mi cartera / cualquiera si admin en lectura). **Todos** los hooks de
   cartera/pedidos/descuentos lo usan; nunca leer el id de la URL a pelo.
@@ -160,21 +167,21 @@ hijas):
 
 ## 7. Cambios de esquema (migraciones 0020+)
 
-| # | Cambio |
-|---|---|
-| 0020 | `usuarios.es_catalogo_general BOOLEAN DEFAULT FALSE` + índice único parcial; seed: marcar un comercial y asignarle los proveedores del catálogo general. |
-| 0021 | `fn_asignar_comercial_defecto()` (y trigger en alta de cliente) + RPC `fn_mi_alcance()`. |
-| 0022 | `fn_proveedores_visibles()`: anónimo → proveedores del comercial por defecto (en vez de "todos"). |
+| #    | Cambio                                                                                                                                                             |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 0020 | `usuarios.es_catalogo_general BOOLEAN DEFAULT FALSE` + índice único parcial; seed: marcar un comercial y asignarle los proveedores del catálogo general.           |
+| 0021 | `fn_asignar_comercial_defecto()` (y trigger en alta de cliente) + RPC `fn_mi_alcance()`.                                                                           |
+| 0022 | `fn_proveedores_visibles()`: anónimo → proveedores del comercial por defecto (en vez de "todos").                                                                  |
 | 0023 | `crear_pedido`/`editar_pedido`: guardar `creado_por` = actor real; `comercial_id` = comercial del cliente; permitir admin crear para cliente (sin carrito propio). |
-| 0024 | Tests pgTAP de negativos de alcance + catálogo general + atribución de creador. |
+| 0024 | Tests pgTAP de negativos de alcance + catálogo general + atribución de creador.                                                                                    |
 
 ## 8. Cambios de app (fases)
 
-| Fase | Contenido |
-|---|---|
-| **1** | `src/lib/permisos.ts` (mapa + cascada + excepciones) y `usePermisos()`; nav inferior/lateral filtrado por capacidad (sin tocar rutas). |
-| **2** | Reestructura a grupos `(publico|cliente|comercial|admin)` + `GuardRuta` + fallbacks; eliminar redirects ad-hoc por pantalla. |
-| **3** | `alcance.ts` + `supabaseSeguro` en hooks; selector de proveedor visible según nº de proveedores del comercial; popup de cambio de proveedor con carrito. |
+| Fase  | Contenido                                                                                                                                                      |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1** | `src/lib/permisos.ts` (mapa + cascada + excepciones) y `usePermisos()`; nav inferior/lateral filtrado por capacidad (sin tocar rutas).                         |
+| **2** | Reestructura a grupos `(publico                                                                                                                                | cliente | comercial | admin)`+`GuardRuta` + fallbacks; eliminar redirects ad-hoc por pantalla. |
+| **3** | `alcance.ts` + `supabaseSeguro` en hooks; selector de proveedor visible según nº de proveedores del comercial; popup de cambio de proveedor con carrito.       |
 | **4** | Regla de carrito en login (vaciar/asignar por defecto) con aviso; "Creado por" en pedidos; vista admin de comercial/cliente en solo lectura + abrir solicitud. |
 
 ## 9. Pendiente de confirmar (menor)

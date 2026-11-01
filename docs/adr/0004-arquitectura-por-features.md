@@ -6,7 +6,7 @@
   difíciles de acotar y pantallas que duplicaban patrones.
 - **Decisión**: reestructurar `src/` en **vertical slices**:
   - `src/app/` — rutas delgadas con grupos `(publico)(carrito)(cliente)
-    (comercial)(admin)`.
+(comercial)(admin)`.
   - `src/features/` — `catalogo/`, `auth/`, `carrito/`, `pedidos/`,
     `cartera/`, `admin/` (cada uno con sus `hooks/`, `componentes/`,
     `lib/`, `screens/` o lo que necesite).

@@ -26,7 +26,11 @@ import { useSolicitud } from '@/features/carrito/contexto';
 import { useProveedores } from '@/features/admin/hooks/use-admin';
 import { useAuth } from '@/features/auth/use-auth';
 import { useCatalogo } from '@/features/catalogo/hooks/use-catalogo';
-import { temaProveedor, textoSobreProveedor, tripletProveedor } from '@/shared/lib/colores-proveedor';
+import {
+  temaProveedor,
+  textoSobreProveedor,
+  tripletProveedor,
+} from '@/shared/lib/colores-proveedor';
 import { useColoresIcono } from '@/shared/lib/theme';
 
 // Pantalla raíz de la app: catálogo público. Vive como componente compartido
@@ -155,7 +159,12 @@ export default function CatalogoScreen({
       {aviso && (
         <View className="mx-4 mb-2 flex-row items-start gap-2 rounded-lg border border-primary/40 bg-primary/10 p-3">
           <Text className="flex-1 text-sm">{aviso}</Text>
-          <IconButton icono={X} tamano={16} etiquetaAccesibilidad="Cerrar aviso" onPress={limpiarAviso} />
+          <IconButton
+            icono={X}
+            tamano={16}
+            etiquetaAccesibilidad="Cerrar aviso"
+            onPress={limpiarAviso}
+          />
         </View>
       )}
 
@@ -174,7 +183,9 @@ export default function CatalogoScreen({
         numColumns={2}
         columnWrapperStyle={{ gap: 12, paddingHorizontal: 16 }}
         contentContainerStyle={{ gap: 12, paddingBottom: (session ? 88 : 24) + insets.bottom }}
-        renderItem={({ item }) => <TarjetaProducto producto={item} origen={origen} onAnadir={anadir} />}
+        renderItem={({ item }) => (
+          <TarjetaProducto producto={item} origen={origen} onAnadir={anadir} />
+        )}
         ListEmptyComponent={
           cat.cargando ? (
             <LoadingView texto="Cargando modelos…" />

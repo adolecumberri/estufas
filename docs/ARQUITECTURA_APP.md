@@ -29,14 +29,14 @@ carpetas, y las dependencias entre features no están acotadas.
 Fuente: `src/global.css` (clases Tailwind) + `src/lib/theme.ts` (valores que
 necesitan JS: iconos, NAV_THEME).
 
-| Grupo | Token | Uso |
-|---|---|---|
-| Color base | `background`, `foreground`, `card`, `muted`, `border`, `accent`, `destructive` | superficies y texto |
-| Acento | `--primary` (verde `#415D43` por defecto) | acciones primarias |
-| Proveedor | `--primary` dinámico en catálogo (Eider `#E1680F`, Fansa `#6FC2B9`) | solo zona catálogo |
-| Iconos | `useColoresIcono()` (`primario`, `primerPlano`, `tenue`, `destructivo`) | lucide |
-| Radios | `rounded-[10px]` (cards/alertas), `rounded-md` (botones/inputs) | — |
-| Espaciado | escala Tailwind (`p-4`, `gap-2/3`) — NO valores arbitrarios salvo casos justificados | — |
+| Grupo      | Token                                                                                | Uso                 |
+| ---------- | ------------------------------------------------------------------------------------ | ------------------- |
+| Color base | `background`, `foreground`, `card`, `muted`, `border`, `accent`, `destructive`       | superficies y texto |
+| Acento     | `--primary` (verde `#415D43` por defecto)                                            | acciones primarias  |
+| Proveedor  | `--primary` dinámico en catálogo (Eider `#E1680F`, Fansa `#6FC2B9`)                  | solo zona catálogo  |
+| Iconos     | `useColoresIcono()` (`primario`, `primerPlano`, `tenue`, `destructivo`)              | lucide              |
+| Radios     | `rounded-[10px]` (cards/alertas), `rounded-md` (botones/inputs)                      | —                   |
+| Espaciado  | escala Tailwind (`p-4`, `gap-2/3`) — NO valores arbitrarios salvo casos justificados | —                   |
 
 **Reglas duras (ir a AGENTS.md):**
 
@@ -52,21 +52,21 @@ necesitan JS: iconos, NAV_THEME).
 
 ## 1.3 Patrones que faltan (crear una vez, usar siempre)
 
-| Primitiva | Sustituye a | Dónde |
-|---|---|---|
-| `Screen` | `View flex-1 bg-background` + `paddingTop: insets.top` repetido | `shared/ui/screen.tsx` |
-| `ScreenHeader` | flecha atrás + título duplicados en ~10 pantallas | `shared/componentes/screen-header.tsx` |
-| `ScreenScroll` | `ScrollView` con paddings repetidos | `shared/ui/screen-scroll.tsx` |
-| `SectionTitle` | `<Text className="text-sm font-semibold">` repetido | `shared/ui/section-title.tsx` |
-| `ListCard` / `Row` | cards de filas + chevron hechos a mano | `shared/componentes/list-card.tsx` |
-| `EmptyState` | "No hay pedidos/clientes/productos..." repetido | `shared/componentes/empty-state.tsx` |
-| `LoadingState` / `ErrorState` | spinners y errores repetidos | `shared/componentes/estados.tsx` |
-| `ConfirmDialog` | `Modal` + overlay + botones a mano | `shared/componentes/confirm-dialog.tsx` |
-| `FormField` | `Label` + `Input` + error repetido | `shared/ui/form-field.tsx` |
-| `Chip` / `ChipGroup` | filtros/badges hechos a mano | `shared/ui/chip.tsx` |
-| `StepperCantidad` | −/+ cantidad en ficha y carrito | `shared/ui/stepper.tsx` |
-| `StatCard` | tarjetas de métricas de cartera/pedidos | `shared/componentes/stat-card.tsx` |
-| `Modal` (contenedor) | modales del admin a mano | `shared/ui/modal.tsx` |
+| Primitiva                     | Sustituye a                                                     | Dónde                                   |
+| ----------------------------- | --------------------------------------------------------------- | --------------------------------------- |
+| `Screen`                      | `View flex-1 bg-background` + `paddingTop: insets.top` repetido | `shared/ui/screen.tsx`                  |
+| `ScreenHeader`                | flecha atrás + título duplicados en ~10 pantallas               | `shared/componentes/screen-header.tsx`  |
+| `ScreenScroll`                | `ScrollView` con paddings repetidos                             | `shared/ui/screen-scroll.tsx`           |
+| `SectionTitle`                | `<Text className="text-sm font-semibold">` repetido             | `shared/ui/section-title.tsx`           |
+| `ListCard` / `Row`            | cards de filas + chevron hechos a mano                          | `shared/componentes/list-card.tsx`      |
+| `EmptyState`                  | "No hay pedidos/clientes/productos..." repetido                 | `shared/componentes/empty-state.tsx`    |
+| `LoadingState` / `ErrorState` | spinners y errores repetidos                                    | `shared/componentes/estados.tsx`        |
+| `ConfirmDialog`               | `Modal` + overlay + botones a mano                              | `shared/componentes/confirm-dialog.tsx` |
+| `FormField`                   | `Label` + `Input` + error repetido                              | `shared/ui/form-field.tsx`              |
+| `Chip` / `ChipGroup`          | filtros/badges hechos a mano                                    | `shared/ui/chip.tsx`                    |
+| `StepperCantidad`             | −/+ cantidad en ficha y carrito                                 | `shared/ui/stepper.tsx`                 |
+| `StatCard`                    | tarjetas de métricas de cartera/pedidos                         | `shared/componentes/stat-card.tsx`      |
+| `Modal` (contenedor)          | modales del admin a mano                                        | `shared/ui/modal.tsx`                   |
 
 ## 1.4 Estados de pantalla (contrato)
 
@@ -187,7 +187,7 @@ Actualizado 01/11/2026.
 ## Hecho
 
 - **Roles (fases 1-4 + backend)**: capacidades en cascada (`shared/seguridad/
-  capacidades.ts` + `use-permisos`), nav por capacidad, grupos de rutas con
+capacidades.ts` + `use-permisos`), nav por capacidad, grupos de rutas con
   `GuardRuta`, alcance de cliente (`shared/lib/alcance.ts`), `rpcSegura`,
   selector de proveedor con aviso y carrito en login. Backend 0020-0023
   (catálogo general = comercial por defecto, asignación automática,
@@ -217,4 +217,3 @@ Actualizado 01/11/2026.
    general vs proveedor, popup de proveedor con carrito, carrito al entrar,
    admin abriendo solicitud para cliente).
 4. **CI/tests de app** (no hay E2E ni pipeline; solo pgTAP + typecheck).
-

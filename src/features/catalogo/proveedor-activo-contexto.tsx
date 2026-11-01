@@ -84,7 +84,9 @@ export function ProveedorActivoProvider({ children }: { children: React.ReactNod
     [proveedores, activo, setActivo, cargando]
   );
 
-  return <ProveedorActivoContext.Provider value={value}>{children}</ProveedorActivoContext.Provider>;
+  return (
+    <ProveedorActivoContext.Provider value={value}>{children}</ProveedorActivoContext.Provider>
+  );
 }
 
 export function useProveedorActivo(): ProveedorActivoContextValue {

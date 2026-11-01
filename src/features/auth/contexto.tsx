@@ -18,7 +18,11 @@ interface AuthContextValue {
   perfil: PerfilUsuario | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string, datos: DatosRegistro) => Promise<{ error: string | null }>;
+  signUp: (
+    email: string,
+    password: string,
+    datos: DatosRegistro
+  ) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
   refreshPerfil: () => Promise<void>;
 }
@@ -39,11 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       return;
     }
-    const { data: fila } = await supabase
-      .from('usuarios')
-      .select('*')
-      .eq('id', s.user.id)
-      .single();
+    const { data: fila } = await supabase.from('usuarios').select('*').eq('id', s.user.id).single();
     setPerfil((fila as PerfilUsuario) ?? null);
     setLoading(false);
   }, []);
@@ -58,34 +58,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, [refreshPerfil]);
 
-  const signIn = React.useCallback(async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return { error: error.message };
-    await refreshPerfil();
-    return { error: null };
-  }, [refreshPerfil]);
+  const signIn = React.useCallback(
+    async (email: string, password: string) => {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) return { error: error.message };
+      await refreshPerfil();
+      return { error: null };
+    },
+    [refreshPerfil]
+  );
 
-  const signUp = React.useCallback(async (email: string, password: string, datos: DatosRegistro) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          rol: 'cliente',
-          tipo_cliente: datos.tipo_cliente,
-          nombre: datos.nombre,
-          apellidos: datos.apellidos ?? null,
-          telefono: datos.telefono ?? null,
-          razon_social: datos.razon_social ?? null,
-          nif_cif: datos.nif_cif ?? null,
+  const signUp = React.useCallback(
+    async (email: string, password: string, datos: DatosRegistro) => {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            rol: 'cliente',
+            tipo_cliente: datos.tipo_cliente,
+            nombre: datos.nombre,
+            apellidos: datos.apellidos ?? null,
+            telefono: datos.telefono ?? null,
+            razon_social: datos.razon_social ?? null,
+            nif_cif: datos.nif_cif ?? null,
+          },
         },
-      },
-    });
-    if (error) return { error: error.message };
-    // Sin confirmación de email (dev), la sesión ya existe; refresca el perfil.
-    if (data.session) await refreshPerfil();
-    return { error: null };
-  }, [refreshPerfil]);
+      });
+      if (error) return { error: error.message };
+      // Sin confirmación de email (dev), la sesión ya existe; refresca el perfil.
+      if (data.session) await refreshPerfil();
+      return { error: null };
+    },
+    [refreshPerfil]
+  );
 
   const signOut = React.useCallback(async () => {
     await supabase.auth.signOut();

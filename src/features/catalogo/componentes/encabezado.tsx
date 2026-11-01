@@ -62,7 +62,9 @@ export function EncabezadoCatalogo({ onAbrirMenu }: { onAbrirMenu?: () => void }
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={
-              totalLineas > 0 ? `Ver carrito de compras, ${totalLineas} artículos` : 'Ver carrito de compras'
+              totalLineas > 0
+                ? `Ver carrito de compras, ${totalLineas} artículos`
+                : 'Ver carrito de compras'
             }
             onPress={() => router.push('/solicitud')}
             className="relative rounded-lg p-2 active:bg-muted"

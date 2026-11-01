@@ -32,7 +32,7 @@ expresamente para ese comando concreto, en esa misma conversación:
 ### Por qué esta regla existe (incidente real)
 
 El 26/10/2026 un agente instaló `@expo/ngrok` con `npm install --no-save` para
-probar un túnel. Ese comando hizo *prune* y **eliminó el CLI de Supabase** del
+probar un túnel. Ese comando hizo _prune_ y **eliminó el CLI de Supabase** del
 árbol de `node_modules`: el backend apareció "caído" y se perdió tiempo
 diagnosticando una causa que el propio agente había introducido. Una
 instalación "inocua" puede romper el entorno.

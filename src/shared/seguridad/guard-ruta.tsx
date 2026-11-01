@@ -8,7 +8,12 @@ import type { Cap } from '@/shared/seguridad/capacidades';
 // Capacidades del anónimo (catálogo general): los grupos que SOLO exigen
 // estas no requieren sesión aunque `exigeSesion` quede a true (p. ej. el
 // carrito, que el anónimo puede llenar).
-const CAPS_ANONIMAS: Cap[] = ['catalogo:ver_general', 'proveedor:cambiar', 'carrito:usar', 'auth:login'];
+const CAPS_ANONIMAS: Cap[] = [
+  'catalogo:ver_general',
+  'proveedor:cambiar',
+  'carrito:usar',
+  'auth:login',
+];
 
 // Guard de grupo de rutas (anillo 2, page-safe): exige al menos UNA de las
 // capacidades indicadas. Sin sesión en un grupo que la requiere → /acceso;

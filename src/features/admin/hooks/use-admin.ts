@@ -1,7 +1,13 @@
 import * as React from 'react';
 
 import { supabase } from '@/shared/lib/supabase';
-import type { ComercialProveedor, Pedido, PerfilUsuario, Promocion, Proveedor } from '@/shared/lib/types';
+import type {
+  ComercialProveedor,
+  Pedido,
+  PerfilUsuario,
+  Promocion,
+  Proveedor,
+} from '@/shared/lib/types';
 
 export interface ProductoAdmin {
   id: string;
@@ -12,7 +18,12 @@ export interface ProductoAdmin {
   tipo_producto_id: string;
   marca_id: string | null;
   proveedor: { nombre: string } | null;
-  producto_precios: { id: string; precio: number; fecha_inicio: string; fecha_fin: string | null }[];
+  producto_precios: {
+    id: string;
+    precio: number;
+    fecha_inicio: string;
+    fecha_fin: string | null;
+  }[];
 }
 
 // Productos (incluye inactivos: RLS solo lo permite al admin).
@@ -51,7 +62,10 @@ export function useProductosAdmin() {
   }, []);
 
   const actualizarPrecio = React.useCallback(async (productoId: string, precio: number) => {
-    const { error } = await supabase.rpc('actualizar_precio', { p_producto: productoId, p_precio: precio });
+    const { error } = await supabase.rpc('actualizar_precio', {
+      p_producto: productoId,
+      p_precio: precio,
+    });
     return { error: error?.message ?? null };
   }, []);
 
@@ -79,7 +93,12 @@ export function usePromocionesAdmin() {
   }, [recargar]);
 
   const crear = React.useCallback(
-    async (datos: { nombre: string; descripcion?: string; descuento_porcentaje: number; fecha_fin?: string | null }) => {
+    async (datos: {
+      nombre: string;
+      descripcion?: string;
+      descuento_porcentaje: number;
+      fecha_fin?: string | null;
+    }) => {
       const { error } = await supabase.from('promociones_tienda').insert({
         nombre: datos.nombre,
         descripcion: datos.descripcion ?? null,
@@ -120,14 +139,17 @@ export function useUsuarios() {
     void recargar();
   }, [recargar]);
 
-  const asignarComercial = React.useCallback(async (clienteId: string, comercialId: string | null) => {
-    if (!comercialId) return { error: 'Selecciona un comercial' };
-    const { error } = await supabase.rpc('asignar_comercial', {
-      p_cliente_id: clienteId,
-      p_comercial_id: comercialId,
-    });
-    return { error: error?.message ?? null };
-  }, []);
+  const asignarComercial = React.useCallback(
+    async (clienteId: string, comercialId: string | null) => {
+      if (!comercialId) return { error: 'Selecciona un comercial' };
+      const { error } = await supabase.rpc('asignar_comercial', {
+        p_cliente_id: clienteId,
+        p_comercial_id: comercialId,
+      });
+      return { error: error?.message ?? null };
+    },
+    []
+  );
 
   return { usuarios, cargando, recargar, asignarComercial };
 }
@@ -159,7 +181,12 @@ export function useProveedores() {
   }, [recargar]);
 
   const crearProveedor = React.useCallback(
-    async (datos: { nombre: string; nif?: string | null; email?: string | null; telefono?: string | null }) => {
+    async (datos: {
+      nombre: string;
+      nif?: string | null;
+      email?: string | null;
+      telefono?: string | null;
+    }) => {
       const { error } = await supabase.rpc('crear_proveedor', {
         p_nombre: datos.nombre,
         p_nif: datos.nif ?? null,
@@ -174,7 +201,13 @@ export function useProveedores() {
   const actualizarProveedor = React.useCallback(
     async (
       proveedorId: string,
-      datos: { nombre?: string | null; nif?: string | null; email?: string | null; telefono?: string | null; activo?: boolean | null }
+      datos: {
+        nombre?: string | null;
+        nif?: string | null;
+        email?: string | null;
+        telefono?: string | null;
+        activo?: boolean | null;
+      }
     ) => {
       const { error } = await supabase.rpc('actualizar_proveedor', {
         p_proveedor: proveedorId,
@@ -261,7 +294,9 @@ export function useAsignacionesProveedores(comercialId: string | undefined) {
 // Comerciales (admin): lista de comerciales y sus clientes asignados.
 export function useComerciales() {
   const [comerciales, setComerciales] = React.useState<PerfilUsuario[]>([]);
-  const [clientesPorComercial, setClientesPorComercial] = React.useState<Record<string, PerfilUsuario[]>>({});
+  const [clientesPorComercial, setClientesPorComercial] = React.useState<
+    Record<string, PerfilUsuario[]>
+  >({});
   const [cargando, setCargando] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -269,7 +304,12 @@ export function useComerciales() {
     setCargando(true);
     setError(null);
     const [resComerciales, resClientes] = await Promise.all([
-      supabase.from('usuarios').select('*').eq('rol', 'comercial').eq('borrado', false).order('nombre'),
+      supabase
+        .from('usuarios')
+        .select('*')
+        .eq('rol', 'comercial')
+        .eq('borrado', false)
+        .order('nombre'),
       supabase
         .from('usuarios')
         .select('*')
@@ -307,7 +347,12 @@ export function useCrearComercial() {
   const [error, setError] = React.useState<string | null>(null);
 
   const crearComercial = React.useCallback(
-    async (datos: { email: string; password: string; nombre: string; apellidos?: string | null }) => {
+    async (datos: {
+      email: string;
+      password: string;
+      nombre: string;
+      apellidos?: string | null;
+    }) => {
       setCargando(true);
       setError(null);
       const { error } = await supabase.rpc('crear_comercial', {
@@ -369,7 +414,12 @@ export function useComercialDetalle(comercialId: string | undefined) {
     ]);
 
     if (resComercial.error || resClientes.error || resPedidos.error) {
-      setError(resComercial.error?.message ?? resClientes.error?.message ?? resPedidos.error?.message ?? null);
+      setError(
+        resComercial.error?.message ??
+          resClientes.error?.message ??
+          resPedidos.error?.message ??
+          null
+      );
       setCargando(false);
       return;
     }

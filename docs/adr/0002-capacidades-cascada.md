@@ -4,9 +4,9 @@
 - **Contexto**: los permisos estaban dispersos en comprobaciones ad-hoc de rol
   por pantalla y por RPC; hacía falta una matriz única y verificable.
 - **Decisión**: modelo de **capacidades en cascada**
-  (`anónimo ⊂ cliente ⊂ comercial ⊂ admin`) con dos ejes: *capacidad*
-  (`recurso:acción`) y *alcance* (`global | mi-comercial | mi-cartera |
-  cliente-concreto`). La cascada hereda capacidades y estrecha el alcance,
+  (`anónimo ⊂ cliente ⊂ comercial ⊂ admin`) con dos ejes: _capacidad_
+  (`recurso:acción`) y _alcance_ (`global | mi-comercial | mi-cartera |
+cliente-concreto`). La cascada hereda capacidades y estrecha el alcance,
   con excepciones explícitas (el admin no compra para sí). En la app:
   `src/shared/seguridad/capacidades.ts` + `use-permisos()` filtran navegación;
   los grupos de rutas `(publico)(carrito)(cliente)(comercial)(admin)` declaran

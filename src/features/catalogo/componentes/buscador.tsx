@@ -8,7 +8,13 @@ import { useColoresIcono } from '@/shared/lib/theme';
 // Campo de búsqueda del catálogo (diseño Stitch): icono integrado a la
 // izquierda, radio 10px y anillo de foco ámbar en web. Usa el Input del
 // registro de componentes (el TextInput a mano se sustituye por la primitiva).
-export function Buscador({ valor, onChange }: { valor: string; onChange: (texto: string) => void }) {
+export function Buscador({
+  valor,
+  onChange,
+}: {
+  valor: string;
+  onChange: (texto: string) => void;
+}) {
   const colores = useColoresIcono();
   return (
     <View className="relative justify-center">

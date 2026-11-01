@@ -36,6 +36,7 @@ Los impuestos no se mostrarán en las fichas del catálogo. Se mostrarán en la 
 ### 3.1. Visitante
 
 Puede:
+
 - Consultar productos publicados.
 - Buscar y filtrar el catálogo.
 - Consultar características técnicas, imágenes y precios públicos.
@@ -48,6 +49,7 @@ No puede consultar pedidos, condiciones comerciales privadas ni datos de cliente
 Un cliente puede ser una empresa o un particular. El tipo de cliente no constituye por sí mismo un rol de acceso diferente.
 
 Puede:
+
 - Iniciar sesión.
 - Consultar el catálogo y sus condiciones comerciales aplicables.
 - Crear pedidos.
@@ -56,6 +58,7 @@ Puede:
 - Consultar el estado y el historial que tenga autorizado.
 
 No puede:
+
 - Modificar los descuentos por su cuenta.
 - Consultar pedidos de otros clientes.
 - Acceder a la cartera comercial de otros usuarios.
@@ -64,6 +67,7 @@ No puede:
 ### 3.3. Comercial
 
 Puede:
+
 - Consultar sus clientes asignados.
 - Consultar las condiciones comerciales de esos clientes.
 - Crear pedidos en nombre de un cliente autorizado.
@@ -78,6 +82,7 @@ No puede acceder automáticamente a todos los clientes ni modificar configuracio
 ### 3.4. Administrador
 
 Puede gestionar:
+
 - Usuarios, roles y asignaciones comerciales.
 - Productos, marcas, categorías y características.
 - Precios e históricos.
@@ -94,6 +99,7 @@ Los permisos deberán comprobarse en el backend. Ocultar botones en la interfaz 
 ### 4.1. Datos generales
 
 Cada producto podrá contener:
+
 - Identificador interno.
 - Referencia comercial.
 - Nombre.
@@ -117,6 +123,7 @@ La referencia comercial tendrá una regla de unicidad definida en el diseño té
 El catálogo comenzará con estufas y podrá incorporar productos de jardín, velas, cerillas y otras familias.
 
 Categorías iniciales de estufas:
+
 - Pellet.
 - Leña.
 - Aire.
@@ -134,6 +141,7 @@ El combustible podrá representarse como categoría o como atributo específico.
 ### 4.3. Características técnicas
 
 Características generales iniciales:
+
 - Potencia global.
 - Potencia nominal.
 - Rendimiento.
@@ -146,6 +154,7 @@ Características generales iniciales:
 - Medidas exteriores.
 
 Características de estufas de leña:
+
 - Aire primario.
 - Horno.
 - Ventilada.
@@ -154,6 +163,7 @@ Características de estufas de leña:
 - Calefacción central.
 
 Características de estufas de pellet:
+
 - Encendido rápido.
 - Canalización de aire caliente.
 - Programable semanal y diariamente.
@@ -186,6 +196,7 @@ Solo se mostrarán públicamente los productos publicados. La información priva
 ## 5. Clientes y asignación comercial
 
 Se distinguirán:
+
 - La cuenta de usuario utilizada para iniciar sesión.
 - El cliente como entidad comercial.
 - El tipo de cliente: empresa o particular.
@@ -211,13 +222,13 @@ Los periodos de vigencia no podrán solaparse para la misma tarifa y producto.
 
 ### 6.2. Comportamiento según usuario
 
-| Situación | Precio mostrado |
-|---|---|
-| Visitante sin sesión | Precio público sin descuentos |
+| Situación                      | Precio mostrado                                                                         |
+| ------------------------------ | --------------------------------------------------------------------------------------- |
+| Visitante sin sesión           | Precio público sin descuentos                                                           |
 | Cliente sin comercial asignado | Precio base, con posibles descuentos generales de tienda definidos por un administrador |
-| Cliente con comercial asignado | Precio base con las condiciones comerciales autorizadas para ese cliente |
-| Comercial | Precios y condiciones de sus clientes asignados |
-| Administrador | Precios, tarifas y descuentos que esté autorizado a gestionar |
+| Cliente con comercial asignado | Precio base con las condiciones comerciales autorizadas para ese cliente                |
+| Comercial                      | Precios y condiciones de sus clientes asignados                                         |
+| Administrador                  | Precios, tarifas y descuentos que esté autorizado a gestionar                           |
 
 Los descuentos generales de tienda son promociones globales que configura un administrador. No deben confundirse con el descuento individual de un cliente.
 
@@ -228,6 +239,7 @@ La existencia de un comercial asignado no implica que un cliente tenga necesaria
 La regla acordada es que el descuento específico por cliente y producto sustituye al descuento general individual del cliente.
 
 Orden de aplicación propuesto:
+
 1. Determinar el precio base vigente.
 2. Identificar los descuentos aplicables al cliente.
 3. Si existe un descuento específico vigente para ese cliente y producto, utilizarlo en lugar del descuento general del cliente.
@@ -242,6 +254,7 @@ Un descuento específico del 0 % se tratará como una excepción válida que sus
 ### 6.4. Descuentos sin comercial
 
 Los clientes sin comercial asignado:
+
 - No tendrán descuentos individuales por cliente o producto por defecto.
 - Podrán beneficiarse de descuentos generales de tienda configurados por un administrador.
 - No podrán asignarse descuentos a sí mismos.
@@ -251,6 +264,7 @@ Los clientes sin comercial asignado:
 Un comercial autorizado podrá añadir un descuento adicional a uno o varios productos de un pedido ya creado.
 
 La aplicación deberá:
+
 - Registrar el descuento original.
 - Registrar el descuento adicional aplicado y el resultado.
 - Guardar el usuario que realizó el cambio y la fecha.
@@ -279,6 +293,7 @@ Los impuestos no aparecerán en las fichas del catálogo ni junto a los precios 
 Cada pedido deberá disponer de la información necesaria para mostrar una sección fiscal en su documento de factura asociado.
 
 La sección fiscal podrá contener, según las reglas que se definan:
+
 - Base imponible.
 - Tipo impositivo.
 - Cuota de impuesto.
@@ -296,6 +311,7 @@ También quedan pendientes los tipos impositivos, el tratamiento de descuentos e
 ### 8.1. Creación
 
 Los pedidos podrán ser creados por:
+
 - Clientes desde su área privada.
 - Comerciales en nombre de clientes autorizados.
 - Administradores, si se habilita esa función.
@@ -303,6 +319,7 @@ Los pedidos podrán ser creados por:
 Los pedidos comenzarán en estado `solicitado`.
 
 La creación guardará:
+
 - Cliente comprador.
 - Usuario creador.
 - Comercial responsable, cuando corresponda.
@@ -326,6 +343,7 @@ No se recalcularán silenciosamente los importes de solicitudes ya creadas por c
 ### 8.3. Estados
 
 Estados iniciales:
+
 - Solicitado.
 - Confirmado.
 - En preparación.
@@ -343,6 +361,7 @@ La cancelación dependerá del estado y los permisos. No se permitirá cambiar l
 Solo el comercial responsable o un administrador autorizado podrán confirmar un pedido.
 
 La confirmación deberá:
+
 - Validar el estado actual.
 - Comprobar los permisos.
 - Guardar quién confirmó y cuándo.
@@ -352,6 +371,7 @@ La confirmación deberá:
 ### 8.5. Edición y cancelación
 
 El cliente, el comercial autorizado o el administrador podrán editar o cancelar solicitudes pendientes, con las siguientes restricciones:
+
 - El cliente solo podrá actuar sobre sus pedidos.
 - El comercial solo podrá actuar sobre pedidos de clientes autorizados.
 - El administrador podrá actuar según sus permisos.
@@ -363,6 +383,7 @@ Las reglas para editar o cancelar pedidos ya confirmados quedan pendientes.
 ### 8.6. Líneas de pedido
 
 Cada línea conservará:
+
 - Referencia y nombre históricos del producto.
 - Cantidad.
 - Precio unitario.
@@ -389,6 +410,7 @@ Las acciones sensibles deberán tener permisos específicos y trazabilidad.
 ### 10.1. Arquitectura
 
 La arquitectura deberá separar:
+
 - Frontend web adaptable.
 - Backend o API con reglas de negocio.
 - PostgreSQL.
@@ -401,6 +423,7 @@ El frontend no se conectará directamente a PostgreSQL con credenciales privileg
 ### 10.2. PostgreSQL
 
 El diseño deberá incluir:
+
 - Claves primarias y foráneas.
 - Restricciones `CHECK`.
 - Índices para consultas frecuentes.
@@ -415,6 +438,7 @@ El esquema SQL existente será el punto de partida, pero deberá revisarse frent
 ### 10.3. Autorización
 
 El backend deberá comprobar:
+
 - Identidad del usuario.
 - Rol.
 - Relación con el cliente.
@@ -439,6 +463,7 @@ La aplicación deberá funcionar en ordenador, tableta y móvil. Se mantendrán 
 El PRD será la referencia funcional principal para las herramientas de programación.
 
 Los asistentes deberán:
+
 - Leer la documentación antes de modificar el proyecto.
 - No inventar reglas de negocio pendientes.
 - Identificar supuestos explícitamente.
@@ -455,6 +480,7 @@ Cada tarea de desarrollo incluirá objetivo, requisitos relacionados, cambios de
 ## 12. Plan de entregas
 
 ### Fase 1 — Fundamentos
+
 - Stack y arquitectura.
 - Entornos y repositorio.
 - Migraciones de PostgreSQL.
@@ -462,12 +488,14 @@ Cada tarea de desarrollo incluirá objetivo, requisitos relacionados, cambios de
 - Usuarios y clientes.
 
 ### Fase 2 — Catálogo
+
 - Familias, marcas y categorías.
 - Productos, recursos y características.
 - Fichas públicas.
 - Búsqueda y filtros.
 
 ### Fase 3 — Precios y descuentos
+
 - Tarifa base.
 - Historial de precios.
 - Descuentos generales de tienda.
@@ -476,12 +504,14 @@ Cada tarea de desarrollo incluirá objetivo, requisitos relacionados, cambios de
 - Historial de modificaciones comerciales.
 
 ### Fase 4 — Portal privado
+
 - Cartera comercial.
 - Área de clientes.
 - Permisos y condiciones comerciales.
 - Consulta de precios aplicables.
 
 ### Fase 5 — Pedidos
+
 - Creación de solicitudes.
 - Edición y cancelación.
 - Confirmación.
@@ -490,6 +520,7 @@ Cada tarea de desarrollo incluirá objetivo, requisitos relacionados, cambios de
 - Resumen fiscal y definición del alcance de facturación.
 
 ### Fase 6 — Preparación para producción
+
 - Pruebas de seguridad.
 - Pruebas de regresión.
 - Copias de seguridad.
