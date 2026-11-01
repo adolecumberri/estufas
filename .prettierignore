@@ -4,3 +4,4 @@ node_modules
 assets
 docs/*.html
 package-lock.json
+docs/**/*.html
