@@ -1,8 +1,12 @@
 -- ============================================================================
--- Test 06: descuentos por combustible y su precedencia
+-- Test 06: descuentos por combustible — LEGACY (retirado de la precedencia)
+--
+-- Decisión cerrada: la cadena de descuentos es producto > categoría >
+-- proveedor > general. El nivel "combustible" (0006) queda RETIRADO de
+-- fn_calcular_precio; la tabla se conserva por datos históricos.
 -- ============================================================================
 BEGIN;
-SELECT plan(4);
+SELECT plan(3);
 
 CREATE SCHEMA IF NOT EXISTS tests;
 
@@ -18,57 +22,37 @@ $$;
 GRANT USAGE ON SCHEMA tests TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION tests.authenticate_as(UUID) TO anon, authenticated;
 
--- Datos de prueba (como postgres, sin RLS): 20% en pellets para el particular.
+-- Datos (como postgres, sin RLS): descuento legacy del 20% en pellets para el
+-- particular. El particular no tiene general ni otros descuentos: solo la
+-- promo de tienda del seed (5%).
 INSERT INTO descuentos_cliente_combustible (cliente_id, combustible, descuento_porcentaje, creado_por)
 VALUES ('33333333-3333-4333-8333-333333333333', 'pellets', 20.00, '22222222-2222-4222-8222-222222222222');
 
--- 1. El 20% por combustible se aplica a TF-12 (pellets).
 SET LOCAL ROLE authenticated;
 SELECT tests.authenticate_as('33333333-3333-4333-8333-333333333333');
+
+-- 1. El descuento por combustible YA NO altera el precio: TF-12 queda con la
+--    promo de tienda (5%), no con el 20% legacy.
 SELECT results_eq(
     $q$ SELECT descuento_pct::numeric, descuento_origen::varchar, round(precio_final, 2)::numeric
         FROM fn_calcular_precio('f1000000-0000-4000-8000-000000000002', '33333333-3333-4333-8333-333333333333') $q$,
-    $$ VALUES (20.00::numeric, 'cliente_combustible'::varchar, 1199.20::numeric) $$,
-    'el descuento por combustible (20% pellets) se aplica a TF-12'
+    $$ VALUES (5.00::numeric, 'promocion_tienda'::varchar, 1424.05::numeric) $$,
+    'el descuento por combustible ya no se aplica (legacy)'
 );
 
--- 2. El descuento específico de producto gana al de combustible (LP-9, 10%).
-RESET ROLE;
-INSERT INTO descuentos_cliente_producto (cliente_id, producto_id, descuento_porcentaje, creado_por)
-VALUES ('33333333-3333-4333-8333-333333333333', 'f1000000-0000-4000-8000-000000000001', 10.00, '22222222-2222-4222-8222-222222222222');
-SET LOCAL ROLE authenticated;
-SELECT tests.authenticate_as('33333333-3333-4333-8333-333333333333');
-SELECT results_eq(
-    $q$ SELECT descuento_pct::numeric, descuento_origen::varchar, round(precio_final, 2)::numeric
-        FROM fn_calcular_precio('f1000000-0000-4000-8000-000000000001', '33333333-3333-4333-8333-333333333333') $q$,
-    $$ VALUES (10.00::numeric, 'cliente_producto'::varchar, 899.10::numeric) $$,
-    'el descuento de producto gana al de combustible'
+-- 2. La tabla sigue existiendo (datos históricos).
+SELECT ok(
+    (SELECT to_regclass('public.descuentos_cliente_combustible') IS NOT NULL),
+    'la tabla descuentos_cliente_combustible sigue existiendo (legacy)'
 );
 
--- 3. El descuento por combustible gana al general aunque este sea mayor (25%).
-RESET ROLE;
-UPDATE usuarios SET descuento_porcentaje = 25.00
-WHERE id = '33333333-3333-4333-8333-333333333333';
-SET LOCAL ROLE authenticated;
-SELECT tests.authenticate_as('33333333-3333-4333-8333-333333333333');
+-- 3. El origen cliente_combustible ya no sale de fn_calcular_precio.
 SELECT results_eq(
-    $q$ SELECT descuento_pct::numeric, descuento_origen::varchar, round(precio_final, 2)::numeric
-        FROM fn_calcular_precio('f1000000-0000-4000-8000-000000000002', '33333333-3333-4333-8333-333333333333') $q$,
-    $$ VALUES (20.00::numeric, 'cliente_combustible'::varchar, 1199.20::numeric) $$,
-    'el descuento por combustible precede al general del cliente'
-);
-
--- 4. La promoción de tienda gana si es mayor (30% > 20%).
-RESET ROLE;
-INSERT INTO promociones_tienda (nombre, descripcion, descuento_porcentaje, activa, creado_por)
-VALUES ('Promo Test 30', 'Promoción de prueba del test 06.', 30.00, TRUE, '11111111-1111-4111-8111-111111111111');
-SET LOCAL ROLE authenticated;
-SELECT tests.authenticate_as('33333333-3333-4333-8333-333333333333');
-SELECT results_eq(
-    $q$ SELECT descuento_pct::numeric, descuento_origen::varchar, round(precio_final, 2)::numeric
-        FROM fn_calcular_precio('f1000000-0000-4000-8000-000000000002', '33333333-3333-4333-8333-333333333333') $q$,
-    $$ VALUES (30.00::numeric, 'promocion_tienda'::varchar, 1049.30::numeric) $$,
-    'la promoción mayor gana al descuento por combustible'
+    $q$ SELECT count(*)::int
+        FROM fn_calcular_precio('f1000000-0000-4000-8000-000000000002', '33333333-3333-4333-8333-333333333333')
+        WHERE descuento_origen = 'cliente_combustible' $q$,
+    ARRAY[0],
+    'el origen cliente_combustible ya no aparece en los precios'
 );
 
 SELECT * FROM finish();
