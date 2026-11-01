@@ -1,7 +1,6 @@
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
-  ArrowLeft,
   BadgeCheck,
   Banknote,
   Building2,
@@ -13,9 +12,11 @@ import {
   XCircle,
 } from 'lucide-react-native';
 import * as React from 'react';
-import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScrollView, View } from 'react-native';
 
+import { EmptyState, ErrorView, LoadingView } from '@/shared/componentes/estados';
+import { Screen, ScreenScroll } from '@/shared/componentes/screen';
+import { ScreenHeader } from '@/shared/componentes/screen-header';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
@@ -28,13 +29,11 @@ import { useCatalogo } from '@/features/catalogo/hooks/use-catalogo';
 import { useAccionesPedido, usePedido } from '@/features/pedidos/hooks/use-pedidos';
 import { obtenerProducto } from '@/features/catalogo/lib/catalogo-local';
 import { formatEUR, formatFecha, formatFechaHora } from '@/shared/lib/format';
-import { volverA } from '@/shared/lib/navegacion';
 import { fuenteImagen } from '@/features/catalogo/lib/imagenes';
 import { useColoresIcono } from '@/shared/lib/theme';
 
 export default function PedidoDetalle() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const insets = useSafeAreaInsets();
   const { perfil } = useAuth();
   const { detalle, cargando, error, recargar } = usePedido(id);
   const { cancelar, confirmar, avanzar, ajustarDescuento } = useAccionesPedido();
@@ -114,15 +113,27 @@ export default function PedidoDetalle() {
     return mapa;
   }, [detalle, catalogo.productos]);
 
-  if (cargando || !detalle) {
+  if (cargando) {
     return (
-      <View className="flex-1 items-center justify-center bg-background">
-        {error ? (
-          <Text className="px-8 text-center text-muted-foreground">{error}</Text>
-        ) : (
-          <ActivityIndicator color="hsl(124.3 17.7% 31%)" />
-        )}
-      </View>
+      <Screen>
+        <LoadingView texto="Cargando pedido…" />
+      </Screen>
+    );
+  }
+
+  if (error) {
+    return (
+      <Screen>
+        <ErrorView mensaje={error} onReintentar={() => void recargar()} />
+      </Screen>
+    );
+  }
+
+  if (!detalle) {
+    return (
+      <Screen>
+        <EmptyState titulo="Pedido no disponible" descripcion="No se ha podido cargar este pedido." />
+      </Screen>
     );
   }
 
@@ -135,29 +146,18 @@ export default function PedidoDetalle() {
   const proveedorPedido = (pedido as typeof pedido & { proveedor?: { nombre: string } | null }).proveedor;
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false} className="flex-1 bg-background" contentContainerStyle={{ paddingBottom: 32 }}>
-      <View style={{ paddingTop: insets.top + 8 }} className="gap-4 p-4">
-        {/* 1. Cabecera: volver + Detalle de Gestión + nº + estado */}
-        <View className="flex-row items-center gap-2">
-          <Pressable
-            onPress={() => volverA('/pedidos')}
-            className="rounded-lg bg-accent p-2 active:bg-accent"
-            accessibilityLabel="Volver al listado de pedidos"
-          >
-            <ArrowLeft size={20} color={colores.primerPlano} />
-          </Pressable>
-          <View className="flex-1 gap-0.5">
-            <Text className="text-xs uppercase tracking-wider text-muted-foreground">
-              Detalle de Gestión
-            </Text>
-            <Text className="text-xl font-bold tracking-tight">
-              Pedido nº {pedido.numero_pedido}
-            </Text>
-          </View>
+    <ScreenScroll>
+      {/* 1. Cabecera: volver + Detalle de Gestión + nº + estado */}
+      <ScreenHeader
+        titulo={`Pedido nº ${pedido.numero_pedido}`}
+        subtitulo="Detalle de Gestión"
+        respaldo="/pedidos"
+        accion={
           <Badge variant={varianteEstado(pedido.estado)}>
             <Text>{ESTADOS_PEDIDO[pedido.estado].etiqueta}</Text>
           </Badge>
-        </View>
+        }
+      />
 
         {/* 2. Miniaturas de productos del pedido */}
         <ScrollView
@@ -519,7 +519,6 @@ export default function PedidoDetalle() {
             ))}
           </CardContent>
         </Card>
-      </View>
-    </ScrollView>
+    </ScreenScroll>
   );
 }

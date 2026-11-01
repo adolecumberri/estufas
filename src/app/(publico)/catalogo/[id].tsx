@@ -1,24 +1,25 @@
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ChevronLeft, Minus, Plus, X } from 'lucide-react-native';
+import { ShoppingCart, X } from 'lucide-react-native';
 import * as React from 'react';
-import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScrollView, View } from 'react-native';
 
+import { ErrorView, LoadingView } from '@/shared/componentes/estados';
+import { ScreenHeader } from '@/shared/componentes/screen-header';
+import { ScreenScroll } from '@/shared/componentes/screen';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { IconButton } from '@/shared/ui/icon-button';
 import { Separator } from '@/shared/ui/separator';
-import { Skeleton } from '@/shared/ui/skeleton';
+import { StepperCantidad } from '@/shared/ui/stepper';
 import { Text } from '@/shared/ui/text';
 import { ORIGENES_DESCUENTO } from '@/shared/constantes';
 import { useSolicitud } from '@/features/carrito/contexto';
 import { useAuth } from '@/features/auth/use-auth';
 import { useProducto } from '@/features/catalogo/hooks/use-producto';
 import { formatEUR, formatPct } from '@/shared/lib/format';
-import { volverA } from '@/shared/lib/navegacion';
 import { fuenteImagen } from '@/features/catalogo/lib/imagenes';
-import { useColoresIcono } from '@/shared/lib/theme';
 
 // Formatea un valor flexible de la ficha técnica (JSONB productos.datos).
 function formatearValorDato(valor: string | number | boolean | null, unidad: string | null): string {
@@ -31,11 +32,12 @@ function formatearValorDato(valor: string | number | boolean | null, unidad: str
 export default function ProductoDetalle() {
   const { id, origen: origenParam } = useLocalSearchParams<{ id: string; origen?: string }>();
   const origen = origenParam ?? 'Catálogo';
-  const insets = useSafeAreaInsets();
   const { session, perfil } = useAuth();
   const { clienteObjetivoId, anadir, aviso, limpiarAviso } = useSolicitud();
   const { producto, cargando, error } = useProducto(id, clienteObjetivoId);
-  const colores = useColoresIcono();
+  // El acceso al carrito en la cabecera solo con sesión y sin ser admin
+  // (mismo criterio que la cabecera del catálogo).
+  const mostrarCarrito = Boolean(session) && perfil?.rol !== 'admin';
 
   const [cantidad, setCantidad] = React.useState(1);
 
@@ -54,25 +56,17 @@ export default function ProductoDetalle() {
 
   if (cargando) {
     return (
-      <View className="flex-1 gap-4 bg-background p-4" style={{ paddingTop: insets.top + 8 }}>
-        <Skeleton className="h-9 w-24" />
-        <Skeleton className="aspect-square w-full" />
-        <Skeleton className="h-6 w-3/4" />
-        <Skeleton className="h-20 w-full" />
-      </View>
+      <ScreenScroll>
+        <LoadingView texto="Cargando producto…" />
+      </ScreenScroll>
     );
   }
 
   if (!producto || error) {
     return (
-      <View className="flex-1 items-center justify-center gap-4 bg-background px-8">
-        <Text className="text-center text-muted-foreground">
-          {error ?? 'Producto no disponible.'}
-        </Text>
-        <Button variant="outline" onPress={() => volverA('/')}>
-          <Text>Volver</Text>
-        </Button>
-      </View>
+      <ScreenScroll>
+        <ErrorView mensaje={error ?? 'Producto no disponible.'} />
+      </ScreenScroll>
     );
   }
 
@@ -113,42 +107,42 @@ export default function ProductoDetalle() {
   };
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false} className="flex-1 bg-background" contentContainerStyle={{ paddingBottom: 32 }}>
-      <View style={{ paddingTop: insets.top + 8 }}>
-        {/* 1. Cabecera: volver + origen */}
-        <View className="flex-row items-center gap-1 px-2">
-          <Pressable
-            onPress={() => volverA('/')}
-            className="rounded-md p-2 active:bg-accent"
-            accessibilityLabel="Volver"
-          >
-            <ChevronLeft size={24} color={colores.primerPlano} />
-          </Pressable>
-          <Text className="flex-1 font-medium">{origen}</Text>
+    <ScreenScroll contentClassName="gap-0 p-0">
+      {/* 1. Cabecera: título del producto + origen + acceso al carrito */}
+      <View className="px-2">
+        <ScreenHeader
+          titulo={producto.nombre}
+          subtitulo={origen}
+          respaldo="/"
+          accion={
+            mostrarCarrito ? (
+              <IconButton
+                icono={ShoppingCart}
+                tamano={20}
+                etiquetaAccesibilidad="Ver carrito de compras"
+                onPress={() => router.push('/solicitud')}
+              />
+            ) : undefined
+          }
+        />
+      </View>
+
+      {/* Aviso global del carrito (p. ej. no mezclar proveedores): mismo
+          banner que en /solicitud y el catálogo, para que el rechazo al
+          añadir se vea también desde la ficha. */}
+      {aviso && (
+        <View className="mx-4 mt-2 flex-row items-start gap-2 rounded-lg border border-primary/40 bg-primary/10 p-3">
+          <Text className="flex-1 text-sm">{aviso}</Text>
+          <IconButton
+            icono={X}
+            tamano={16}
+            etiquetaAccesibilidad="Cerrar aviso"
+            onPress={limpiarAviso}
+          />
         </View>
+      )}
 
-        {/* Aviso global del carrito (p. ej. no mezclar proveedores): mismo
-            banner que en /solicitud y el catálogo, para que el rechazo al
-            añadir se vea también desde la ficha. */}
-        {aviso && (
-          <View className="mx-4 mt-2 flex-row items-start gap-2 rounded-lg border border-primary/40 bg-primary/10 p-3">
-            <Text className="flex-1 text-sm">{aviso}</Text>
-            <Pressable
-              onPress={limpiarAviso}
-              className="rounded-md p-0.5 active:bg-accent"
-              accessibilityLabel="Cerrar aviso"
-            >
-              <X size={16} color={colores.tenue} />
-            </Pressable>
-          </View>
-        )}
-
-        {/* 2. Nombre */}
-        <View className="p-4 pb-2">
-          <Text className="text-2xl font-bold tracking-tight">{producto.nombre}</Text>
-        </View>
-
-        {/* 3. Galería de imágenes */}
+      {/* 2. Galería de imágenes */}
         <ScrollView
           horizontal
           pagingEnabled
@@ -195,7 +189,7 @@ export default function ProductoDetalle() {
           )}
         </View>
 
-        {/* 6. Cantidad y añadir (solo con sesión iniciada; admin solo lectura) */}
+        {/* 4. Cantidad y añadir (solo con sesión iniciada; admin solo lectura) */}
         <View className="mt-4 px-4">
           {session && perfil?.rol === 'admin' ? (
             <Text className="text-sm text-muted-foreground">
@@ -203,23 +197,10 @@ export default function ProductoDetalle() {
             </Text>
           ) : session ? (
             <View className="flex-row items-center gap-3">
-              <View className="flex-row items-center rounded-lg border border-input">
-                <Pressable
-                  onPress={() => setCantidad((c) => Math.max(1, c - 1))}
-                  className="p-3 active:bg-accent"
-                  accessibilityLabel="Restar"
-                >
-                  <Minus size={16} color={colores.primerPlano} />
-                </Pressable>
-                <Text className="w-10 text-center text-base font-semibold">{cantidad}</Text>
-                <Pressable
-                  onPress={() => setCantidad((c) => Math.min(999, c + 1))}
-                  className="p-3 active:bg-accent"
-                  accessibilityLabel="Sumar"
-                >
-                  <Plus size={16} color={colores.primerPlano} />
-                </Pressable>
-              </View>
+              <StepperCantidad
+                valor={cantidad}
+                onCambiar={(n) => setCantidad(Math.min(999, n))}
+              />
               <Button className="flex-1" onPress={anadirASolicitud}>
                 <Text>Añadir a la solicitud</Text>
               </Button>
@@ -348,7 +329,6 @@ export default function ProductoDetalle() {
             </Text>
           )}
         </View>
-      </View>
-    </ScrollView>
+    </ScreenScroll>
   );
 }

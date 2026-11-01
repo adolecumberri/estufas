@@ -1,9 +1,9 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { RefreshCw, X } from 'lucide-react-native';
+import { Boxes, RefreshCw, X } from 'lucide-react-native';
 import { vars } from 'nativewind';
 import * as React from 'react';
-import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
+import { FlatList, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import banner from '../../../../assets/images/banner.jpg';
@@ -12,9 +12,13 @@ import { Buscador } from '@/features/catalogo/componentes/buscador';
 import { EncabezadoCatalogo } from '@/features/catalogo/componentes/encabezado';
 import TarjetaProducto from '@/features/catalogo/componentes/tarjeta-producto';
 import { SelectorProveedor } from '@/features/catalogo/componentes/selector-proveedor';
+import { EmptyState, ErrorView, LoadingView } from '@/shared/componentes/estados';
+import { Screen } from '@/shared/componentes/screen';
 import { NavInferior } from '@/shared/navegacion/nav-inferior';
 import { NavLateral } from '@/shared/navegacion/nav-lateral';
 import { Button } from '@/shared/ui/button';
+import { Card } from '@/shared/ui/card';
+import { IconButton } from '@/shared/ui/icon-button';
 import { Text } from '@/shared/ui/text';
 import { COMBUSTIBLES } from '@/shared/constantes';
 import { useProveedorActivo } from '@/features/catalogo/proveedor-activo-contexto';
@@ -29,8 +33,8 @@ import { useColoresIcono } from '@/shared/lib/theme';
 // para ser la ruta inicial (/) sin depender de un Redirect (que provoca el
 // aviso "GO_BACK was not handled" en Android). Compone los componentes
 // compartidos del catálogo (diseño Stitch): cabecera fija, navegación
-// lateral por combustible, buscador, chips de categorías, rejilla de 2
-// columnas con paginación y barra de navegación.
+// lateral por combustible, buscador, rejilla de 2 columnas con paginación y
+// barra de navegación.
 //
 // `proveedorIdOverride` permite montar ESTA misma pantalla desde la ruta
 // dedicada /catalogo/proveedor/[id] (catálogo de un proveedor concreto).
@@ -90,15 +94,13 @@ export default function CatalogoScreen({
     // de "upgrade warning" y al serializar el árbol toca los getters del
     // contexto de navegación de expo-router → crash
     // ("Couldn't find a navigation context"). Por eso van SIEMPRE presentes.
-    <View
-      className="flex-1 bg-background"
-      style={[
-        { paddingTop: insets.top },
-        vars({
-          '--primary': tripletProveedor(proveedorActivo?.color ?? null),
-          '--primary-foreground': textoSobreProveedor(proveedorActivo?.color ?? null),
-        }),
-      ]}
+    // Screen añade el fondo y la safe area superior; vars() viaja en `style`.
+    <Screen
+      className="flex-1"
+      style={vars({
+        '--primary': tripletProveedor(proveedorActivo?.color ?? null),
+        '--primary-foreground': textoSobreProveedor(proveedorActivo?.color ?? null),
+      })}
     >
       {/* Cabecera */}
       <EncabezadoCatalogo onAbrirMenu={() => setMenuAbierto(true)} />
@@ -123,7 +125,7 @@ export default function CatalogoScreen({
           sale del primer producto cargado; sin resultados, texto genérico.
           El tinte, el borde y el texto usan el tema del color del proveedor. */}
       {proveedorIdOverride && (
-        <View
+        <Card
           className="mx-4 mb-2 flex-row items-center gap-2 rounded-lg border px-3 py-2"
           style={{ backgroundColor: temaBanner.tinte, borderColor: temaBanner.borde }}
         >
@@ -132,7 +134,10 @@ export default function CatalogoScreen({
               ? `Viendo solo el catálogo de ${cat.productos[0].proveedor_nombre}`
               : 'Solo productos de ese proveedor'}
           </Text>
-          <Pressable
+          <IconButton
+            icono={X}
+            tamano={16}
+            etiquetaAccesibilidad="Quitar filtro de proveedor"
             onPress={() => {
               // En la ruta dedicada el "quitar filtro" vuelve al catálogo
               // general (el banner solo existe en esa ruta). El typegen de
@@ -141,12 +146,8 @@ export default function CatalogoScreen({
               // el dev server).
               router.replace('/' as never);
             }}
-            className="rounded-md p-0.5 active:bg-accent"
-            accessibilityLabel="Quitar filtro de proveedor"
-          >
-            <X size={16} color={colores.tenue} />
-          </Pressable>
-        </View>
+          />
+        </Card>
       )}
 
       {/* Aviso global del carrito (p. ej. no mezclar proveedores): el mismo
@@ -154,13 +155,7 @@ export default function CatalogoScreen({
       {aviso && (
         <View className="mx-4 mb-2 flex-row items-start gap-2 rounded-lg border border-primary/40 bg-primary/10 p-3">
           <Text className="flex-1 text-sm">{aviso}</Text>
-          <Pressable
-            onPress={limpiarAviso}
-            className="rounded-md p-0.5 active:bg-accent"
-            accessibilityLabel="Cerrar aviso"
-          >
-            <X size={16} color={colores.tenue} />
-          </Pressable>
+          <IconButton icono={X} tamano={16} etiquetaAccesibilidad="Cerrar aviso" onPress={limpiarAviso} />
         </View>
       )}
 
@@ -182,20 +177,21 @@ export default function CatalogoScreen({
         renderItem={({ item }) => <TarjetaProducto producto={item} origen={origen} onAnadir={anadir} />}
         ListEmptyComponent={
           cat.cargando ? (
-            <View className="items-center py-16">
-              <ActivityIndicator color="hsl(124.3 17.7% 31%)" />
-            </View>
+            <LoadingView texto="Cargando modelos…" />
+          ) : cat.error ? (
+            <ErrorView mensaje={cat.error} />
           ) : (
-            <View className="items-center gap-2 px-8 py-16">
-              <Text className="text-muted-foreground">
-                {cat.error ?? 'No hay productos que coincidan con la búsqueda.'}
-              </Text>
-              {!cat.error && (cat.busqueda || cat.categoria) && (
-                <Button variant="outline" size="sm" onPress={cat.limpiarFiltros}>
-                  <Text>Limpiar filtros</Text>
-                </Button>
-              )}
-            </View>
+            <EmptyState
+              titulo="No hay productos que coincidan con la búsqueda."
+              icono={Boxes}
+              accion={
+                cat.busqueda || cat.categoria ? (
+                  <Button variant="outline" size="sm" onPress={cat.limpiarFiltros}>
+                    <Text>Limpiar filtros</Text>
+                  </Button>
+                ) : undefined
+              }
+            />
           )
         }
         ListFooterComponent={
@@ -227,6 +223,6 @@ export default function CatalogoScreen({
 
       {/* Barra inferior persistente: solo con sesión (los anónimos no la ven). */}
       {session && <NavInferior activa="catalogo" />}
-    </View>
+    </Screen>
   );
 }

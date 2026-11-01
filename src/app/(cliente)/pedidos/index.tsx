@@ -3,18 +3,22 @@ import {
   Building2,
   CheckCircle2,
   ChevronRight,
-  ReceiptText,
+  RefreshCw,
   User,
-  Zap,
 } from 'lucide-react-native';
 import * as React from 'react';
-import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ActivityIndicator, ScrollView, View } from 'react-native';
 
+import { EmptyState, ErrorView, LoadingView } from '@/shared/componentes/estados';
+import { ListCard } from '@/shared/componentes/list-card';
+import { ScreenScroll } from '@/shared/componentes/screen';
+import { ScreenHeader } from '@/shared/componentes/screen-header';
+import { SectionTitle } from '@/shared/componentes/section-title';
 import { NavInferior } from '@/shared/navegacion/nav-inferior';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
+import { Chip, IconButton } from '@/shared/ui';
 import { Text } from '@/shared/ui/text';
 import { ESTADOS_PEDIDO, type EstadoPedido } from '@/shared/constantes';
 import { useAuth } from '@/features/auth/use-auth';
@@ -22,7 +26,6 @@ import { useCartera } from '@/features/cartera/hooks/use-comercial';
 import { useAccionesPedido, usePedidos } from '@/features/pedidos/hooks/use-pedidos';
 import { formatEUR, formatFecha } from '@/shared/lib/format';
 import { useColoresIcono } from '@/shared/lib/theme';
-import { cn } from '@/shared/lib/utils';
 import type { Pedido } from '@/shared/lib/types';
 
 // Chips de filtro: "Todos" más un chip por cada estado del enum real.
@@ -30,7 +33,6 @@ const FILTROS = ['todos', ...(Object.keys(ESTADOS_PEDIDO) as EstadoPedido[])] as
 type Filtro = (typeof FILTROS)[number];
 
 export default function Pedidos() {
-  const insets = useSafeAreaInsets();
   const colores = useColoresIcono();
   const { perfil } = useAuth();
   const { pedidos, cargando: cargandoPedidos, error: errorPedidos, recargar } = usePedidos();
@@ -100,97 +102,72 @@ export default function Pedidos() {
   };
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top + 8 }}>
-      {/* Cabecera (el cierre de sesión vive en la navegación lateral) */}
-      <View className="flex-row items-center justify-between px-4 pb-2">
-        <View className="gap-0.5">
-          <Text className="text-xl font-bold tracking-tight">Pedidos</Text>
-          <Text className="text-xs text-muted-foreground">
-            {etiquetaRol ? `${etiquetaRol} · ${perfil?.email ?? ''}` : (perfil?.email ?? '')}
-          </Text>
-        </View>
-      </View>
+    <>
+      <ScreenScroll contentClassName="pb-24">
+        {/* Cabecera (el cierre de sesión vive en la navegación lateral) */}
+        <ScreenHeader
+          titulo="Pedidos"
+          respaldo="/"
+          subtitulo={etiquetaRol ? `${etiquetaRol} · ${perfil?.email ?? ''}` : (perfil?.email ?? '')}
+          accion={
+            <IconButton
+              icono={RefreshCw}
+              onPress={() => void recargar()}
+              etiquetaAccesibilidad="Refrescar pedidos"
+            />
+          }
+        />
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        className="flex-1"
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: 96 + insets.bottom }}
-      >
-        {/* Chips de filtro por estado (deslizables) */}
+        {/* Chips de filtro por estado (deslizables, con contadores) */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 8, paddingHorizontal: 16, paddingBottom: 8 }}
+          contentContainerStyle={{ gap: 8 }}
         >
           {FILTROS.map((f) => {
-            const activo = filtro === f;
+            const cuenta =
+              f === 'todos' ? pedidos.length : pedidos.filter((p) => p.estado === f).length;
             return (
-              <Pressable
+              <Chip
                 key={f}
+                activo={filtro === f}
                 onPress={() => setFiltro(f)}
-                className={cn(
-                  'flex-row items-center gap-1.5 rounded-full px-3.5 py-1.5',
-                  activo ? 'bg-primary/10' : 'bg-muted'
-                )}
-              >
-                <Text
-                  className={cn(
-                    'text-xs',
-                    activo ? 'font-semibold text-primary' : 'font-medium text-muted-foreground'
-                  )}
-                >
-                  {f === 'todos' ? 'Todos' : ESTADOS_PEDIDO[f].etiqueta}
-                </Text>
-                {f !== 'todos' && (
-                  <View
-                    className={cn('rounded-full px-1.5 py-0.5', activo ? 'bg-primary/15' : 'bg-secondary')}
-                  >
-                    <Text
-                      className={cn(
-                        'text-[10px] font-bold',
-                        activo ? 'text-primary' : 'text-muted-foreground'
-                      )}
-                    >
-                      {pedidos.filter((p) => p.estado === f).length}
-                    </Text>
-                  </View>
-                )}
-              </Pressable>
+                etiqueta={f === 'todos' ? 'Todos' : `${ESTADOS_PEDIDO[f].etiqueta} (${cuenta})`}
+              />
             );
           })}
         </ScrollView>
 
         {cargandoPedidos ? (
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="hsl(124.3 17.7% 31%)" />
-          </View>
+          <LoadingView texto="Cargando pedidos…" />
         ) : errorPedidos ? (
-          <View className="flex-1 items-center justify-center gap-3 px-8">
-            <Text className="text-center text-muted-foreground">{errorPedidos}</Text>
-          </View>
+          <ErrorView mensaje={errorPedidos} onReintentar={() => void recargar()} />
         ) : pedidos.length === 0 ? (
-          <View className="flex-1 items-center justify-center gap-4 px-8">
-            <Text className="text-center text-muted-foreground">Aún no tienes pedidos.</Text>
-            <Button onPress={() => router.replace('/')}>
-              <Text>Ver catálogo</Text>
-            </Button>
-          </View>
+          <EmptyState
+            titulo="Sin pedidos"
+            descripcion="Añade productos a tu solicitud desde el catálogo para crear tu primer pedido."
+            accion={
+              <Button onPress={() => router.replace('/')}>
+                <Text>Ver catálogo</Text>
+              </Button>
+            }
+          />
         ) : (
-          <View className="gap-5 p-4">
+          <View className="gap-5">
             {/* SECCIÓN 1: pedidos pendientes de confirmar (solo comercial/admin) */}
             {esComercialOAdmin && (filtro === 'todos' || filtro === 'solicitado') && (
               <View className="gap-2">
-                <View className="flex-row items-center justify-between">
-                  <View className="flex-row items-center gap-1.5">
-                    <Zap size={18} color={colores.primario} />
-                    <Text className="text-base font-semibold">Pedidos pendientes de confirmar</Text>
-                  </View>
-                  <View className="rounded-full bg-amber-100 px-2 py-0.5 dark:bg-amber-500/15">
-                    <Text className="text-xs font-bold uppercase text-amber-700 dark:text-amber-400">
-                      {pendientes.length} {pendientes.length === 1 ? 'pendiente' : 'pendientes'}
-                    </Text>
-                  </View>
-                </View>
+                <SectionTitle
+                  accion={
+                    <View className="rounded-full bg-amber-100 px-2 py-0.5 dark:bg-amber-500/15">
+                      <Text className="text-xs font-bold uppercase text-amber-700 dark:text-amber-400">
+                        {pendientes.length} {pendientes.length === 1 ? 'pendiente' : 'pendientes'}
+                      </Text>
+                    </View>
+                  }
+                >
+                  Pedidos pendientes de confirmar
+                </SectionTitle>
                 {pendientes.length === 0 ? (
                   <Text className="text-sm text-muted-foreground">
                     No hay pedidos pendientes de confirmar.
@@ -272,16 +249,16 @@ export default function Pedidos() {
 
             {/* SECCIÓN 2: historial general de pedidos */}
             <View className="gap-2">
-              <View className="flex-row items-center justify-between">
-                <View className="flex-row items-center gap-1.5">
-                  <ReceiptText size={18} color={colores.tenue} />
-                  <Text className="text-base font-semibold">Historial de pedidos</Text>
-                </View>
-                <Text className="text-xs text-muted-foreground">
-                  {pedidosFiltrados.length}{' '}
-                  {pedidosFiltrados.length === 1 ? 'pedido registrado' : 'pedidos registrados'}
-                </Text>
-              </View>
+              <SectionTitle
+                accion={
+                  <Text className="text-xs text-muted-foreground">
+                    {pedidosFiltrados.length}{' '}
+                    {pedidosFiltrados.length === 1 ? 'pedido registrado' : 'pedidos registrados'}
+                  </Text>
+                }
+              >
+                Historial de pedidos
+              </SectionTitle>
               {pedidosFiltrados.length === 0 ? (
                 <Text className="text-sm text-muted-foreground">No hay pedidos con este estado.</Text>
               ) : (
@@ -290,45 +267,43 @@ export default function Pedidos() {
                     const numProductos = productosDe(p);
                     const cliente = clienteDe(p);
                     return (
-                      <Pressable
+                      <ListCard
                         key={p.id}
                         onPress={() => router.push(`/pedidos/${p.id}`)}
-                        className="active:opacity-80"
+                        className="gap-2 p-3.5"
                       >
-                        <Card className="gap-2 rounded-lg p-3.5">
-                          <View className="flex-row items-center justify-between gap-2">
-                            <View className="flex-row items-center gap-2">
-                              <Text className="text-sm font-semibold">Pedido nº {p.numero_pedido}</Text>
-                              <Badge variant={varianteEstado(p.estado)}>
-                                <Text>{ESTADOS_PEDIDO[p.estado].etiqueta}</Text>
-                              </Badge>
-                            </View>
-                            <Text className="text-sm font-bold">{formatEUR(totalDe(p))}</Text>
+                        <View className="flex-row items-center justify-between gap-2">
+                          <View className="flex-row items-center gap-2">
+                            <Text className="text-sm font-semibold">Pedido nº {p.numero_pedido}</Text>
+                            <Badge variant={varianteEstado(p.estado)}>
+                              <Text>{ESTADOS_PEDIDO[p.estado].etiqueta}</Text>
+                            </Badge>
                           </View>
-                          <View className="flex-row items-center justify-between gap-2">
-                            <View className="flex-1 flex-row items-center gap-1.5">
-                              <Text className="text-xs text-muted-foreground">
-                                {formatFecha(p.fecha_pedido)}
-                              </Text>
-                              <Text className="text-xs text-muted-foreground">·</Text>
-                              <Text className="text-xs text-muted-foreground">
-                                {numProductos} {numProductos === 1 ? 'producto' : 'productos'}
-                              </Text>
-                            </View>
-                            <ChevronRight size={18} color={colores.tenue} />
-                          </View>
-                          <View className="flex-row items-center gap-1.5">
-                            {cliente?.razon_social ? (
-                              <Building2 size={14} color={colores.tenue} />
-                            ) : (
-                              <User size={14} color={colores.tenue} />
-                            )}
-                            <Text className="flex-1 text-xs text-muted-foreground" numberOfLines={1}>
-                              {nombreClienteDe(p) ?? 'Cliente sin asignar'}
+                          <Text className="text-sm font-bold">{formatEUR(totalDe(p))}</Text>
+                        </View>
+                        <View className="flex-row items-center justify-between gap-2">
+                          <View className="flex-1 flex-row items-center gap-1.5">
+                            <Text className="text-xs text-muted-foreground">
+                              {formatFecha(p.fecha_pedido)}
+                            </Text>
+                            <Text className="text-xs text-muted-foreground">·</Text>
+                            <Text className="text-xs text-muted-foreground">
+                              {numProductos} {numProductos === 1 ? 'producto' : 'productos'}
                             </Text>
                           </View>
-                        </Card>
-                      </Pressable>
+                          <ChevronRight size={18} color={colores.tenue} />
+                        </View>
+                        <View className="flex-row items-center gap-1.5">
+                          {cliente?.razon_social ? (
+                            <Building2 size={14} color={colores.tenue} />
+                          ) : (
+                            <User size={14} color={colores.tenue} />
+                          )}
+                          <Text className="flex-1 text-xs text-muted-foreground" numberOfLines={1}>
+                            {nombreClienteDe(p) ?? 'Cliente sin asignar'}
+                          </Text>
+                        </View>
+                      </ListCard>
                     );
                   })}
                 </View>
@@ -336,9 +311,9 @@ export default function Pedidos() {
             </View>
           </View>
         )}
-      </ScrollView>
+      </ScreenScroll>
 
       <NavInferior activa="pedidos" />
-    </View>
+    </>
   );
 }

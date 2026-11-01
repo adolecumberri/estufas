@@ -1,19 +1,17 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
-import { Minus, Plus } from 'lucide-react-native';
 import * as React from 'react';
 import { Pressable, View } from 'react-native';
 
 import { Card } from '@/shared/ui/card';
+import { StepperCantidad } from '@/shared/ui/stepper';
 import { Text } from '@/shared/ui/text';
 import { RUTAS } from '@/shared/constantes';
 import { useAuth } from '@/features/auth/use-auth';
 import { formatEUR, formatPct } from '@/shared/lib/format';
 import { fuenteImagen } from '@/features/catalogo/lib/imagenes';
-import { useColoresIcono } from '@/shared/lib/theme';
 import type { LineaSolicitud, ProductoCatalogo } from '@/shared/lib/types';
 
-const CANTIDAD_MIN = 1;
 const CANTIDAD_MAX = 999;
 
 // Tarjeta de producto del catálogo (diseño Stitch): cabecera con imagen y
@@ -33,13 +31,9 @@ function TarjetaProducto({
 }) {
   const { session, perfil } = useAuth();
   const [cantidad, setCantidad] = React.useState(1);
-  const colores = useColoresIcono();
 
   // El admin navega el catálogo en SOLO LECTURA: sin stepper ni botón "Añadir".
   const esAdmin = perfil?.rol === 'admin';
-
-  const restar = () => setCantidad((c) => Math.max(CANTIDAD_MIN, c - 1));
-  const sumar = () => setCantidad((c) => Math.min(CANTIDAD_MAX, c + 1));
 
   const anadirAlPedido = () => {
     if (!session) {
@@ -131,32 +125,17 @@ function TarjetaProducto({
             <Text className="text-[10px] font-medium text-muted-foreground">Sin IVA</Text>
           </View>
 
-          {/* Stepper de cantidad (cantidad que se añadirá); no para admin */}
+          {/* Stepper de cantidad (cantidad que se añadirá); no para admin.
+              Envuelto en un Pressable que corta la propagación para que el
+              toque en −/+ no abra el detalle del producto. */}
           {!esAdmin && (
             <View className="mt-1 flex-row">
-              <View className="flex-row items-center justify-between rounded-lg border border-border bg-muted px-1 py-0.5">
-                <Pressable
-                  accessibilityLabel="Reducir cantidad"
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    restar();
-                  }}
-                  className="h-6 w-6 items-center justify-center active:scale-90"
-                >
-                  <Minus size={16} color={colores.tenue} />
-                </Pressable>
-                <Text className="text-xs font-semibold">{cantidad}</Text>
-                <Pressable
-                  accessibilityLabel="Aumentar cantidad"
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    sumar();
-                  }}
-                  className="h-6 w-6 items-center justify-center active:scale-90"
-                >
-                  <Plus size={16} color={colores.tenue} />
-                </Pressable>
-              </View>
+              <Pressable onPress={(e) => e.stopPropagation()}>
+                <StepperCantidad
+                  valor={cantidad}
+                  onCambiar={(n) => setCantidad(Math.min(CANTIDAD_MAX, n))}
+                />
+              </Pressable>
             </View>
           )}
         </View>

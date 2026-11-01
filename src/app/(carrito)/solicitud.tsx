@@ -2,12 +2,16 @@ import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Minus, Plus, Trash2, UserRound, X } from 'lucide-react-native';
 import * as React from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Pressable, View } from 'react-native';
 
+import { EmptyState } from '@/shared/componentes/estados';
+import { ListCard } from '@/shared/componentes/list-card';
+import { ScreenScroll } from '@/shared/componentes/screen';
+import { ScreenHeader } from '@/shared/componentes/screen-header';
 import { NavInferior } from '@/shared/navegacion/nav-inferior';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent } from '@/shared/ui/card';
+import { IconButton } from '@/shared/ui';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { Separator } from '@/shared/ui/separator';
@@ -16,12 +20,10 @@ import { useSolicitud } from '@/features/carrito/contexto';
 import { useAuth } from '@/features/auth/use-auth';
 import { useAccionesPedido, usePedido } from '@/features/pedidos/hooks/use-pedidos';
 import { formatEUR } from '@/shared/lib/format';
-import { volverA } from '@/shared/lib/navegacion';
 import { fuenteImagen } from '@/features/catalogo/lib/imagenes';
 import { useColoresIcono } from '@/shared/lib/theme';
 
 export default function Solicitud() {
-  const insets = useSafeAreaInsets();
   const { perfil } = useAuth();
   const {
     lineas,
@@ -108,160 +110,145 @@ export default function Solicitud() {
 
   return (
     <>
-      <ScrollView showsVerticalScrollIndicator={false} className="flex-1 bg-background" contentContainerStyle={{ paddingBottom: 96 + insets.bottom }}>
-        <View style={{ paddingTop: insets.top + 8 }} className="gap-4 p-4">
-          <View className="flex-row items-center justify-between">
-            <View className="flex-1 gap-0.5">
-              <Text className="text-xl font-bold tracking-tight">
-                {params.editar ? 'Editar solicitud' : 'Tu solicitud'}
-              </Text>
-              {proveedorDelCarrito && (
-                <Text className="text-xs text-muted-foreground">
-                  Proveedor: {proveedorDelCarrito.nombre}
-                </Text>
-              )}
-            </View>
-            <Button variant="ghost" size="sm" onPress={() => volverA('/')}>
-              <Text className="text-sm text-muted-foreground">Volver</Text>
-            </Button>
-          </View>
+      <ScreenScroll contentClassName="pb-24">
+        <ScreenHeader
+          titulo={params.editar ? 'Editar solicitud' : 'Solicitud'}
+          respaldo={params.editar ? `/pedidos/${params.editar}` : '/'}
+          subtitulo={proveedorDelCarrito ? `Proveedor: ${proveedorDelCarrito.nombre}` : undefined}
+        />
 
-          {/* Aviso global del carrito (p. ej. intento de mezclar proveedores) */}
-          {aviso && (
-            <View className="flex-row items-start gap-2 rounded-lg border border-primary/40 bg-primary/10 p-3">
+        {/* Aviso global del carrito (p. ej. intento de mezclar proveedores) */}
+        {aviso && (
+          <Card className="gap-0 rounded-lg border-primary/40 bg-primary/10 p-3">
+            <View className="flex-row items-start gap-2">
               <Text className="flex-1 text-sm">{aviso}</Text>
-              <Pressable
-                onPress={limpiarAviso}
-                className="rounded-md p-0.5 active:bg-accent"
-                accessibilityLabel="Cerrar aviso"
-              >
-                <X size={16} color={colores.tenue} />
-              </Pressable>
+              <IconButton icono={X} onPress={limpiarAviso} etiquetaAccesibilidad="Cerrar aviso" />
             </View>
-          )}
+          </Card>
+        )}
 
-          {(perfil?.rol === 'comercial' || perfil?.rol === 'admin') && !params.editar && (
-            <Card className="rounded-lg border-primary/40 bg-primary/10">
-              <CardContent className="flex-row items-center gap-3">
-                <UserRound size={18} color={colores.tenue} />
-                {clienteObjetivoId ? (
+        {(perfil?.rol === 'comercial' || perfil?.rol === 'admin') && !params.editar && (
+          <Card className="gap-0 rounded-lg border-primary/40 bg-primary/10 p-3">
+            <CardContent className="flex-row items-center gap-3 px-0">
+              <UserRound size={18} color={colores.tenue} />
+              {clienteObjetivoId ? (
+                <View className="flex-1 gap-1">
+                  <Text className="text-sm font-medium">Pedido para un cliente asignado</Text>
+                  <Text className="text-xs text-muted-foreground">
+                    Los precios mostrados son los del cliente.
+                  </Text>
+                </View>
+              ) : (
+                <View className="flex-1">
+                  <Text className="text-sm">Selecciona el cliente destinatario.</Text>
+                </View>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onPress={() => (clienteObjetivoId ? setClienteObjetivoId(null) : router.push('/cartera'))}
+              >
+                <Text>{clienteObjetivoId ? 'Cambiar' : 'Seleccionar'}</Text>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {lineas.length === 0 ? (
+          <EmptyState
+            titulo="Tu solicitud está vacía."
+            descripcion="Añade productos desde el catálogo para preparar tu pedido."
+            accion={
+              <Button onPress={() => router.replace('/')}>
+                <Text>Ver catálogo</Text>
+              </Button>
+            }
+          />
+        ) : (
+          <View className="gap-3">
+            {lineas.map((l) => (
+              <ListCard key={l.producto_id} className="gap-3 p-3">
+                <View className="flex-row gap-3">
+                  <Image
+                    source={fuenteImagen(l.imagen_url) ?? undefined}
+                    className="h-14 w-14 rounded-md bg-muted"
+                    contentFit="cover"
+                  />
                   <View className="flex-1 gap-1">
-                    <Text className="text-sm font-medium">Pedido para un cliente asignado</Text>
-                    <Text className="text-xs text-muted-foreground">
-                      Los precios mostrados son los del cliente.
+                    <Text numberOfLines={2} className="text-sm font-medium">
+                      {l.nombre}
                     </Text>
-                  </View>
-                ) : (
-                  <View className="flex-1">
-                    <Text className="text-sm">Selecciona el cliente destinatario.</Text>
-                  </View>
-                )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onPress={() => (clienteObjetivoId ? setClienteObjetivoId(null) : router.push('/cartera'))}
-                >
-                  <Text>{clienteObjetivoId ? 'Cambiar' : 'Seleccionar'}</Text>
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {lineas.length === 0 ? (
-            <Card className="rounded-lg">
-              <CardContent className="items-center gap-2 py-8">
-                <Text className="text-muted-foreground">Tu solicitud está vacía.</Text>
-                <Button onPress={() => router.replace('/')}>
-                  <Text>Ver catálogo</Text>
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <View className="gap-3">
-              {lineas.map((l) => (
-                <Card key={l.producto_id} className="rounded-lg p-3">
-                  <CardContent className="flex-row gap-3">
-                    <Image
-                      source={fuenteImagen(l.imagen_url) ?? undefined}
-                      className="h-14 w-14 rounded-md bg-muted"
-                      contentFit="cover"
-                    />
-                    <View className="flex-1 gap-1">
-                      <Text numberOfLines={2} className="text-sm font-medium">
-                        {l.nombre}
-                      </Text>
-                      <Text className="text-xs text-muted-foreground">{l.referencia}</Text>
-                      <View className="flex-row flex-wrap items-baseline gap-x-1.5">
-                        <Text className="text-sm font-semibold">{formatEUR(l.precio_final)}</Text>
-                        {l.descuento_pct > 0 && (
-                          <Text className="text-xs text-muted-foreground line-through">
-                            {formatEUR(l.precio_base)}
-                          </Text>
-                        )}
-                      </View>
+                    <Text className="text-xs text-muted-foreground">{l.referencia}</Text>
+                    <View className="flex-row flex-wrap items-baseline gap-x-1.5">
+                      <Text className="text-sm font-semibold">{formatEUR(l.precio_final)}</Text>
                       {l.descuento_pct > 0 && (
-                        <Text className="text-xs text-muted-foreground">
-                          Incluye {l.descuento_pct.toLocaleString('es-ES')}% de descuento
+                        <Text className="text-xs text-muted-foreground line-through">
+                          {formatEUR(l.precio_base)}
                         </Text>
                       )}
-                      <View className="mt-1 flex-row items-center gap-3">
-                        <View className="flex-row items-center rounded-lg border border-border">
-                          <Pressable
-                            onPress={() => cambiarCantidad(l.producto_id, -1)}
-                            className="p-1.5 active:bg-accent"
-                          >
-                            <Minus size={14} color={colores.primerPlano} />
-                          </Pressable>
-                          <Text className="w-8 text-center text-sm font-semibold">{l.cantidad}</Text>
-                          <Pressable
-                            onPress={() => cambiarCantidad(l.producto_id, 1)}
-                            className="p-1.5 active:bg-accent"
-                          >
-                            <Plus size={14} color={colores.primerPlano} />
-                          </Pressable>
-                        </View>
-                        <Text className="text-sm font-semibold">{formatEUR(l.precio_final * l.cantidad)}</Text>
-                        <Pressable onPress={() => quitar(l.producto_id)} className="ml-auto p-1.5 active:bg-accent">
-                          <Trash2 size={16} color={colores.destructivo} />
+                    </View>
+                    {l.descuento_pct > 0 && (
+                      <Text className="text-xs text-muted-foreground">
+                        Incluye {l.descuento_pct.toLocaleString('es-ES')}% de descuento
+                      </Text>
+                    )}
+                    <View className="mt-1 flex-row items-center gap-3">
+                      <View className="flex-row items-center rounded-lg border border-border">
+                        <Pressable
+                          onPress={() => cambiarCantidad(l.producto_id, -1)}
+                          className="p-1.5 active:bg-accent"
+                        >
+                          <Minus size={14} color={colores.primerPlano} />
+                        </Pressable>
+                        <Text className="w-8 text-center text-sm font-semibold">{l.cantidad}</Text>
+                        <Pressable
+                          onPress={() => cambiarCantidad(l.producto_id, 1)}
+                          className="p-1.5 active:bg-accent"
+                        >
+                          <Plus size={14} color={colores.primerPlano} />
                         </Pressable>
                       </View>
+                      <Text className="text-sm font-semibold">{formatEUR(l.precio_final * l.cantidad)}</Text>
+                      <Pressable onPress={() => quitar(l.producto_id)} className="ml-auto p-1.5 active:bg-accent">
+                        <Trash2 size={16} color={colores.destructivo} />
+                      </Pressable>
                     </View>
-                  </CardContent>
-                </Card>
-              ))}
+                  </View>
+                </View>
+              </ListCard>
+            ))}
 
-              <Separator />
+            <Separator />
 
-              <View className="flex-row items-center justify-between px-1">
-                <Text className="text-sm font-semibold">Total (sin impuestos)</Text>
-                <Text className="text-lg font-bold">{formatEUR(total)}</Text>
-              </View>
-
-              <View className="gap-1.5">
-                <Label nativeID="observaciones">Observaciones (opcional)</Label>
-                <Input
-                  id="observaciones"
-                  value={observaciones}
-                  onChangeText={setObservaciones}
-                  placeholder="Comentarios para tu solicitud"
-                  multiline
-                  numberOfLines={3}
-                  className="h-20 py-2 text-base"
-                />
-              </View>
-
-              {error && <Text className="text-sm text-destructive">{error}</Text>}
-
-              <Button disabled={enviando} onPress={() => void enviar()}>
-                <Text>{enviando ? 'Enviando…' : params.editar ? 'Guardar cambios' : 'Enviar solicitud'}</Text>
-              </Button>
-              <Text className="text-center text-xs text-muted-foreground">
-                Al enviar, la solicitud queda registrada y un comercial la revisará para confirmarla.
-              </Text>
+            <View className="flex-row items-center justify-between px-1">
+              <Text className="text-sm font-semibold">Total (sin impuestos)</Text>
+              <Text className="text-lg font-bold">{formatEUR(total)}</Text>
             </View>
-          )}
-        </View>
-      </ScrollView>
+
+            <View className="gap-1.5">
+              <Label nativeID="observaciones">Observaciones (opcional)</Label>
+              <Input
+                id="observaciones"
+                value={observaciones}
+                onChangeText={setObservaciones}
+                placeholder="Comentarios para tu solicitud"
+                multiline
+                numberOfLines={3}
+                className="h-20 py-2 text-base"
+              />
+            </View>
+
+            {error && <Text className="text-sm text-destructive">{error}</Text>}
+
+            <Button disabled={enviando} onPress={() => void enviar()}>
+              <Text>{enviando ? 'Enviando…' : params.editar ? 'Guardar cambios' : 'Enviar solicitud'}</Text>
+            </Button>
+            <Text className="text-center text-xs text-muted-foreground">
+              Al enviar, la solicitud queda registrada y un comercial la revisará para confirmarla.
+            </Text>
+          </View>
+        )}
+      </ScreenScroll>
 
       <NavInferior activa="solicitud" />
     </>

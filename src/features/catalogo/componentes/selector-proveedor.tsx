@@ -1,10 +1,9 @@
 import { Boxes, Flame, Flower } from 'lucide-react-native';
 import * as React from 'react';
-import { Modal, Pressable, ScrollView, View } from 'react-native';
+import { Pressable, ScrollView } from 'react-native';
 
-import { Button } from '@/shared/ui/button';
-import { Card, CardContent } from '@/shared/ui/card';
 import { Text } from '@/shared/ui/text';
+import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { useProveedorActivo } from '@/features/catalogo/proveedor-activo-contexto';
 import { useSolicitud } from '@/features/carrito/contexto';
 import { textoSobreProveedor, temaProveedor } from '@/shared/lib/colores-proveedor';
@@ -117,43 +116,18 @@ export function SelectorProveedor({ compacto = false }: { compacto?: boolean }) 
         })}
       </ScrollView>
 
-      {/* Modal: confirmar cambio de proveedor con carrito no vacío */}
-      <Modal
-        transparent
-        animationType="fade"
+      {/* Diálogo: confirmar cambio de proveedor con carrito no vacío */}
+      <ConfirmDialog
         visible={pendiente !== null}
-        onRequestClose={() => setPendiente(null)}
-      >
-        <View className="flex-1">
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Cancelar cambio de proveedor"
-            className="absolute inset-0 bg-black/50"
-            onPress={() => setPendiente(null)}
-          />
-          <View className="flex-1 items-center justify-center p-4">
-            <Card className="w-full max-w-md rounded-lg">
-              <CardContent className="gap-3">
-                <Text accessibilityRole="header" className="font-semibold">
-                  ¿Cambiar de proveedor?
-                </Text>
-                <Text className="text-sm text-muted-foreground">
-                  Tu carrito tiene {totalArticulos} artículo{totalArticulos === 1 ? '' : 's'} de{' '}
-                  {nombreProveedorCarrito}. Al cambiar se vaciará.
-                </Text>
-                <View className="flex-row justify-end gap-2">
-                  <Button size="sm" variant="outline" onPress={() => setPendiente(null)}>
-                    <Text>Cancelar</Text>
-                  </Button>
-                  <Button size="sm" onPress={confirmarCambio}>
-                    <Text>Cambiar y vaciar</Text>
-                  </Button>
-                </View>
-              </CardContent>
-            </Card>
-          </View>
-        </View>
-      </Modal>
+        titulo="¿Cambiar de proveedor?"
+        mensaje={`Tu carrito tiene ${totalArticulos} artículo${
+          totalArticulos === 1 ? '' : 's'
+        } de ${nombreProveedorCarrito}. Al cambiar se vaciará.`}
+        textoConfirmar="Cambiar y vaciar"
+        textoCancelar="Cancelar"
+        onConfirmar={confirmarCambio}
+        onCancelar={() => setPendiente(null)}
+      />
     </>
   );
 }

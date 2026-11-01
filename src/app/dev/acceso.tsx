@@ -3,13 +3,12 @@
 // docs/USUARIOS_PRUEBA.md). Fuera de __DEV__ no existe: redirige al catálogo.
 import { Redirect, router } from 'expo-router';
 
-import { volverA } from '@/shared/lib/navegacion';
-import { ChevronLeft } from 'lucide-react-native';
 import * as React from 'react';
-import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ActivityIndicator, View } from 'react-native';
 
-import { Card, CardContent } from '@/shared/ui/card';
+import { ListCard } from '@/shared/componentes/list-card';
+import { ScreenScroll } from '@/shared/componentes/screen';
+import { ScreenHeader } from '@/shared/componentes/screen-header';
 import { Text } from '@/shared/ui/text';
 import { supabase } from '@/shared/lib/supabase';
 import { useColoresIcono } from '@/shared/lib/theme';
@@ -77,7 +76,6 @@ const PERFILES: PerfilDev[] = [
 ];
 
 export default function DevAcceso() {
-  const insets = useSafeAreaInsets();
   const colores = useColoresIcono();
 
   // Perfil en curso (su email, o 'anonimo'): string | null. null = sin petición.
@@ -127,49 +125,29 @@ export default function DevAcceso() {
   };
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top + 8 }}>
-      <View className="flex-row items-center gap-2 px-4 pb-2">
-        <Pressable onPress={() => volverA('/acceso')} className="rounded-md p-1 active:bg-accent">
-          <ChevronLeft size={24} color={colores.primerPlano} />
-        </Pressable>
-        <Text className="text-xl font-bold tracking-tight">Acceso rápido (dev)</Text>
-      </View>
+    <ScreenScroll contentClassName="gap-3">
+      <ScreenHeader titulo="Acceso rápido (dev)" respaldo="/" />
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        className="flex-1"
-        contentContainerStyle={{ gap: 12, padding: 16, paddingBottom: 32 + insets.bottom }}
-      >
-        <Text className="text-xs text-muted-foreground">
-          Cambia de usuario con un toque para probar roles y visibilidad (ver docs/USUARIOS_PRUEBA.md).
-        </Text>
+      <Text className="text-xs text-muted-foreground">
+        Cambia de usuario con un toque para probar roles y visibilidad (ver docs/USUARIOS_PRUEBA.md).
+      </Text>
 
-        {PERFILES.map((p) => (
-          <View key={p.id} className="gap-1">
-            <Pressable
-              disabled={procesando !== null}
-              onPress={() => void entrar(p)}
-              className="active:opacity-80"
-            >
-              <Card className="rounded-lg p-3">
-                <CardContent className="gap-1 px-3">
-                  <View className="flex-row items-center justify-between gap-2">
-                    <Text className="font-medium">{p.nombre}</Text>
-                    {procesando === p.id && (
-                      <ActivityIndicator color="hsl(124.3 17.7% 31%)" />
-                    )}
-                  </View>
-                  <Text className="text-sm">{p.email ?? 'Sin sesión'}</Text>
-                  <Text className="text-xs text-muted-foreground">{p.rol}</Text>
-                </CardContent>
-              </Card>
-            </Pressable>
-            {errores[p.id] ? (
-              <Text className="px-3 text-xs text-destructive">{errores[p.id]}</Text>
-            ) : null}
-          </View>
-        ))}
-      </ScrollView>
-    </View>
+      {PERFILES.map((p) => (
+        <View key={p.id} className="gap-1">
+          {/* entrar() ya ignora toques mientras hay una petición en curso. */}
+          <ListCard onPress={() => void entrar(p)} className="gap-1">
+            <View className="flex-row items-center justify-between gap-2">
+              <Text className="font-medium">{p.nombre}</Text>
+              {procesando === p.id && <ActivityIndicator color={colores.primario} />}
+            </View>
+            <Text className="text-sm">{p.email ?? 'Sin sesión'}</Text>
+            <Text className="text-xs text-muted-foreground">{p.rol}</Text>
+          </ListCard>
+          {errores[p.id] ? (
+            <Text className="px-3 text-xs text-destructive">{errores[p.id]}</Text>
+          ) : null}
+        </View>
+      ))}
+    </ScreenScroll>
   );
 }

@@ -1,9 +1,8 @@
 import { Flame } from 'lucide-react-native';
 import * as React from 'react';
-import { Platform, Pressable, ScrollView, View } from 'react-native';
+import { Platform, ScrollView, View } from 'react-native';
 
-import { Text } from '@/shared/ui/text';
-import { useColoresIcono } from '@/shared/lib/theme';
+import { Chip } from '@/shared/ui/chip';
 import type { Categoria } from '@/shared/lib/types';
 import { cn } from '@/shared/lib/utils';
 
@@ -14,10 +13,9 @@ type Props = {
 };
 
 // Fila de chips de categorías con desplazamiento horizontal (diseño Stitch):
-// el chip activo lleva acento ámbar + icono de llama y se deselecciona al
-// tocarlo de nuevo.
+// el chip activo lleva acento primario + icono de llama y se deselecciona al
+// tocarlo de nuevo. Los chips a mano se sustituyen por la primitiva Chip.
 export function ChipsCategorias({ categorias, seleccionada, onSeleccionar }: Props) {
-  const colores = useColoresIcono();
   return (
     <ScrollView
       horizontal
@@ -33,24 +31,13 @@ export function ChipsCategorias({ categorias, seleccionada, onSeleccionar }: Pro
         {categorias.map((c) => {
           const activa = seleccionada === c.id;
           return (
-            <Pressable
+            <Chip
               key={c.id}
+              etiqueta={c.nombre}
+              activo={activa}
+              icono={activa ? Flame : undefined}
               onPress={() => onSeleccionar(activa ? null : c.id)}
-              className={cn(
-                'flex-row items-center gap-1.5 rounded-lg px-3.5 py-1.5 active:scale-95',
-                activa ? 'bg-primary' : 'border border-border bg-background'
-              )}
-            >
-              {activa && <Flame size={16} color={colores.primarioClaro} />}
-              <Text
-                className={cn(
-                  'text-sm font-medium',
-                  activa ? 'text-primary-foreground' : 'text-foreground'
-                )}
-              >
-                {c.nombre}
-              </Text>
-            </Pressable>
+            />
           );
         })}
       </View>

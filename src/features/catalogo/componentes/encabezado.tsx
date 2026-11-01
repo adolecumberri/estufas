@@ -4,6 +4,7 @@ import * as React from 'react';
 import { Pressable, View } from 'react-native';
 
 import { Badge } from '@/shared/ui/badge';
+import { IconButton } from '@/shared/ui/icon-button';
 import { Text } from '@/shared/ui/text';
 import { APP, RUTAS } from '@/shared/constantes';
 import { useSolicitud } from '@/features/carrito/contexto';
@@ -41,14 +42,12 @@ export function EncabezadoCatalogo({ onAbrirMenu }: { onAbrirMenu?: () => void }
     <View className="h-16 flex-row items-center justify-between border-b border-border bg-background px-4">
       <View className="flex-row items-center gap-2">
         {onAbrirMenu && (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Abrir menú de navegación"
+          <IconButton
+            icono={Menu}
+            tamano={24}
+            etiquetaAccesibilidad="Abrir menú de navegación"
             onPress={onAbrirMenu}
-            className="rounded-lg p-2 active:bg-muted"
-          >
-            <Menu size={22} color={colores.primerPlano} />
-          </Pressable>
+          />
         )}
         <View className="h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
           <Flame size={22} color={colores.primario} />
@@ -86,18 +85,12 @@ export function EncabezadoCatalogo({ onAbrirMenu }: { onAbrirMenu?: () => void }
         )}
 
         {mostrarCuenta && (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={session ? 'Cuenta de usuario' : 'Iniciar sesión'}
+          <IconButton
+            icono={session ? UserRound : LogIn}
+            tamano={20}
+            etiquetaAccesibilidad={session ? 'Cuenta de usuario' : 'Iniciar sesión'}
             onPress={destinoCuenta}
-            className="rounded-lg p-2 active:bg-muted"
-          >
-            {session ? (
-              <UserRound size={20} color={colores.primerPlano} />
-            ) : (
-              <LogIn size={20} color={colores.primerPlano} />
-            )}
-          </Pressable>
+          />
         )}
       </View>
     </View>
