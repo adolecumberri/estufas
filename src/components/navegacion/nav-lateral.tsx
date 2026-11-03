@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Flame, LogIn, X } from 'lucide-react-native';
+import { Flame, LogIn, LogOut, X } from 'lucide-react-native';
 import * as React from 'react';
 import { Modal, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,6 +9,7 @@ import { Text } from '@/components/ui/text';
 import { APP, COMBUSTIBLES, RUTAS } from '@/constants';
 import { useAuth } from '@/hooks/use-auth';
 import type { Categoria, Combustible } from '@/lib/types';
+import { supabase } from '@/lib/supabase';
 import { useColoresIcono } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 
@@ -44,6 +45,19 @@ export function NavLateral({
     if (perfil?.rol === 'admin') return RUTAS.admin;
     if (perfil?.rol === 'comercial') return RUTAS.cartera;
     return RUTAS.pedidos;
+  };
+
+  // Cierre de sesión local (la sesión de la cuenta queda invalidada en este
+  // dispositivo). Si falla, no se cierra el menú ni se navega: el usuario
+  // sigue dentro y puede reintentar.
+  const cerrarSesionLocal = async () => {
+    try {
+      const { error } = await supabase.auth.signOut({ scope: 'local' });
+      if (error) return;
+      onCerrar();
+    } catch {
+      // sin efecto: se mantiene la sesión y el menú abierto
+    }
   };
 
   return (
@@ -183,19 +197,25 @@ export function NavLateral({
             )}
           </ScrollView>
 
-          {/* Pie del panel: acceso a la cuenta */}
+          {/* Pie del panel: acceso a la cuenta y cierre de sesión */}
           <View className="border-t border-border p-3">
             {session ? (
-              <Button
-                variant="outline"
-                className="w-full"
-                onPress={() => {
-                  router.push(destinoCuenta());
-                  onCerrar();
-                }}
-              >
-                <Text>Mi cuenta</Text>
-              </Button>
+              <View className="gap-2">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onPress={() => {
+                    router.push(destinoCuenta());
+                    onCerrar();
+                  }}
+                >
+                  <Text>Mi cuenta</Text>
+                </Button>
+                <Button variant="ghost" className="w-full" onPress={() => void cerrarSesionLocal()}>
+                  <LogOut size={16} color={colores.destructivo} />
+                  <Text className="text-destructive">Cerrar sesión</Text>
+                </Button>
+              </View>
             ) : (
               <Button
                 className="w-full"

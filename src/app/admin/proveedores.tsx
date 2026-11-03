@@ -1,7 +1,16 @@
 import { Redirect, router } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
+
+import { volverA } from '@/lib/navegacion';
+import {
+  Boxes,
+  ChevronLeft,
+  Flame,
+  Flower,
+  Plus,
+  type LucideIcon,
+} from 'lucide-react-native';
 import * as React from 'react';
-import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
+import { ActivityIndicator, Modal, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Badge } from '@/components/ui/badge';
@@ -9,81 +18,22 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
-import { useAsignacionesProveedores, useProveedores, useUsuarios } from '@/hooks/use-admin';
+import { useProveedores } from '@/hooks/use-admin';
 import { useAuth } from '@/hooks/use-auth';
+import { temaProveedor } from '@/lib/colores-proveedor';
 import { useColoresIcono } from '@/lib/theme';
 import { cn } from '@/lib/utils';
-import type { PerfilUsuario, Proveedor } from '@/lib/types';
+import type { Proveedor } from '@/lib/types';
 
-// Fila de un comercial dentro de un proveedor: su asignación, el toggle
-// habilitado/deshabilitado y las acciones asignar/desasignar. Cada fila es un
-// componente propio, así que puede llamar al hook de asignaciones (una
-// instancia por comercial) sin romper las reglas de hooks.
-function FilaComercial({ comercial, proveedorId }: { comercial: PerfilUsuario; proveedorId: string }) {
-  const { asignaciones, cargando, error: errorCarga, recargar, asignar, desasignar, habilitar } =
-    useAsignacionesProveedores(comercial.id);
-  const [errorAccion, setErrorAccion] = React.useState<string | null>(null);
-
-  const asignacion = asignaciones.find((a) => a.proveedor_id === proveedorId);
-
-  const ejecutar = async (accion: () => Promise<{ error: string | null }>) => {
-    setErrorAccion(null);
-    const { error } = await accion();
-    setErrorAccion(error);
-    if (!error) await recargar();
-  };
-
-  return (
-    <View className="gap-1">
-      <View className="flex-row items-center justify-between gap-2">
-        <View className="flex-1">
-          <Text numberOfLines={1} className="text-xs">
-            {comercial.nombre} {comercial.apellidos ?? ''}
-          </Text>
-          {asignacion && (
-            <Badge variant="outline" className="mt-1 self-start">
-              <Text className="text-[10px]">
-                Asignado{asignacion.habilitado ? '' : ' · deshabilitado'}
-              </Text>
-            </Badge>
-          )}
-        </View>
-        {cargando ? (
-          <ActivityIndicator size="small" color="hsl(24.6 95% 53.1%)" />
-        ) : errorCarga ? (
-          <Text className="text-xs text-destructive">No se pudo cargar la asignación</Text>
-        ) : asignacion ? (
-          <View className="flex-row items-center gap-2">
-            <Pressable
-              accessibilityRole="switch"
-              accessibilityState={{ checked: asignacion.habilitado }}
-              accessibilityLabel={`Proveedor habilitado para ${comercial.nombre}`}
-              onPress={() => void ejecutar(() => habilitar(proveedorId, !asignacion.habilitado))}
-              className={cn(
-                'h-5 w-9 flex-row items-center rounded-full px-0.5',
-                asignacion.habilitado ? 'justify-end bg-primary' : 'justify-start bg-muted'
-              )}
-            >
-              <View className="h-4 w-4 rounded-full bg-white" />
-            </Pressable>
-            <Button
-              size="sm"
-              variant="outline"
-              onPress={() => void ejecutar(() => desasignar(proveedorId))}
-            >
-              <Text className="text-xs">Desasignar</Text>
-            </Button>
-          </View>
-        ) : (
-          <Button size="sm" onPress={() => void ejecutar(() => asignar(proveedorId))}>
-            <Text className="text-xs">Asignar</Text>
-          </Button>
-        )}
-      </View>
-      {errorAccion && <Text className="text-xs text-muted-foreground">{errorAccion}</Text>}
-    </View>
-  );
+// Icono asociado a cada proveedor: llama (pellets), flor (leña) o cajas por
+// defecto. (Duplicada a propósito en admin/comerciales.tsx para no crear un
+// módulo compartido mientras otros workers editan estos archivos.)
+function iconoProveedor(icono: string | null | undefined): LucideIcon {
+  if (icono === 'flame') return Flame;
+  if (icono === 'flower') return Flower;
+  return Boxes;
 }
+
 
 export default function AdminProveedores() {
   const insets = useSafeAreaInsets();
@@ -92,15 +42,18 @@ export default function AdminProveedores() {
 
   const { proveedores, cargando, error, recargar, crearProveedor, actualizarProveedor } =
     useProveedores();
-  const { usuarios } = useUsuarios();
-  const comerciales = usuarios.filter((u) => u.rol === 'comercial');
 
+  // Formulario de creación, ahora en un modal como el de "Nuevo comercial".
+  const [modalAbierto, setModalAbierto] = React.useState(false);
   const [nombre, setNombre] = React.useState('');
   const [nif, setNif] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [telefono, setTelefono] = React.useState('');
   const [creando, setCreando] = React.useState(false);
-  const [mensaje, setMensaje] = React.useState<string | null>(null);
+  const [mensajeCrear, setMensajeCrear] = React.useState<string | null>(null);
+
+  // Mensajes de la edición inline (el modal está cerrado en ese caso).
+  const [mensajeLista, setMensajeLista] = React.useState<string | null>(null);
 
   const [proveedorEditando, setProveedorEditando] = React.useState<string | null>(null);
   const [editNombre, setEditNombre] = React.useState('');
@@ -111,10 +64,15 @@ export default function AdminProveedores() {
   if (!session) return <Redirect href="/acceso" />;
   if (perfil && perfil.rol !== 'admin') return <Redirect href="/pedidos" />;
 
+  const abrirModal = () => {
+    setMensajeCrear(null);
+    setModalAbierto(true);
+  };
+
   const crear = async () => {
     const nombreTrim = nombre.trim();
     if (!nombreTrim) {
-      setMensaje('El nombre es obligatorio.');
+      setMensajeCrear('El nombre es obligatorio.');
       return;
     }
     setCreando(true);
@@ -125,12 +83,13 @@ export default function AdminProveedores() {
       telefono: telefono.trim() || null,
     });
     setCreando(false);
-    setMensaje(error ?? 'Proveedor creado.');
+    setMensajeCrear(error);
     if (!error) {
       setNombre('');
       setNif('');
       setEmail('');
       setTelefono('');
+      setModalAbierto(false);
       await recargar();
     }
   };
@@ -141,12 +100,13 @@ export default function AdminProveedores() {
     setEditNif(p.nif ?? '');
     setEditEmail(p.email ?? '');
     setEditTelefono(p.telefono ?? '');
+    setMensajeLista(null);
   };
 
   const guardarEdicion = async (id: string) => {
     const nombreTrim = editNombre.trim();
     if (!nombreTrim) {
-      setMensaje('El nombre no puede quedar vacío.');
+      setMensajeLista('El nombre no puede quedar vacío.');
       return;
     }
     // Los campos opcionales se envían tal cual (recortados): una cadena vacía
@@ -158,161 +118,196 @@ export default function AdminProveedores() {
       email: editEmail.trim(),
       telefono: editTelefono.trim(),
     });
-    setMensaje(error ?? 'Proveedor actualizado.');
+    setMensajeLista(error ?? 'Proveedor actualizado.');
     if (!error) {
       setProveedorEditando(null);
       await recargar();
     }
   };
 
-  const alternarActivo = async (p: Proveedor) => {
-    const { error } = await actualizarProveedor(p.id, { activo: !p.activo });
-    setMensaje(error ?? (p.activo ? 'Proveedor desactivado.' : 'Proveedor activado.'));
-    if (!error) await recargar();
-  };
-
   return (
-    <ScrollView showsVerticalScrollIndicator={false} className="flex-1 bg-background" contentContainerStyle={{ paddingBottom: 32 }}>
-      <View style={{ paddingTop: insets.top + 8 }} className="gap-4 p-4">
-        <View className="flex-row items-center gap-2">
-          <Pressable onPress={() => router.back()} className="rounded-md p-1 active:bg-accent">
-            <ChevronLeft size={24} color={colores.primerPlano} />
-          </Pressable>
-          <Text className="text-xl font-bold tracking-tight">Proveedores</Text>
-        </View>
-
-        {/* Formulario: nuevo proveedor */}
-        <Card className="rounded-[10px]">
-          <CardContent className="gap-2">
-            <Text className="font-semibold">Nuevo proveedor</Text>
-            <Input
-              value={nombre}
-              onChangeText={setNombre}
-              placeholder="Nombre (obligatorio)"
-              className="h-9 text-sm"
-            />
-            <Input value={nif} onChangeText={setNif} placeholder="NIF" className="h-9 text-sm" />
-            <Input
-              value={email}
-              onChangeText={setEmail}
-              placeholder="Email"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              className="h-9 text-sm"
-            />
-            <Input
-              value={telefono}
-              onChangeText={setTelefono}
-              placeholder="Teléfono"
-              keyboardType="phone-pad"
-              className="h-9 text-sm"
-            />
-            <Button size="sm" disabled={creando} onPress={() => void crear()}>
-              <Text>{creando ? 'Creando…' : 'Crear'}</Text>
+    <>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        className="flex-1 bg-background"
+        contentContainerStyle={{ paddingBottom: 32 }}
+      >
+        <View style={{ paddingTop: insets.top + 8 }} className="gap-4 p-4">
+          <View className="flex-row items-center gap-2">
+            <Pressable onPress={() => volverA('/admin')} className="rounded-md p-1 active:bg-accent">
+              <ChevronLeft size={24} color={colores.primerPlano} />
+            </Pressable>
+            <Text className="flex-1 text-xl font-bold tracking-tight">Proveedores</Text>
+            <Button size="sm" onPress={abrirModal}>
+              <Plus size={16} color={colores.primarioClaro} />
+              <Text>Nuevo proveedor</Text>
             </Button>
-            {mensaje && <Text className="text-xs text-muted-foreground">{mensaje}</Text>}
-          </CardContent>
-        </Card>
-
-        {/* Lista de proveedores */}
-        {cargando ? (
-          <View className="items-center py-16">
-            <ActivityIndicator color="hsl(24.6 95% 53.1%)" />
           </View>
-        ) : error ? (
-          <Text className="text-muted-foreground">{error}</Text>
-        ) : proveedores.length === 0 ? (
-          <Text className="text-muted-foreground">No hay proveedores todavía.</Text>
-        ) : (
-          <View className="gap-3">
-            {proveedores.map((p) => (
-              <Card key={p.id} className="rounded-[10px] p-4">
-                <CardContent className="gap-2">
-                  <View className="flex-row items-start justify-between gap-2">
-                    <View className="flex-1 gap-1">
-                      <Text className="font-medium">{p.nombre}</Text>
-                      <Text className="text-xs text-muted-foreground">
-                        {[p.nif, p.email, p.telefono].filter(Boolean).join(' · ') || 'Sin datos de contacto'}
-                      </Text>
+
+          {/* Lista de proveedores */}
+          {cargando ? (
+            <View className="items-center py-16">
+              <ActivityIndicator color="hsl(124.3 17.7% 31%)" />
+            </View>
+          ) : error ? (
+            <Text className="text-muted-foreground">{error}</Text>
+          ) : proveedores.length === 0 ? (
+            <Text className="text-muted-foreground">No hay proveedores todavía.</Text>
+          ) : (
+            <View className="gap-3">
+              {mensajeLista && <Text className="text-sm text-muted-foreground">{mensajeLista}</Text>}
+              {proveedores.map((p) => {
+                const Icono = iconoProveedor(p.icono);
+                const tema = temaProveedor(p.color);
+                return (
+                <Card key={p.id} className="rounded-[10px] p-4">
+                  <CardContent className="gap-2">
+                    <View className="flex-row items-start justify-between gap-2">
+                      <View className="flex-1 gap-1">
+                        <View className="flex-row items-center gap-2">
+                          <Icono size={18} color={tema.base} />
+                          <Text className="font-medium">{p.nombre}</Text>
+                          <View
+                            className="h-2.5 w-2.5 rounded-full"
+                            style={{ backgroundColor: tema.base }}
+                          />
+                        </View>
+                        <Text className="text-xs text-muted-foreground">
+                          {[p.nif, p.email, p.telefono].filter(Boolean).join(' · ') ||
+                            'Sin datos de contacto'}
+                        </Text>
+                      </View>
+                      {/* Solo lectura: la activación ya no se gestiona aquí. */}
+                      <Badge variant={p.activo ? 'default' : 'outline'}>
+                        <Text>{p.activo ? 'Activo' : 'Inactivo'}</Text>
+                      </Badge>
                     </View>
-                    <Badge variant={p.activo ? 'default' : 'outline'}>
-                      <Text>{p.activo ? 'Activo' : 'Inactivo'}</Text>
-                    </Badge>
-                  </View>
 
-                  <View className="flex-row flex-wrap gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onPress={() => abrirEdicion(p)}
-                    >
-                      <Text className="text-xs">
-                        {proveedorEditando === p.id ? 'Cerrar edición' : 'Editar'}
-                      </Text>
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={p.activo ? 'outline' : 'secondary'}
-                      onPress={() => void alternarActivo(p)}
-                    >
-                      <Text className="text-xs">{p.activo ? 'Desactivar' : 'Activar'}</Text>
-                    </Button>
-                  </View>
-
-                  {proveedorEditando === p.id && (
-                    <View className="gap-2">
-                      <Input
-                        value={editNombre}
-                        onChangeText={setEditNombre}
-                        placeholder="Nombre"
-                        className="h-9 text-sm"
-                      />
-                      <Input
-                        value={editNif}
-                        onChangeText={setEditNif}
-                        placeholder="NIF"
-                        className="h-9 text-sm"
-                      />
-                      <Input
-                        value={editEmail}
-                        onChangeText={setEditEmail}
-                        placeholder="Email"
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        className="h-9 text-sm"
-                      />
-                      <Input
-                        value={editTelefono}
-                        onChangeText={setEditTelefono}
-                        placeholder="Teléfono"
-                        keyboardType="phone-pad"
-                        className="h-9 text-sm"
-                      />
-                      <Button size="sm" variant="secondary" onPress={() => void guardarEdicion(p.id)}>
-                        <Text>Guardar</Text>
+                    <View className="flex-row flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        style={{ borderColor: tema.borde }}
+                        // Ruta dedicada del catálogo del proveedor; si aún no
+                        // está en los tipos generados, el cast mantiene el
+                        // typecheck verde (se regeneran al arrancar dev).
+                        onPress={() =>
+                          router.push({
+                            pathname: '/catalogo/proveedor/[id]',
+                            params: { id: p.id },
+                          } as never)
+                        }
+                      >
+                        <Boxes size={14} color={colores.tenue} />
+                        <Text className="text-xs" style={{ color: tema.texto }}>
+                          Ver catálogo
+                        </Text>
+                      </Button>
+                      <Button size="sm" variant="outline" onPress={() => abrirEdicion(p)}>
+                        <Text className="text-xs">
+                          {proveedorEditando === p.id ? 'Cerrar edición' : 'Editar'}
+                        </Text>
                       </Button>
                     </View>
-                  )}
 
-                  {/* Comerciales asignados a este proveedor */}
-                  <View className="gap-2 border-t border-border pt-3">
-                    <Text className="text-sm font-semibold">Comerciales</Text>
-                    {comerciales.length === 0 ? (
-                      <Text className="text-xs text-muted-foreground">
-                        No hay comerciales registrados.
-                      </Text>
-                    ) : (
-                      comerciales.map((c) => (
-                        <FilaComercial key={c.id} comercial={c} proveedorId={p.id} />
-                      ))
+                    {proveedorEditando === p.id && (
+                      <View className="gap-2">
+                        <Input
+                          value={editNombre}
+                          onChangeText={setEditNombre}
+                          placeholder="Nombre"
+                          className="h-9 text-sm"
+                        />
+                        <Input
+                          value={editNif}
+                          onChangeText={setEditNif}
+                          placeholder="NIF"
+                          className="h-9 text-sm"
+                        />
+                        <Input
+                          value={editEmail}
+                          onChangeText={setEditEmail}
+                          placeholder="Email"
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                          className="h-9 text-sm"
+                        />
+                        <Input
+                          value={editTelefono}
+                          onChangeText={setEditTelefono}
+                          placeholder="Teléfono"
+                          keyboardType="phone-pad"
+                          className="h-9 text-sm"
+                        />
+                        <Button size="sm" variant="secondary" onPress={() => void guardarEdicion(p.id)}>
+                          <Text>Guardar</Text>
+                        </Button>
+                      </View>
                     )}
-                  </View>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+                );
+              })}
+            </View>
+          )}
+        </View>
+      </ScrollView>
+
+      {/* Modal: nuevo proveedor (mismo patrón que el de "Nuevo comercial"). */}
+      <Modal
+        transparent
+        animationType="fade"
+        visible={modalAbierto}
+        onRequestClose={() => setModalAbierto(false)}
+      >
+        <View className="flex-1">
+          <Pressable
+            accessibilityLabel="Cerrar formulario"
+            className="absolute inset-0 bg-black/50"
+            onPress={() => setModalAbierto(false)}
+          />
+          <View className="flex-1 items-center justify-center p-4">
+            <Card className="w-full max-w-md rounded-[10px]">
+              <CardContent className="gap-2">
+                <Text className="font-semibold">Nuevo proveedor</Text>
+                <Input
+                  value={nombre}
+                  onChangeText={setNombre}
+                  placeholder="Nombre (obligatorio)"
+                  className="h-9 text-sm"
+                />
+                <Input value={nif} onChangeText={setNif} placeholder="NIF" className="h-9 text-sm" />
+                <Input
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="Email"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  className="h-9 text-sm"
+                />
+                <Input
+                  value={telefono}
+                  onChangeText={setTelefono}
+                  placeholder="Teléfono"
+                  keyboardType="phone-pad"
+                  className="h-9 text-sm"
+                />
+                <View className="flex-row justify-end gap-2 pt-1">
+                  <Button size="sm" variant="outline" onPress={() => setModalAbierto(false)}>
+                    <Text>Cancelar</Text>
+                  </Button>
+                  <Button size="sm" disabled={creando} onPress={() => void crear()}>
+                    <Text>{creando ? 'Creando…' : 'Crear'}</Text>
+                  </Button>
+                </View>
+                {mensajeCrear && (
+                  <Text className="text-xs text-muted-foreground">{mensajeCrear}</Text>
+                )}
+              </CardContent>
+            </Card>
           </View>
-        )}
-      </View>
-    </ScrollView>
+        </View>
+      </Modal>
+    </>
   );
 }

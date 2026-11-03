@@ -28,6 +28,7 @@ import { useCatalogo } from '@/hooks/use-catalogo';
 import { useCliente, useDescuentos } from '@/hooks/use-comercial';
 import { usePedidos } from '@/hooks/use-pedidos';
 import { formatEUR, formatPct } from '@/lib/format';
+import { volverA } from '@/lib/navegacion';
 import { useColoresIcono } from '@/lib/theme';
 
 const DESCRIPCIONES_COMBUSTIBLE: Record<CombustibleId, string> = {
@@ -74,8 +75,10 @@ export default function ClienteDetalle() {
   }, [cliente]);
 
   if (!session) return <Redirect href="/acceso" />;
+  // El admin no gestiona cartera de clientes: vuelve a su panel.
+  if (perfil?.rol === 'admin') return <Redirect href="/admin" />;
 
-  const puedeGestionar = perfil?.rol === 'comercial' || perfil?.rol === 'admin';
+  const puedeGestionar = perfil?.rol === 'comercial';
   if (perfil && !puedeGestionar) return <Redirect href="/pedidos" />;
 
   const pedidosDelCliente = pedidos.filter((p) => p.cliente_id === id);
@@ -140,7 +143,7 @@ export default function ClienteDetalle() {
   if (cargando || !cliente) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator color="hsl(24.6 95% 53.1%)" />
+        <ActivityIndicator color="hsl(124.3 17.7% 31%)" />
       </View>
     );
   }
@@ -157,7 +160,7 @@ export default function ClienteDetalle() {
         {/* Cabecera */}
         <View className="gap-2">
           <Pressable
-            onPress={() => router.back()}
+            onPress={() => volverA('/cartera')}
             className="flex-row items-center gap-1 self-start px-1 py-1 active:bg-accent"
           >
             <ChevronLeft size={18} color={colores.primerPlano} />
@@ -463,7 +466,7 @@ export default function ClienteDetalle() {
                   />
                 </View>
                 {catalogo.cargando ? (
-                  <ActivityIndicator color="hsl(24.6 95% 53.1%)" />
+                  <ActivityIndicator color="hsl(124.3 17.7% 31%)" />
                 ) : catalogo.productos.length === 0 ? (
                   <Text className="text-sm text-muted-foreground">Sin resultados.</Text>
                 ) : (

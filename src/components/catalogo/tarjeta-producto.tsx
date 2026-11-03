@@ -31,9 +31,12 @@ function TarjetaProducto({
   origen?: string;
   onAnadir: (linea: LineaSolicitud) => void;
 }) {
-  const { session } = useAuth();
+  const { session, perfil } = useAuth();
   const [cantidad, setCantidad] = React.useState(1);
   const colores = useColoresIcono();
+
+  // El admin navega el catálogo en SOLO LECTURA: sin stepper ni botón "Añadir".
+  const esAdmin = perfil?.rol === 'admin';
 
   const restar = () => setCantidad((c) => Math.max(CANTIDAD_MIN, c - 1));
   const sumar = () => setCantidad((c) => Math.min(CANTIDAD_MAX, c + 1));
@@ -128,36 +131,38 @@ function TarjetaProducto({
             <Text className="text-[10px] font-medium text-muted-foreground">Sin IVA</Text>
           </View>
 
-          {/* Stepper de cantidad (cantidad que se añadirá) */}
-          <View className="mt-1 flex-row">
-            <View className="flex-row items-center justify-between rounded-[10px] border border-border bg-muted px-1 py-0.5">
-              <Pressable
-                accessibilityLabel="Reducir cantidad"
-                onPress={(e) => {
-                  e.stopPropagation();
-                  restar();
-                }}
-                className="h-6 w-6 items-center justify-center active:scale-90"
-              >
-                <Minus size={16} color={colores.tenue} />
-              </Pressable>
-              <Text className="text-xs font-semibold">{cantidad}</Text>
-              <Pressable
-                accessibilityLabel="Aumentar cantidad"
-                onPress={(e) => {
-                  e.stopPropagation();
-                  sumar();
-                }}
-                className="h-6 w-6 items-center justify-center active:scale-90"
-              >
-                <Plus size={16} color={colores.tenue} />
-              </Pressable>
+          {/* Stepper de cantidad (cantidad que se añadirá); no para admin */}
+          {!esAdmin && (
+            <View className="mt-1 flex-row">
+              <View className="flex-row items-center justify-between rounded-[10px] border border-border bg-muted px-1 py-0.5">
+                <Pressable
+                  accessibilityLabel="Reducir cantidad"
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    restar();
+                  }}
+                  className="h-6 w-6 items-center justify-center active:scale-90"
+                >
+                  <Minus size={16} color={colores.tenue} />
+                </Pressable>
+                <Text className="text-xs font-semibold">{cantidad}</Text>
+                <Pressable
+                  accessibilityLabel="Aumentar cantidad"
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    sumar();
+                  }}
+                  className="h-6 w-6 items-center justify-center active:scale-90"
+                >
+                  <Plus size={16} color={colores.tenue} />
+                </Pressable>
+              </View>
             </View>
-          </View>
+          )}
         </View>
 
-        {/* Botón "Añadir" a ancho completo (solo con sesión) */}
-        {session && (
+        {/* Botón "Añadir" a ancho completo (solo con sesión; no para admin) */}
+        {session && !esAdmin && (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`Añadir ${producto.nombre} al pedido`}

@@ -34,6 +34,8 @@ export function EncabezadoCatalogo({ onAbrirMenu }: { onAbrirMenu?: () => void }
   // El admin no usa el icono de cuenta de la cabecera: su acceso al panel
   // está en la barra inferior.
   const mostrarCuenta = !(session && perfil?.rol === 'admin');
+  // El admin tampoco ve el carrito: navega el catálogo en solo lectura.
+  const mostrarCarrito = session && perfil?.rol !== 'admin';
 
   return (
     <View className="h-16 flex-row items-center justify-between border-b border-border bg-background px-4">
@@ -57,7 +59,7 @@ export function EncabezadoCatalogo({ onAbrirMenu }: { onAbrirMenu?: () => void }
       <View className="flex-row items-center gap-1.5">
         {/* El carrito solo existe con sesión: sin login no se puede poblar
             (los botones "Añadir" no se muestran) y no debe confundir. */}
-        {session && (
+        {mostrarCarrito && (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={

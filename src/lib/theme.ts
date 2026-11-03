@@ -11,7 +11,7 @@ export const THEME = {
     cardForeground: 'hsl(240 10% 3.9%)',
     popover: 'hsl(0 0% 100%)',
     popoverForeground: 'hsl(240 10% 3.9%)',
-    primary: 'hsl(24.6 95% 53.1%)',
+    primary: 'hsl(124.3 17.7% 31%)',
     primaryForeground: 'hsl(0 0% 98%)',
     secondary: 'hsl(240 4.8% 95.9%)',
     secondaryForeground: 'hsl(240 5.9% 10%)',
@@ -22,7 +22,7 @@ export const THEME = {
     destructive: 'hsl(0 84.2% 60.2%)',
     border: 'hsl(240 5.9% 90%)',
     input: 'hsl(240 5.9% 90%)',
-    ring: 'hsl(24.6 95% 53.1%)',
+    ring: 'hsl(124.3 17.7% 31%)',
     radius: '0.625rem',
   },
   dark: {
@@ -32,7 +32,7 @@ export const THEME = {
     cardForeground: 'hsl(0 0% 98%)',
     popover: 'hsl(240 10% 3.9%)',
     popoverForeground: 'hsl(0 0% 98%)',
-    primary: 'hsl(24.6 95% 53.1%)',
+    primary: 'hsl(124.3 17.7% 31%)',
     primaryForeground: 'hsl(0 0% 98%)',
     secondary: 'hsl(240 3.7% 15.9%)',
     secondaryForeground: 'hsl(0 0% 98%)',
@@ -43,7 +43,7 @@ export const THEME = {
     destructive: 'hsl(0 72.2% 50.6%)',
     border: 'hsl(240 3.7% 15.9%)',
     input: 'hsl(240 3.7% 15.9%)',
-    ring: 'hsl(24.6 95% 53.1%)',
+    ring: 'hsl(124.3 17.7% 31%)',
     radius: '0.625rem',
   },
 } as const;
@@ -80,14 +80,14 @@ export const NAV_THEME: Record<'light' | 'dark', typeof DefaultTheme> = {
 // explícito según el tema (los tokens de clase no llegan al stroke del SVG).
 export const COLORES_ICONO = {
   light: {
-    primario: '#f97316',
+    primario: '#415D43',
     primarioClaro: '#fafafa',
     primerPlano: '#09090b',
     tenue: '#71717a',
     destructivo: '#dc2626',
   },
   dark: {
-    primario: '#f97316',
+    primario: '#415D43',
     primarioClaro: '#fafafa',
     primerPlano: '#fafafa',
     tenue: '#a1a1aa',

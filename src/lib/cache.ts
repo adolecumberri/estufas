@@ -41,3 +41,13 @@ export async function cacheEdad(clave: string): Promise<number | null> {
     return null;
   }
 }
+
+// Elimina una entrada de caché (p. ej. al recibir una denegación de permisos:
+// una autorización cacheada no debe sobrevivir a la revocación).
+export async function cacheBorrar(clave: string): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(clave);
+  } catch {
+    // sin almacenamiento disponible
+  }
+}

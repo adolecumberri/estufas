@@ -3,7 +3,6 @@ import {
   Building2,
   CheckCircle2,
   ChevronRight,
-  LogOut,
   ReceiptText,
   User,
   Zap,
@@ -33,7 +32,7 @@ type Filtro = (typeof FILTROS)[number];
 export default function Pedidos() {
   const insets = useSafeAreaInsets();
   const colores = useColoresIcono();
-  const { session, perfil, cerrarSesion } = useAuth();
+  const { session, perfil } = useAuth();
   const { pedidos, cargando: cargandoPedidos, error: errorPedidos, recargar } = usePedidos();
   const { clientes } = useCartera();
   const { confirmar } = useAccionesPedido();
@@ -57,11 +56,13 @@ export default function Pedidos() {
   );
 
   if (!session) return <Redirect href="/acceso" />;
+  // El admin no tiene pedidos propios ni cartera: su ámbito es Comerciales y
+  // Proveedores (pestaña Admin), no la gestión de pedidos.
+  if (perfil?.rol === 'admin') return <Redirect href="/admin" />;
 
-  const esComercialOAdmin = perfil?.rol === 'comercial' || perfil?.rol === 'admin';
+  const esComercialOAdmin = perfil?.rol === 'comercial';
   // Subtítulo de la cabecera según el rol (el cliente solo ve su email).
-  const etiquetaRol =
-    perfil?.rol === 'comercial' ? 'Comercial' : perfil?.rol === 'admin' ? 'Admin' : null;
+  const etiquetaRol = perfil?.rol === 'comercial' ? 'Comercial' : null;
   const pendientes = pedidos.filter((p) => p.estado === 'solicitado');
   const pedidosFiltrados = filtro === 'todos' ? pedidos : pedidos.filter((p) => p.estado === filtro);
 
@@ -105,7 +106,7 @@ export default function Pedidos() {
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top + 8 }}>
-      {/* Cabecera */}
+      {/* Cabecera (el cierre de sesión vive en la navegación lateral) */}
       <View className="flex-row items-center justify-between px-4 pb-2">
         <View className="gap-0.5">
           <Text className="text-xl font-bold tracking-tight">Pedidos</Text>
@@ -113,9 +114,6 @@ export default function Pedidos() {
             {etiquetaRol ? `${etiquetaRol} · ${perfil?.email ?? ''}` : (perfil?.email ?? '')}
           </Text>
         </View>
-        <Pressable onPress={() => void cerrarSesion()} className="rounded-md p-2 active:bg-accent">
-          <LogOut size={20} color={colores.tenue} />
-        </Pressable>
       </View>
 
       <ScrollView
@@ -169,7 +167,7 @@ export default function Pedidos() {
 
         {cargandoPedidos ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="hsl(24.6 95% 53.1%)" />
+            <ActivityIndicator color="hsl(124.3 17.7% 31%)" />
           </View>
         ) : errorPedidos ? (
           <View className="flex-1 items-center justify-center gap-3 px-8">

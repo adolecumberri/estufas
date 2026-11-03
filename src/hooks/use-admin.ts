@@ -1,7 +1,7 @@
 import * as React from 'react';
 
 import { supabase } from '@/lib/supabase';
-import type { ComercialProveedor, PerfilUsuario, Promocion, Proveedor } from '@/lib/types';
+import type { ComercialProveedor, Pedido, PerfilUsuario, Promocion, Proveedor } from '@/lib/types';
 
 export interface ProductoAdmin {
   id: string;
@@ -256,4 +256,189 @@ export function useAsignacionesProveedores(comercialId: string | undefined) {
   );
 
   return { asignaciones, cargando, error, recargar, asignar, desasignar, habilitar };
+}
+
+// Comerciales (admin): lista de comerciales y sus clientes asignados.
+export function useComerciales() {
+  const [comerciales, setComerciales] = React.useState<PerfilUsuario[]>([]);
+  const [clientesPorComercial, setClientesPorComercial] = React.useState<Record<string, PerfilUsuario[]>>({});
+  const [cargando, setCargando] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const recargar = React.useCallback(async () => {
+    setCargando(true);
+    setError(null);
+    const [resComerciales, resClientes] = await Promise.all([
+      supabase.from('usuarios').select('*').eq('rol', 'comercial').eq('borrado', false).order('nombre'),
+      supabase
+        .from('usuarios')
+        .select('*')
+        .eq('rol', 'cliente')
+        .eq('borrado', false)
+        .not('id_comercial', 'is', null)
+        .order('nombre'),
+    ]);
+    setCargando(false);
+    if (resComerciales.error || resClientes.error) {
+      setError(resComerciales.error?.message ?? resClientes.error?.message ?? null);
+      return;
+    }
+    const comerciales = (resComerciales.data ?? []) as PerfilUsuario[];
+    const clientes = (resClientes.data ?? []) as PerfilUsuario[];
+    const porComercial: Record<string, PerfilUsuario[]> = {};
+    for (const c of clientes) {
+      if (!c.id_comercial) continue;
+      (porComercial[c.id_comercial] ??= []).push(c);
+    }
+    setComerciales(comerciales);
+    setClientesPorComercial(porComercial);
+  }, []);
+
+  React.useEffect(() => {
+    void recargar();
+  }, [recargar]);
+
+  return { comerciales, clientesPorComercial, cargando, error, recargar };
+}
+
+// Crear comercial (admin) vía RPC crear_comercial.
+export function useCrearComercial() {
+  const [cargando, setCargando] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const crearComercial = React.useCallback(
+    async (datos: { email: string; password: string; nombre: string; apellidos?: string | null }) => {
+      setCargando(true);
+      setError(null);
+      const { error } = await supabase.rpc('crear_comercial', {
+        p_email: datos.email,
+        p_password: datos.password,
+        p_nombre: datos.nombre,
+        p_apellidos: datos.apellidos ?? null,
+      });
+      setCargando(false);
+      if (error) {
+        setError(error.message);
+        return { error: error.message };
+      }
+      return { error: null };
+    },
+    []
+  );
+
+  return { crearComercial, cargando, error };
+}
+
+// Cliente del detalle de un comercial + sus contadores de descuentos.
+export interface ClienteComDescuentos extends PerfilUsuario {
+  descuento_porcentaje: number;
+  nDescuentosProducto: number;
+  nDescuentosCombustible: number;
+}
+
+// Detalle de un comercial (admin): perfil, clientes con sus descuentos y
+// últimos pedidos.
+export function useComercialDetalle(comercialId: string | undefined) {
+  const [comercial, setComercial] = React.useState<PerfilUsuario | null>(null);
+  const [clientes, setClientes] = React.useState<ClienteComDescuentos[]>([]);
+  const [pedidos, setPedidos] = React.useState<Pedido[]>([]);
+  const [cargando, setCargando] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const recargar = React.useCallback(async () => {
+    if (!comercialId) return;
+    setCargando(true);
+    setError(null);
+
+    const [resComercial, resClientes, resPedidos] = await Promise.all([
+      supabase.from('usuarios').select('*').eq('id', comercialId).single(),
+      supabase
+        .from('usuarios')
+        .select('*')
+        .eq('id_comercial', comercialId)
+        .eq('borrado', false)
+        .order('nombre'),
+      supabase
+        .from('pedidos')
+        .select(
+          '*, pedido_lineas(total_linea,cantidad), cliente:usuarios!pedidos_cliente_id_fkey(nombre,apellidos,razon_social)'
+        )
+        .eq('comercial_id', comercialId)
+        .order('fecha_pedido', { ascending: false })
+        .limit(20),
+    ]);
+
+    if (resComercial.error || resClientes.error || resPedidos.error) {
+      setError(resComercial.error?.message ?? resClientes.error?.message ?? resPedidos.error?.message ?? null);
+      setCargando(false);
+      return;
+    }
+
+    const filasClientes = (resClientes.data ?? []) as PerfilUsuario[];
+    const ids = filasClientes.map((c) => c.id);
+
+    // Contadores de descuentos vigentes por cliente. Las vistas de vigentes
+    // están REVOKEd para authenticated (0002/0006), así que se cuentan desde
+    // las tablas base filtrando la vigencia en el cliente.
+    const hoy = new Date().toISOString().slice(0, 10);
+    const [resProd, resComb] = await Promise.all([
+      ids.length > 0
+        ? supabase
+            .from('descuentos_cliente_producto')
+            .select('cliente_id')
+            .in('cliente_id', ids)
+            .eq('borrado', false)
+            .lte('fecha_inicio', hoy)
+            .or(`fecha_fin.is.null,fecha_fin.gt.${hoy}`)
+        : Promise.resolve({ data: [] as { cliente_id: string }[], error: null }),
+      ids.length > 0
+        ? supabase
+            .from('descuentos_cliente_combustible')
+            .select('cliente_id')
+            .in('cliente_id', ids)
+            .eq('borrado', false)
+            .lte('fecha_inicio', hoy)
+            .or(`fecha_fin.is.null,fecha_fin.gt.${hoy}`)
+        : Promise.resolve({ data: [] as { cliente_id: string }[], error: null }),
+    ]);
+
+    if (resProd.error || resComb.error) {
+      setError(resProd.error?.message ?? resComb.error?.message ?? null);
+      setCargando(false);
+      return;
+    }
+
+    const cuentaProducto = new Map<string, number>();
+    for (const d of (resProd.data ?? []) as { cliente_id: string }[]) {
+      cuentaProducto.set(d.cliente_id, (cuentaProducto.get(d.cliente_id) ?? 0) + 1);
+    }
+    const cuentaCombustible = new Map<string, number>();
+    for (const d of (resComb.data ?? []) as { cliente_id: string }[]) {
+      cuentaCombustible.set(d.cliente_id, (cuentaCombustible.get(d.cliente_id) ?? 0) + 1);
+    }
+
+    setComercial(resComercial.data as PerfilUsuario);
+    setClientes(
+      filasClientes.map(
+        (c) =>
+          ({
+            ...c,
+            descuento_porcentaje: c.descuento_porcentaje ?? 0,
+            nDescuentosProducto: cuentaProducto.get(c.id) ?? 0,
+            nDescuentosCombustible: cuentaCombustible.get(c.id) ?? 0,
+          }) as ClienteComDescuentos
+      )
+    );
+    setPedidos((resPedidos.data ?? []) as unknown as Pedido[]);
+    setCargando(false);
+  }, [comercialId]);
+
+  React.useEffect(() => {
+    setComercial(null);
+    setClientes([]);
+    setPedidos([]);
+    void recargar();
+  }, [recargar]);
+
+  return { comercial, clientes, pedidos, cargando, error, recargar };
 }
