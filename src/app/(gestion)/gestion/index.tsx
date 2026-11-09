@@ -5,8 +5,6 @@ import { Pressable, View } from 'react-native';
 import { ListCard } from '@/shared/componentes/list-card';
 import { Screen } from '@/shared/componentes/screen';
 import { ScreenHeader } from '@/shared/componentes/screen-header';
-import { AccionCuenta } from '@/shared/componentes/accion-cuenta';
-import { NavInferior } from '@/shared/navegacion/nav-inferior';
 import { Text } from '@/shared/ui/text';
 import { useColoresIcono } from '@/shared/lib/theme';
 
@@ -31,7 +29,7 @@ export default function Gestion() {
   return (
     <Screen padded>
       <View className="gap-3 pb-24">
-        <ScreenHeader titulo="Gestión" respaldo="/" accion={<AccionCuenta />} />
+        <ScreenHeader titulo="Gestión" respaldo="/" />
         {SECCIONES.map((s) => (
           <ListCard key={s.ruta} onPress={() => router.push(s.ruta)}>
             <View className="flex-row items-center gap-3">
@@ -47,8 +45,6 @@ export default function Gestion() {
           <Text className="text-center text-sm text-muted-foreground">Volver al catálogo</Text>
         </Pressable>
       </View>
-      {/* Barra inferior: el admin no pierde el submenú al entrar en su panel. */}
-      <NavInferior activa="gestion" />
     </Screen>
   );
 }

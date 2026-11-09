@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@/shared/ui/button';
 import { Text } from '@/shared/ui/text';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
+import { Skeleton } from '@/shared/ui/skeleton';
 import { APP, COMBUSTIBLES, RUTAS } from '@/shared/constantes';
 import { useAuth } from '@/features/auth/use-auth';
 import { usePermisos } from '@/shared/seguridad/use-permisos';
@@ -60,6 +61,8 @@ export function NavLateral({
   proveedores,
   activo,
   onSeleccionar,
+  filtrosListos = true,
+  cargandoFiltros = false,
 }: {
   abierto: boolean;
   onCerrar: () => void;
@@ -79,6 +82,12 @@ export function NavLateral({
   proveedores?: Proveedor[];
   activo?: string | null;
   onSeleccionar?: (id: string) => void;
+  /** Primera carga de filtros completada: con false se muestran skeletons
+      (nunca las opciones de otro proveedor). */
+  filtrosListos?: boolean;
+  /** Refresco de filtros en curso: se mantienen las opciones previas,
+      atenuadas, marcadas como cargando. */
+  cargandoFiltros?: boolean;
 }) {
   const insets = useSafeAreaInsets();
   const { session } = useAuth();
@@ -229,7 +238,18 @@ export function NavLateral({
                   </View>
                 </View>
               )}
-              {COMBUSTIBLES.filter((c) => combustibles.includes(c.id)).map((c) => {
+              {/* Opciones del proveedor: primera carga → skeletons; refresco
+                  → opciones previas atenuadas (nunca las de otro proveedor). */}
+              {!filtrosListos ? (
+                <View className="gap-2 px-4 py-3">
+                  <Skeleton className="h-5 w-24" />
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-4 w-32" />
+                </View>
+              ) : (
+                <View className={cn(cargandoFiltros && 'opacity-50')}>
+                  {COMBUSTIBLES.filter((c) => combustibles.includes(c.id)).map((c) => {
                 const activo = combustible === c.id;
                 const subsecciones = categorias.filter(
                   (x) => x.combustible === c.id && x.clave !== 'pellet' && x.clave !== 'lena'

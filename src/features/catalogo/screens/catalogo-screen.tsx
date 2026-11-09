@@ -11,7 +11,6 @@ import banner from '../../../../assets/images/banner.jpg';
 import { Buscador } from '@/features/catalogo/componentes/buscador';
 import { EncabezadoCatalogo } from '@/features/catalogo/componentes/encabezado';
 import TarjetaProducto from '@/features/catalogo/componentes/tarjeta-producto';
-import { SelectorProveedor } from '@/features/catalogo/componentes/selector-proveedor';
 import { EmptyState, ErrorView, LoadingView } from '@/shared/componentes/estados';
 import { Screen } from '@/shared/componentes/screen';
 import { NavInferior } from '@/shared/navegacion/nav-inferior';
@@ -136,16 +135,10 @@ export default function CatalogoScreen({
       ? 'Catálogo'
       : (COMBUSTIBLES.find((c) => c.id === cat.combustible)?.etiqueta ?? 'Catálogo'));
 
-  // Menú lateral: con el proveedor activo, SOLO sus combustibles y categorías
-  // (el hook los calcula desde el snapshot completo, sin búsqueda/paginación).
-  // Mientras no estén listos (carga inicial o camino de red sin SQLite) se cae
-  // al comportamiento anterior: todos los combustibles y categorías globales.
-  const combustiblesMenu = cat.filtrosProveedor.listo
-    ? cat.filtrosProveedor.combustibles
-    : COMBUSTIBLES.map((c) => c.id);
-  const categoriasMenu = cat.filtrosProveedor.listo
-    ? cat.filtrosProveedor.categorias
-    : cat.categorias;
+  // Menú lateral: opciones del proveedor activo SIEMPRE desde la BD (el hook
+  // las cachea por proveedor). Nunca se cae a la lista global: mientras carga
+  // se mantienen las anteriores (atenuadas) o skeletons en la primera carga.
+  const filtrosMenu = cat.filtrosProveedor;
 
   return (
     // El PRIMARIO del catálogo es el color del proveedor activo: esta pantalla
@@ -169,25 +162,6 @@ export default function CatalogoScreen({
 
       {/* Banner decorativo */}
       <Image source={banner} className="h-[60px] w-full" contentFit="cover" transition={200} />
-
-      {/* Selector de proveedor: en modo acotado a un comercial, solo sus
-          proveedores (si tiene varios); en el catálogo general, el contexto;
-          la ruta dedicada no muestra selector (proveedor fijo). */}
-      {!proveedorIdOverride && (
-        <View className="mt-2">
-          {comercialParam ? (
-            proveedoresComercial && proveedoresComercial.length > 1 ? (
-              <SelectorProveedor
-                proveedores={proveedoresComercial}
-                activo={proveedorId}
-                onSeleccionar={setProveedorScoped}
-              />
-            ) : null
-          ) : (
-            <SelectorProveedor />
-          )}
-        </View>
-      )}
 
       {/* Buscador */}
       <View className="mt-2 px-4 pb-2">
@@ -296,17 +270,25 @@ export default function CatalogoScreen({
         />
       )}
 
-      {/* Navegación lateral (cajón) */}
+      {/* Navegación lateral (cajón): único sitio para cambiar de proveedor
+          (selector dentro del cajón). En el modo acotado a un comercial se le
+          pasa la lista de ESE comercial; en /catalogo/proveedor/[id] el
+          proveedor es fijo y el selector se oculta. */}
       <NavLateral
         abierto={menuAbierto}
         onCerrar={() => setMenuAbierto(false)}
         combustible={cat.combustible}
-        combustibles={combustiblesMenu}
-        categorias={categoriasMenu}
+        combustibles={filtrosMenu.combustibles}
+        categorias={filtrosMenu.categorias}
+        filtrosListos={filtrosMenu.listo}
+        cargandoFiltros={filtrosMenu.cargando}
         setCombustible={cat.setCombustible}
         categoria={cat.categoria}
         setCategoria={cat.setCategoria}
         conSelectorProveedor={!proveedorIdOverride}
+        proveedores={comercialParam ? (proveedoresComercial ?? []) : undefined}
+        activo={comercialParam ? proveedorId : undefined}
+        onSeleccionar={comercialParam ? setProveedorScoped : undefined}
       />
 
       {/* Barra inferior persistente: solo con sesión (los anónimos no la ven). */}

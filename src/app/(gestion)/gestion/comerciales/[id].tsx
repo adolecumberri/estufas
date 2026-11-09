@@ -3,7 +3,6 @@ import { Flame, ReceiptText, Users } from 'lucide-react-native';
 import * as React from 'react';
 import { View } from 'react-native';
 
-import { AccionCuenta } from '@/shared/componentes/accion-cuenta';
 import { EmptyState, ErrorView, LoadingView } from '@/shared/componentes/estados';
 import { ListCard } from '@/shared/componentes/list-card';
 import { ScreenScroll } from '@/shared/componentes/screen';
@@ -55,7 +54,6 @@ export default function GestionComercialDetalle() {
         titulo={nombre}
         subtitulo={comercial?.email ?? undefined}
         respaldo="/gestion/comerciales"
-        accion={<AccionCuenta />}
       />
 
       {cargando ? (

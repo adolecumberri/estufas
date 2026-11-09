@@ -8,15 +8,21 @@ import {
   filaAProductoCatalogo,
   inicializarBd,
   obtenerCategorias,
-  obtenerFiltrosProveedor,
   obtenerMarcas,
   sincronizarCatalogo,
 } from '@/features/catalogo/lib/catalogo-local';
+import {
+  obtenerFiltrosProveedorCacheados,
+  type FiltrosProveedor,
+} from '@/features/catalogo/lib/filtros-proveedor';
 import { obtenerReglasCuenta, type ReglasCuenta } from '@/shared/lib/precios';
 import { supabase } from '@/shared/lib/supabase';
 import type { Categoria, Combustible, Marca, ProductoCatalogo } from '@/shared/lib/types';
 
 const DEBOUNCE_MS = 300;
+// Debounce del cálculo de filtros del menú lateral: más generoso que el de
+// productos porque un swap de proveedores puede dispararlo varias veces.
+const DEBOUNCE_FILTROS_MS = 400;
 
 // Caché AsyncStorage (solo para el camino de red, cuando SQLite no está
 // disponible): filtros 24 h y páginas stale-while-revalidate, como antes.
@@ -94,31 +100,58 @@ export function useCatalogo(clienteId?: string | null, proveedorId?: string | nu
     reglas: ReglasCuenta | null;
   } | null>(null);
 
-  // Filtros del menú lateral: combustibles y categorías presentes en los
-  // productos del proveedor activo (conjunto completo del snapshot, sin
-  // búsqueda ni paginación). `listo` distingue "aún sin calcular" (o camino
-  // de red, sin datos completos) de "calculado y puede estar vacío" (p. ej.
-  // Fansa no tiene pellets/leña): con listo=false la pantalla cae al
-  // comportamiento anterior (todos los combustibles y categorías globales).
+  // Filtros del menú lateral: combustibles y categorías del proveedor activo,
+  // SIEMPRE desde la BD (SQLite local o RPC fn_filtros_proveedor) con caché
+  // por proveedor. NUNCA se cae a la lista global: mientras no hay datos se
+  // mantienen las opciones del proveedor anterior (marcadas como cargando) o,
+  // si es la primera carga, se muestran skeletons en el cajón.
   const [filtrosProveedor, setFiltrosProveedor] = React.useState<{
     listo: boolean;
+    cargando: boolean;
     combustibles: Combustible[];
     categorias: Categoria[];
-  }>({ listo: false, combustibles: [], categorias: [] });
+  }>({ listo: false, cargando: false, combustibles: [], categorias: [] });
+  const filtrosPeticion = React.useRef(0);
 
-  // Recalcula al cambiar de proveedor (sin recargar: es una lectura síncrona
-  // de la BD local ya sincronizada).
   React.useEffect(() => {
-    if (!datosBase?.modoLocal) {
-      setFiltrosProveedor({ listo: false, combustibles: [], categorias: [] });
+    if (!datosBase) {
+      setFiltrosProveedor((prev) => ({ ...prev, cargando: true }));
       return;
     }
-    try {
-      const { combustibles, categorias } = obtenerFiltrosProveedor(proveedorId ?? null);
-      setFiltrosProveedor({ listo: true, combustibles, categorias });
-    } catch {
-      setFiltrosProveedor({ listo: false, combustibles: [], categorias: [] });
-    }
+    let cancelado = false;
+    const peticionId = ++filtrosPeticion.current;
+    const idProveedor = proveedorId ?? null;
+    // Se mantienen las opciones previas mientras carga (el cajón las atenúa);
+    // debounce + "última petición gana" aguantan el spam de cambios de
+    // proveedor sin martillear la BD (la caché por proveedor lo remata).
+    setFiltrosProveedor((prev) => ({ ...prev, cargando: true }));
+
+    const t = setTimeout(() => {
+      void (async () => {
+        let resultado: FiltrosProveedor | null = null;
+        try {
+          resultado = await obtenerFiltrosProveedorCacheados(idProveedor, datosBase.modoLocal);
+        } catch {
+          resultado = null; // fallo: se mantienen las opciones previas
+        }
+        if (cancelado || peticionId !== filtrosPeticion.current) return;
+        if (resultado) {
+          setFiltrosProveedor({
+            listo: true,
+            cargando: false,
+            combustibles: resultado.combustibles,
+            categorias: resultado.categorias,
+          });
+        } else {
+          setFiltrosProveedor((prev) => ({ ...prev, cargando: false }));
+        }
+      })();
+    }, DEBOUNCE_FILTROS_MS);
+
+    return () => {
+      cancelado = true;
+      clearTimeout(t);
+    };
   }, [datosBase, proveedorId]);
 
   const claveProductosActual = claveProductos(

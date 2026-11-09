@@ -4,10 +4,8 @@ import * as React from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 
 import { EmptyState, ErrorView, LoadingView } from '@/shared/componentes/estados';
-import { AccionCuenta } from '@/shared/componentes/accion-cuenta';
 import { ScreenScroll } from '@/shared/componentes/screen';
 import { ScreenHeader } from '@/shared/componentes/screen-header';
-import { NavInferior } from '@/shared/navegacion/nav-inferior';
 import { FormField, FormModal } from '@/shared/ui';
 import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
@@ -167,19 +165,16 @@ export default function GestionComerciales() {
           subtitulo="Equipo, clientes y accesos a proveedores"
           respaldo="/gestion"
           accion={
-            <View className="flex-row items-center gap-1.5">
-              <AccionCuenta />
-              <Button
-                size="sm"
-                onPress={() => {
-                  setMensaje(null);
-                  setModalAbierto(true);
-                }}
-              >
-                <Plus size={16} color={colores.primarioClaro} />
-                <Text>Nuevo comercial</Text>
-              </Button>
-            </View>
+            <Button
+              size="sm"
+              onPress={() => {
+                setMensaje(null);
+                setModalAbierto(true);
+              }}
+            >
+              <Plus size={16} color={colores.primarioClaro} />
+              <Text>Nuevo comercial</Text>
+            </Button>
           }
         />
 
@@ -293,9 +288,6 @@ export default function GestionComerciales() {
         </FormField>
         {mensaje && <Text className="text-xs text-muted-foreground">{mensaje}</Text>}
       </FormModal>
-
-      {/* Barra inferior: el admin no pierde el submenú al entrar en su panel. */}
-      <NavInferior activa="gestion" />
     </>
   );
 }
