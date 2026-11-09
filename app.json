@@ -36,6 +36,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "623871de-397c-474a-92d0-bae91e9af6f4"
+      }
+    },
+    "owner": "estufas"
   }
 }
