@@ -15,7 +15,7 @@ import { SelectorProveedor } from '@/features/catalogo/componentes/selector-prov
 import { EmptyState, ErrorView, LoadingView } from '@/shared/componentes/estados';
 import { Screen } from '@/shared/componentes/screen';
 import { NavInferior } from '@/shared/navegacion/nav-inferior';
-import { NavLateral } from '@/shared/navegacion/nav-lateral';
+import { NavLateral } from '@/features/catalogo/componentes/nav-lateral';
 import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
 import { IconButton } from '@/shared/ui/icon-button';

@@ -8,7 +8,7 @@ import { ScreenScroll } from '@/shared/componentes/screen';
 import { ScreenHeader } from '@/shared/componentes/screen-header';
 import { FormField, FormModal } from '@/shared/ui';
 import { Button } from '@/shared/ui/button';
-import { Card, CardContent } from '@/shared/ui/card';
+import { Card } from '@/shared/ui/card';
 import { Input } from '@/shared/ui/input';
 import { Separator } from '@/shared/ui/separator';
 import { Text } from '@/shared/ui/text';

@@ -21,7 +21,6 @@ const DEBOUNCE_MS = 300;
 // disponible): filtros 24 h y páginas stale-while-revalidate, como antes.
 const CLAVE_CATEGORIAS = 'estufas.cache.categorias.v1';
 const CLAVE_MARCAS = 'estufas.cache.marcas.v1';
-const TTL_FILTROS_MS = 24 * 60 * 60 * 1000;
 
 // La clave de productos incluye la CUENTA autenticada: los precios se
 // personalizan por usuario, y sin esto un visitante anónimo u otro cliente

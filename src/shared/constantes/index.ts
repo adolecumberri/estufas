@@ -8,7 +8,7 @@ import { Platform } from 'react-native';
 
 export const APP = {
   nombre: 'Brasa y Verde',
-  slug: 'brasa-y-verde',
+  slug: 'estufas',
   version: '0.1.0',
   idioma: 'es-ES',
 } as const;
@@ -71,6 +71,8 @@ export const ORIGENES_DESCUENTO = {
   ninguno: { etiqueta: 'Sin descuento' },
   cliente_general: { etiqueta: 'Descuento de cliente' },
   cliente_producto: { etiqueta: 'Descuento específico' },
+  cliente_categoria: { etiqueta: 'Descuento por categoría' },
+  cliente_proveedor: { etiqueta: 'Descuento por proveedor' },
   cliente_combustible: { etiqueta: 'Descuento por combustible' },
   promocion_tienda: { etiqueta: 'Promoción de tienda' },
   ajuste_comercial: { etiqueta: 'Ajuste comercial' },

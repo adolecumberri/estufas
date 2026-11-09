@@ -21,7 +21,6 @@ export default function AdminUsuarios() {
   const [mensaje, setMensaje] = React.useState<string | null>(null);
 
   const comerciales = usuarios.filter((u) => u.rol === 'comercial');
-  const clientes = usuarios.filter((u) => u.rol === 'cliente');
 
   const cambiarComercial = async (clienteId: string, comercialId: string | null) => {
     if (!comercialId) return;

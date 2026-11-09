@@ -130,6 +130,9 @@ function parseJson<T>(texto: string | null): T | null {
   try {
     return JSON.parse(texto) as T;
   } catch {
+    // Una columna JSON corrupta en SQLite no debe fallar la pantalla, pero
+    // tampoco pasar silenciosa: se deja rastro para diagnosticar la fila.
+    console.warn('[catalogo-local] JSON corrupto ignorado:', texto.slice(0, 120));
     return null;
   }
 }

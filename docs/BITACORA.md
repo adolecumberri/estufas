@@ -2,6 +2,28 @@
 
 Registro cronológico de decisiones y cambios relevantes.
 
+## 2026-11-09 — Supabase Cloud + desloppify
+
+- **Migración local → cloud**: migraciones 0001-0026 aplicadas al proyecto
+  cloud `estufas` (bvulkrggcicftjalfctz) vía Management API y datos del stack
+  local copiados con `pg_dump --column-inserts` (27 tablas + auth.users/
+  identities). Verificado: counts idénticos (productos 1466, usuarios 7),
+  login admin OK, `fn_proveedores_visibles` = Eider+Fansa y precios idénticos
+  al local. Ajustes documentados en `docs/MIGRACION_CLOUD.md` (search_path en
+  11 funciones de trigger, triggers de negocio off durante la carga, FK
+  circular, seed de 0005/0020 truncado). ⚠️ Revocar el access token de la
+  Management API.
+- **Desloppify (rama desloppify/code-health)**: escaneo inicial strict 19.5
+  → **77.7** tras revisión subjetiva de 20 dimensiones y arreglos: orígenes
+  de descuento 0025 añadidos a `ORIGENES_DESCUENTO` (fuera el cast de
+  precios.ts), `APP.slug` alineado, `nav-lateral` movido a
+  `features/catalogo/componentes`, `parseJson` ahora advierte JSON corrupto,
+  3 imports/vars muertas eliminadas, comentarios duplicados de precedencia
+  podados, `scorecard.png` en `.gitignore`. Pendientes para otra pasada:
+  tests del frontend, extracción de hooks en pantallas grandes
+  (pedidos/cartera [id]), desduplicar librerías de iconos y retirada del
+  legado combustible.
+
 ## 2026-11-01 — Calidad y consolidación
 
 - **Roles en cascada (app)**: implementadas las 4 fases de ARQUITECTURA_ROLES

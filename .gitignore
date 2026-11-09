@@ -62,3 +62,8 @@ supabase/.branches/
 # Datos crudos/normalizados de proveedores (contienen tarifas comerciales)
 docs/fansa.txt
 docs/fansa_normalizado.json
+
+# desloppify state
+.desloppify/
+scorecard.png
+

@@ -49,11 +49,6 @@ export interface ResultadoPrecio {
   descuento_origen: OrigenDescuento;
 }
 
-// Orígenes añadidos en 0025. ORIGENES_DESCUENTO de constantes aún no los
-// declara: se tipan aquí y se ajustan al tipo público al salir (un único
-// cast documentado), para no romper a los consumidores mientras tanto.
-type OrigenEfectivo = OrigenDescuento | 'cliente_categoria' | 'cliente_proveedor';
-
 // DTO del RPC fn_descuentos_cuenta con las claves nuevas de 0025 ('categorias'
 // y 'proveedores'). El tipo DescuentosCuenta de types.ts aún no las incluye:
 // aquí se amplían localmente y se leen con fallback (los DTOs cacheados de la
@@ -165,15 +160,15 @@ export function aplicarReglas(
   if (!reglas) return { descuento_pct: 0, descuento_origen: 'ninguno' };
 
   let pct = 0;
-  let origen: OrigenEfectivo = 'ninguno';
+  let origen: OrigenDescuento = 'ninguno';
 
   const especifico = reglas.productos.get(producto.producto_id);
   if (especifico !== undefined) {
-    // 1) Producto específico: gana aunque sea 0% (sustituye a todo lo demás).
+    // Gana aunque sea 0% (sustituye a todo lo demás).
     pct = especifico;
     origen = 'cliente_producto';
   } else if (producto.proveedor_id) {
-    // 2) Categoría del proveedor del producto (varias → el mayor %).
+    // Categoría del proveedor del producto (varias → el mayor %).
     let mejorCategoria: number | null = null;
     for (const categoriaId of producto.categorias ?? []) {
       const d = reglas.categorias.get(`${producto.proveedor_id}:${categoriaId}`);
@@ -185,13 +180,13 @@ export function aplicarReglas(
       pct = mejorCategoria;
       origen = 'cliente_categoria';
     } else {
-      // 3) Proveedor del producto (0% incluido: sustituye al general).
+      // Proveedor del producto (0% incluido: sustituye al general).
       const dProveedor = reglas.proveedores.get(producto.proveedor_id);
       if (dProveedor !== undefined) {
         pct = dProveedor;
         origen = 'cliente_proveedor';
       } else if (reglas.general_pct !== null && reglas.general_pct > 0) {
-        // 4) General: solo cuenta si es positivo (0 = ninguno).
+        // General: solo cuenta si es positivo (0 = ninguno).
         pct = reglas.general_pct;
         origen = 'cliente_general';
       }
@@ -202,15 +197,14 @@ export function aplicarReglas(
     origen = 'cliente_general';
   }
 
-  // 5) Promo: último recurso; gana SOLO si supera el candidato (no se acumula).
+  // Promo: último recurso; gana SOLO si supera el candidato (no se acumula).
   const promo = reglas.promo_pct ?? 0;
   if (promo > pct) {
     pct = promo;
     origen = 'promocion_tienda';
   }
 
-  // El tipo público OrigenDescuento aún no declara los orígenes de 0025.
-  return { descuento_pct: pct, descuento_origen: origen as OrigenDescuento };
+  return { descuento_pct: pct, descuento_origen: origen };
 }
 
 // Precio final replicando round(precio_base * (1 - pct/100), 2) del servidor.
