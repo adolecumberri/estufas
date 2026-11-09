@@ -1,28 +1,18 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import {
-  CircleCheck,
-  Flame,
-  Mail,
-  Percent,
-  Plus,
-  Search,
-  ShieldCheck,
-  Trash2,
-} from 'lucide-react-native';
+import { CircleCheck, Flame, Mail, Percent, ShieldCheck, Trash2 } from 'lucide-react-native';
 import * as React from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { View } from 'react-native';
 
 import { EmptyState, ErrorView, LoadingView } from '@/shared/componentes/estados';
 import { FilaDetalle, ListCard } from '@/shared/componentes/list-card';
 import { ScreenScroll } from '@/shared/componentes/screen';
 import { ScreenHeader } from '@/shared/componentes/screen-header';
 import { SectionTitle } from '@/shared/componentes/section-title';
-import { Chip, FormField } from '@/shared/ui';
+import { FormField } from '@/shared/ui';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Input } from '@/shared/ui/input';
-import { Separator } from '@/shared/ui/separator';
 import { Text } from '@/shared/ui/text';
 import { COMBUSTIBLES, ESTADOS_PEDIDO, TIPOS_CLIENTE } from '@/shared/constantes';
 import type { CombustibleId } from '@/shared/constantes';
@@ -40,9 +30,6 @@ const DESCRIPCIONES_COMBUSTIBLE: Record<CombustibleId, string> = {
   lena: 'Fundición, Cassette e Insert',
 };
 
-const CHIPS_GENERAL = [5, 10, 15, 20];
-const CHIPS_PRODUCTO = [0, 8, 12, 15, 20];
-
 export default function ClienteDetalle() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { setClienteObjetivoId } = useSolicitud();
@@ -51,20 +38,16 @@ export default function ClienteDetalle() {
   const { puede } = usePermisos();
   const puedeGestionar = puede('pedidos:crear_para_cliente');
   const { cliente, descuentos, descuentosCombustible, cargando, error, recargar } = useCliente(id);
-  const { asignarGeneral, asignarProducto, anularProducto, asignarCombustible, anularCombustible } =
-    useDescuentos();
+  const { asignarGeneral, anularProducto, asignarCombustible, anularCombustible } = useDescuentos();
   const { pedidos } = usePedidos();
   const catalogo = useCatalogo(id);
   const colores = useColoresIcono();
 
   const [pctGeneral, setPctGeneral] = React.useState('');
-  const [productoSeleccionado, setProductoSeleccionado] = React.useState<string | null>(null);
-  const [pctProducto, setPctProducto] = React.useState('');
   const [pctCombustibles, setPctCombustibles] = React.useState<{ pellets: string; lena: string }>({
     pellets: '',
     lena: '',
   });
-  const [anadiendo, setAnadiendo] = React.useState(false);
   const [mensaje, setMensaje] = React.useState<string | null>(null);
 
   // Pre-rellena el valor del descuento general con el vigente al cargar
@@ -86,23 +69,6 @@ export default function ClienteDetalle() {
     const { error } = await asignarGeneral(id!, pct);
     setMensaje(error ?? 'Descuento general actualizado.');
     if (!error) await recargar();
-  };
-
-  const guardarProducto = async () => {
-    if (!productoSeleccionado) return;
-    const pct = Number(pctProducto.replace(',', '.'));
-    if (Number.isNaN(pct) || pct < 0 || pct > 100) {
-      setMensaje('Porcentaje inválido (0-100).');
-      return;
-    }
-    const { error } = await asignarProducto(id!, productoSeleccionado, pct);
-    setMensaje(error ?? 'Descuento específico guardado.');
-    setProductoSeleccionado(null);
-    setPctProducto('');
-    if (!error) {
-      setAnadiendo(false);
-      await recargar();
-    }
   };
 
   const anularDescuentoProducto = async (productoId: string) => {
@@ -140,8 +106,6 @@ export default function ClienteDetalle() {
     ? (cliente.razon_social ?? `${cliente.nombre} ${cliente.apellidos ?? ''}`.trim())
     : 'Cliente';
 
-  const productoElegido = catalogo.productos.find((p) => p.producto_id === productoSeleccionado);
-
   return (
     <ScreenScroll>
       <ScreenHeader
@@ -162,17 +126,26 @@ export default function ClienteDetalle() {
         <EmptyState titulo="Cliente no encontrado" />
       ) : (
         <>
-          {/* Tarjeta del cliente */}
+          {/* CTA principal: abrirle un pedido (REQUISITOS_FICHA_CLIENTE §B.7) */}
+          {puedeGestionar ? (
+            <Button onPress={empezarPedido} className="w-full">
+              <Text>Crear pedido para este cliente</Text>
+            </Button>
+          ) : null}
+
+          {/* Datos del cliente (sin repetir el nombre: ya está en la cabecera) */}
           <Card className="rounded-lg">
             <CardContent className="gap-1.5">
               <View className="flex-row items-start justify-between gap-2">
                 <View className="flex-1 gap-0.5">
-                  <Text className="text-base font-semibold" numberOfLines={2}>
-                    {nombreCliente}
-                  </Text>
                   {cliente.nif_cif ? (
                     <Text className="text-sm text-muted-foreground">CIF {cliente.nif_cif}</Text>
                   ) : null}
+                  <View className="flex-row items-center gap-1.5">
+                    <Mail size={14} color={colores.tenue} />
+                    <Text className="text-sm text-muted-foreground">{cliente.email}</Text>
+                  </View>
+                  {cliente.telefono ? <Text className="text-sm">{cliente.telefono}</Text> : null}
                 </View>
                 <View className="flex-row items-center gap-1">
                   <CircleCheck
@@ -190,27 +163,10 @@ export default function ClienteDetalle() {
                   </Text>
                 </View>
               </View>
-              <View className="flex-row flex-wrap items-center gap-x-1.5 gap-y-0.5">
-                <Mail size={14} color={colores.tenue} />
-                <Text className="text-sm text-muted-foreground">{cliente.email}</Text>
-                {cliente.tipo_cliente === 'empresa' ? (
-                  <>
-                    <View className="h-1 w-1 rounded-full bg-border" />
-                    <Text className="text-sm font-medium text-primary">Tarifa Profesional</Text>
-                  </>
-                ) : null}
-              </View>
-              {cliente.telefono ? <Text className="text-sm">{cliente.telefono}</Text> : null}
             </CardContent>
           </Card>
 
-          {puedeGestionar ? (
-            <Button onPress={empezarPedido}>
-              <Text>Crear pedido para este cliente</Text>
-            </Button>
-          ) : null}
-
-          {/* Descuento general de cartera */}
+          {/* Descuento general de cartera (valor numérico libre, sin chips) */}
           <Card className="rounded-lg">
             <CardHeader className="gap-2">
               <View className="flex-row items-center justify-between gap-2">
@@ -244,25 +200,13 @@ export default function ClienteDetalle() {
               </Text>
               <View className="gap-2 rounded-lg bg-muted p-3">
                 <FormField etiqueta="Valor Porcentual">
-                  <View className="flex-row flex-wrap items-center gap-2">
-                    <Input
-                      keyboardType="decimal-pad"
-                      value={pctGeneral}
-                      onChangeText={setPctGeneral}
-                      placeholder="%"
-                      className="h-10 w-24 text-sm"
-                    />
-                    <View className="flex-row flex-wrap gap-1.5">
-                      {CHIPS_GENERAL.map((pct) => (
-                        <Chip
-                          key={pct}
-                          etiqueta={`${pct}%`}
-                          activo={pctGeneral === String(pct)}
-                          onPress={() => setPctGeneral(String(pct))}
-                        />
-                      ))}
-                    </View>
-                  </View>
+                  <Input
+                    keyboardType="decimal-pad"
+                    value={pctGeneral}
+                    onChangeText={setPctGeneral}
+                    placeholder="%"
+                    className="h-10 w-24 text-sm"
+                  />
                 </FormField>
                 <View className="flex-row items-center gap-3">
                   <Button size="sm" variant="secondary" onPress={() => void guardarGeneral()}>
@@ -276,9 +220,9 @@ export default function ClienteDetalle() {
             </CardContent>
           </Card>
 
-          {/* Descuentos por proveedor (reglas por proveedor y categoría +
-              historial de cambios; solo si el rol puede gestionar descuentos) */}
-          <DescuentosProveedor clienteId={id} categorias={catalogo.categorias} />
+          {/* Descuentos por proveedor (pestañas con categorías y productos de
+              cada proveedor + historial; solo si el rol puede gestionarlos) */}
+          <DescuentosProveedor clienteId={id} />
 
           {/* Por categoría técnica (descuento por combustible) */}
           <View className="gap-2">
@@ -357,171 +301,68 @@ export default function ClienteDetalle() {
             })}
           </View>
 
-          {/* Descuentos por producto */}
+          {/* Descuentos por producto (lista de reglas existentes; el alta por
+              artículo vive en la pestaña del proveedor correspondiente) */}
           <View className="gap-2">
-            <SectionTitle
-              accion={
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onPress={() => {
-                    setAnadiendo((v) => !v);
-                    setProductoSeleccionado(null);
-                  }}
-                >
-                  <Plus size={14} color={colores.primario} />
-                  <Text className="text-xs">Añadir Producto</Text>
-                </Button>
-              }
-            >
-              Descuentos por Producto
-            </SectionTitle>
+            <SectionTitle>Descuentos por Producto</SectionTitle>
             <Text className="text-xs text-muted-foreground">
               {descuentos.length} referencias con tarifa individualizada
             </Text>
 
             {descuentos.length === 0 ? (
               <Text className="text-sm text-muted-foreground">Sin descuentos específicos.</Text>
-            ) : null}
-            {descuentos.map((d) => {
-              const producto = catalogo.productos.find((p) => p.producto_id === d.producto_id);
-              return (
-                <ListCard key={d.id}>
-                  <View className="flex-row items-start justify-between gap-2">
-                    <View className="flex-1 gap-0.5">
-                      <Text className="text-xs text-muted-foreground">
-                        Ref. {producto?.referencia ?? d.producto_id}
-                      </Text>
-                      <Text className="text-sm font-semibold" numberOfLines={1}>
-                        {producto?.nombre ?? d.producto_id}
-                      </Text>
-                      {producto ? (
-                        <FilaDetalle
-                          etiqueta="Precio"
-                          valor={
-                            <View className="flex-row items-baseline gap-2">
-                              <Text className="text-xs text-muted-foreground line-through">
-                                {formatEUR(producto.precio_base)}
-                              </Text>
-                              <Text className="text-sm font-bold text-primary">
-                                {formatEUR(producto.precio_final)}
-                              </Text>
-                            </View>
-                          }
-                        />
-                      ) : null}
-                    </View>
-                    <View className="items-end gap-1.5">
-                      <View className="rounded-full bg-primary/10 px-2 py-0.5">
-                        <Text className="text-xs font-bold text-primary">
-                          {d.descuento_porcentaje === 0
-                            ? '0% EXCLUIDO'
-                            : `-${formatPct(d.descuento_porcentaje)} DTO`}
+            ) : (
+              descuentos.map((d) => {
+                const producto = catalogo.productos.find((p) => p.producto_id === d.producto_id);
+                return (
+                  <ListCard key={d.id}>
+                    <View className="flex-row items-start justify-between gap-2">
+                      <View className="flex-1 gap-0.5">
+                        <Text className="text-xs text-muted-foreground">
+                          Ref. {producto?.referencia ?? d.producto_id}
                         </Text>
-                      </View>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-8 px-2"
-                        onPress={() => void anularDescuentoProducto(d.producto_id)}
-                      >
-                        <Trash2 size={16} color={colores.destructivo} />
-                      </Button>
-                    </View>
-                  </View>
-                </ListCard>
-              );
-            })}
-
-            {anadiendo ? (
-              <Card className="rounded-lg">
-                <CardContent className="gap-3">
-                  <Text className="text-sm font-semibold">Añadir descuento por producto</Text>
-                  <Text className="text-xs text-muted-foreground">
-                    Sustituye al descuento general para ese producto; 0% = excluirlo.
-                  </Text>
-                  <View className="flex-row items-center gap-2">
-                    <Search size={16} color={colores.tenue} />
-                    <Input
-                      value={catalogo.busqueda}
-                      onChangeText={catalogo.setBusqueda}
-                      placeholder="Buscar por referencia o modelo…"
-                      className="h-10 flex-1 text-sm"
-                    />
-                  </View>
-                  {catalogo.cargando ? (
-                    <ActivityIndicator color={colores.primario} />
-                  ) : catalogo.productos.length === 0 ? (
-                    <Text className="text-sm text-muted-foreground">Sin resultados.</Text>
-                  ) : (
-                    <View className="gap-1.5">
-                      {catalogo.productos.map((p) => {
-                        const seleccionado = productoSeleccionado === p.producto_id;
-                        return (
-                          <ListCard
-                            key={p.producto_id}
-                            onPress={() => setProductoSeleccionado(p.producto_id)}
-                            className={seleccionado ? 'border-primary bg-primary/5' : ''}
-                          >
-                            <Text className="text-sm font-medium" numberOfLines={1}>
-                              {p.nombre}
-                            </Text>
-                            <FilaDetalle
-                              etiqueta={`Ref. ${p.referencia} · ${formatEUR(p.precio_base)}`}
-                              valor={formatEUR(p.precio_final)}
-                            />
-                          </ListCard>
-                        );
-                      })}
-                    </View>
-                  )}
-                  {productoSeleccionado ? (
-                    <View className="gap-2">
-                      <Separator />
-                      <Text className="text-xs text-muted-foreground">
-                        Producto seleccionado: {productoElegido?.nombre ?? productoSeleccionado}
-                      </Text>
-                      <FormField etiqueta="Porcentaje">
-                        <View className="flex-row flex-wrap items-center gap-2">
-                          <Input
-                            keyboardType="decimal-pad"
-                            value={pctProducto}
-                            onChangeText={setPctProducto}
-                            placeholder="%"
-                            className="h-10 w-24 text-sm"
+                        <Text className="text-sm font-semibold" numberOfLines={1}>
+                          {producto?.nombre ?? d.producto_id}
+                        </Text>
+                        {producto ? (
+                          <FilaDetalle
+                            etiqueta="Precio"
+                            valor={
+                              <View className="flex-row items-baseline gap-2">
+                                <Text className="text-xs text-muted-foreground line-through">
+                                  {formatEUR(producto.precio_base)}
+                                </Text>
+                                <Text className="text-sm font-bold text-primary">
+                                  {formatEUR(producto.precio_final)}
+                                </Text>
+                              </View>
+                            }
                           />
-                          <View className="flex-row flex-wrap gap-1.5">
-                            {CHIPS_PRODUCTO.map((pct) => (
-                              <Chip
-                                key={pct}
-                                etiqueta={pct === 0 ? '0% (Excl.)' : `${pct}%`}
-                                activo={pctProducto === String(pct)}
-                                onPress={() => setPctProducto(String(pct))}
-                              />
-                            ))}
-                          </View>
+                        ) : null}
+                      </View>
+                      <View className="items-end gap-1.5">
+                        <View className="rounded-full bg-primary/10 px-2 py-0.5">
+                          <Text className="text-xs font-bold text-primary">
+                            {d.descuento_porcentaje === 0
+                              ? '0% EXCLUIDO'
+                              : `-${formatPct(d.descuento_porcentaje)} DTO`}
+                          </Text>
                         </View>
-                      </FormField>
-                      <View className="flex-row gap-2">
-                        <Button size="sm" onPress={() => void guardarProducto()}>
-                          <Text>Añadir descuento</Text>
-                        </Button>
                         <Button
                           size="sm"
-                          variant="outline"
-                          onPress={() => {
-                            setProductoSeleccionado(null);
-                            setPctProducto('');
-                          }}
+                          variant="ghost"
+                          className="h-8 px-2"
+                          accessibilityLabel={`Anular descuento del producto ${producto?.nombre ?? d.producto_id}`}
+                          onPress={() => void anularDescuentoProducto(d.producto_id)}
                         >
-                          <Text className="text-xs">Cancelar</Text>
+                          <Trash2 size={16} color={colores.destructivo} />
                         </Button>
                       </View>
                     </View>
-                  ) : null}
-                </CardContent>
-              </Card>
-            ) : null}
+                  </ListCard>
+                );
+              })
+            )}
           </View>
 
           {/* Nota de auditoría */}

@@ -383,6 +383,41 @@ export function obtenerMarcas(): Marca[] {
   return db.getAllSync<Marca>('SELECT id, nombre FROM marcas ORDER BY nombre');
 }
 
+// Combustibles y categorías presentes en los productos de UN proveedor (o de
+// todos si proveedorId es null). Alimenta el menú lateral: con el proveedor
+// activo solo se muestran las secciones de combustible y las categorías que
+// existen en SUS productos. Conjunto COMPLETO del snapshot (sin búsqueda ni
+// paginación), replicando la visibilidad de consultarCatalogo (solo productos
+// activos y, cuando hay proveedor, solo los suyos).
+export function obtenerFiltrosProveedor(proveedorId: string | null): {
+  combustibles: Combustible[];
+  categorias: Categoria[];
+} {
+  const db = obtenerBd();
+  const filas =
+    proveedorId === null
+      ? db.getAllSync<{ combustibles: string; categorias: string }>(
+          'SELECT combustibles, categorias FROM productos WHERE activo = 1'
+        )
+      : db.getAllSync<{ combustibles: string; categorias: string }>(
+          'SELECT combustibles, categorias FROM productos WHERE activo = 1 AND proveedor_id = ?',
+          [proveedorId]
+        );
+
+  const presentes = new Set<Combustible>();
+  const idsCategoria = new Set<string>();
+  for (const f of filas) {
+    for (const c of parseJson<Combustible[]>(f.combustibles) ?? []) presentes.add(c);
+    for (const id of parseJson<string[]>(f.categorias) ?? []) idsCategoria.add(id);
+  }
+
+  // El orden de las secciones lo fija la constante COMBUSTIBLES; la presencia
+  // de cada combustible la fijan los datos del proveedor.
+  const combustibles = (['pellets', 'lena'] as const).filter((c) => presentes.has(c));
+  const categorias = obtenerCategorias().filter((c) => idsCategoria.has(c.id));
+  return { combustibles, categorias };
+}
+
 const preciosTransporte = (fila: FilaProductoLocal) =>
   parseJson<{ camion: number | null; palet: number | null; franquicia: number | null }>(
     fila.precios_transporte

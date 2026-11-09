@@ -1,6 +1,6 @@
-import { Trash2 } from 'lucide-react-native';
+import { Search, Trash2 } from 'lucide-react-native';
 import * as React from 'react';
-import { View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 
 import {
   useDescuentosCliente,
@@ -15,11 +15,12 @@ import { Chip, ConfirmDialog, FormField } from '@/shared/ui';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent } from '@/shared/ui/card';
 import { Input } from '@/shared/ui/input';
+import { Separator } from '@/shared/ui/separator';
 import { Text } from '@/shared/ui/text';
 import { usePermisos } from '@/shared/seguridad/use-permisos';
-import { formatFechaHora, formatPct } from '@/shared/lib/format';
+import { formatEUR, formatFechaHora, formatPct } from '@/shared/lib/format';
+import { supabase } from '@/shared/lib/supabase';
 import { useColoresIcono } from '@/shared/lib/theme';
-import type { Categoria } from '@/shared/lib/types';
 
 const ACCIONES: Record<FilaHistorialDescuento['accion'], string> = {
   crear: 'creado',
@@ -49,18 +50,33 @@ const parsePct = (valor: string): number | null => {
   return pct;
 };
 
-// Descuentos por proveedor y por categoría de un cliente + historial de
-// cambios. Los proveedores visibles son los habilitados para el comercial
-// (los mismos que hereda el cliente); las categorías llegan del catálogo del
-// cliente porque el esquema no asocia categorías a proveedores. Solo se
-// muestra si el rol puede gestionar descuentos (comercial).
-export function DescuentosProveedor({
-  clienteId,
-  categorias,
-}: {
-  clienteId: string | null | undefined;
-  categorias: Categoria[];
-}) {
+// Filas de los RPC 0027 (SECURITY DEFINER, con alcance por proveedor/cliente).
+interface CategoriaProveedor {
+  id: string;
+  nombre: string;
+  clave: string;
+  grupo: string;
+  orden: number;
+}
+
+interface ProductoProveedor {
+  producto_id: string;
+  referencia: string;
+  nombre: string;
+  precio_base: number;
+  precio_final: number;
+}
+
+const DEBOUNCE_MS = 300;
+
+// Descuentos por proveedor (REQUISITOS_FICHA_CLIENTE §B.9): una PESTAÑA por
+// proveedor; cada pestaña trae su propia rama — descuento del proveedor,
+// categorías derivadas de SUS productos (producto_categoria ⋈ productos por
+// proveedor_id) y productos DE ESE proveedor para el descuento por artículo.
+// Al cambiar de pestaña cambian categorías y productos (RPC 0027). Incluye el
+// historial de cambios (últimas 30). Solo se muestra si el rol puede
+// gestionar descuentos (comercial).
+export function DescuentosProveedor({ clienteId }: { clienteId: string | null | undefined }) {
   const { puede } = usePermisos();
   const puedeEditar = puede('descuentos:gestionar');
   const { proveedores: proveedoresVisibles, cargando: cargandoProveedores } =
@@ -74,6 +90,7 @@ export function DescuentosProveedor({
     recargar,
     guardarProveedor,
     guardarCategoria,
+    guardarProducto,
     anular,
   } = useDescuentosCliente(clienteId);
   const colores = useColoresIcono();
@@ -83,6 +100,15 @@ export function DescuentosProveedor({
   const [pctCategorias, setPctCategorias] = React.useState<Record<string, string>>({});
   const [mensaje, setMensaje] = React.useState<string | null>(null);
   const [anulando, setAnulando] = React.useState<AnularDescuento | null>(null);
+
+  // Rama del proveedor activo (categorías y productos de ESE proveedor).
+  const [busqueda, setBusqueda] = React.useState('');
+  const [categoriasProveedor, setCategoriasProveedor] = React.useState<CategoriaProveedor[]>([]);
+  const [productosProveedor, setProductosProveedor] = React.useState<ProductoProveedor[]>([]);
+  const [cargandoRama, setCargandoRama] = React.useState(false);
+  const [errorRama, setErrorRama] = React.useState<string | null>(null);
+  const [productoSeleccionado, setProductoSeleccionado] = React.useState<string | null>(null);
+  const [pctProducto, setPctProducto] = React.useState('');
 
   // Selecciona el primer proveedor disponible al cargar la lista.
   React.useEffect(() => {
@@ -99,11 +125,49 @@ export function DescuentosProveedor({
     setPctProveedor(regla ? String(regla.pct) : '');
   }, [proveedorActivo, proveedores]);
 
+  // Rama por pestaña: categorías y productos del proveedor activo (con
+  // debounce en la búsqueda de productos).
+  React.useEffect(() => {
+    if (!proveedorActivo) return;
+    let cancelado = false;
+    setCargandoRama(true);
+    setErrorRama(null);
+    const t = setTimeout(() => {
+      void (async () => {
+        const [resCat, resProd] = await Promise.all([
+          supabase.rpc('fn_categorias_proveedor', { p_proveedor: proveedorActivo }),
+          supabase.rpc('fn_productos_proveedor', {
+            p_cliente: clienteId ?? null,
+            p_proveedor: proveedorActivo,
+            p_busqueda: busqueda.trim() || null,
+            p_limite: 40,
+          }),
+        ]);
+        if (cancelado) return;
+        setCategoriasProveedor((resCat.data ?? []) as CategoriaProveedor[]);
+        setProductosProveedor((resProd.data ?? []) as ProductoProveedor[]);
+        setErrorRama(resCat.error?.message ?? resProd.error?.message ?? null);
+        setCargandoRama(false);
+      })();
+    }, DEBOUNCE_MS);
+    return () => {
+      cancelado = true;
+      clearTimeout(t);
+    };
+  }, [proveedorActivo, busqueda, clienteId]);
+
   if (!puedeEditar) return null;
 
   const reglaProveedor = proveedorActivo
     ? proveedores.find((p) => p.proveedor_id === proveedorActivo)
     : undefined;
+
+  const cambiarProveedor = (pid: string) => {
+    setProveedorActivo(pid);
+    setProductoSeleccionado(null);
+    setPctProducto('');
+    setBusqueda('');
+  };
 
   const guardarProveedorPct = async () => {
     if (!proveedorActivo) return;
@@ -127,6 +191,21 @@ export function DescuentosProveedor({
     setMensaje(error ?? 'Descuento de categoría guardado.');
   };
 
+  const guardarProductoPct = async () => {
+    if (!productoSeleccionado) return;
+    const pct = parsePct(pctProducto);
+    if (pct === null) {
+      setMensaje('Porcentaje inválido (0-100).');
+      return;
+    }
+    const { error } = await guardarProducto(productoSeleccionado, pct);
+    setMensaje(error ?? 'Descuento de producto guardado.');
+    if (!error) {
+      setProductoSeleccionado(null);
+      setPctProducto('');
+    }
+  };
+
   const confirmarAnular = async () => {
     if (!anulando) return;
     const { error } = await anular(anulando);
@@ -134,11 +213,14 @@ export function DescuentosProveedor({
     setMensaje(error ?? 'Descuento anulado.');
   };
 
+  const productoElegido = productosProveedor.find((p) => p.producto_id === productoSeleccionado);
+
   return (
     <View className="gap-2">
       <SectionTitle>Descuentos por proveedor</SectionTitle>
       <Text className="text-xs text-muted-foreground">
-        Reglas por proveedor y por categoría; el descuento por producto sigue teniendo preferencia.
+        Una pestaña por proveedor con sus categorías y productos; el descuento por producto sigue
+        teniendo preferencia.
       </Text>
 
       {cargando || cargandoProveedores ? (
@@ -149,14 +231,14 @@ export function DescuentosProveedor({
         <EmptyState titulo="Sin proveedores habilitados" />
       ) : (
         <View className="gap-2">
-          {/* Selector de proveedor */}
+          {/* Pestañas por proveedor */}
           <View className="flex-row flex-wrap gap-1.5">
             {proveedoresVisibles.map((p) => (
               <Chip
                 key={p.id}
                 etiqueta={p.nombre}
                 activo={proveedorActivo === p.id}
-                onPress={() => setProveedorActivo(p.id)}
+                onPress={() => cambiarProveedor(p.id)}
               />
             ))}
           </View>
@@ -208,15 +290,17 @@ export function DescuentosProveedor({
                   </View>
                 </FormField>
 
-                {/* Categorías del proveedor */}
+                {/* Categorías de ESTE proveedor (derivadas de sus productos) */}
                 <View className="gap-1.5">
                   <SectionTitle>Categorías del proveedor</SectionTitle>
-                  {categorias.length === 0 ? (
+                  {cargandoRama ? (
+                    <ActivityIndicator color={colores.primario} />
+                  ) : categoriasProveedor.length === 0 ? (
                     <Text className="text-sm text-muted-foreground">
                       Sin categorías disponibles.
                     </Text>
                   ) : (
-                    categorias.map((c) => {
+                    categoriasProveedor.map((c) => {
                       const regla = reglasCategoria.find(
                         (r) => r.proveedor_id === proveedorActivo && r.categoria_id === c.id
                       );
@@ -270,12 +354,85 @@ export function DescuentosProveedor({
                     })
                   )}
                 </View>
+
+                {/* Productos de ESTE proveedor (buscador filtrado) */}
+                <View className="gap-1.5">
+                  <SectionTitle>Productos de este proveedor</SectionTitle>
+                  <View className="flex-row items-center gap-2">
+                    <Search size={16} color={colores.tenue} />
+                    <Input
+                      value={busqueda}
+                      onChangeText={setBusqueda}
+                      placeholder="Buscar por referencia o modelo…"
+                      className="h-10 flex-1 text-sm"
+                    />
+                  </View>
+                  {cargandoRama ? (
+                    <ActivityIndicator color={colores.primario} />
+                  ) : productosProveedor.length === 0 ? (
+                    <Text className="text-sm text-muted-foreground">Sin productos.</Text>
+                  ) : (
+                    <View className="gap-1.5">
+                      {productosProveedor.map((p) => {
+                        const seleccionado = productoSeleccionado === p.producto_id;
+                        return (
+                          <ListCard
+                            key={p.producto_id}
+                            onPress={() => setProductoSeleccionado(p.producto_id)}
+                            className={seleccionado ? 'border-primary bg-primary/5' : ''}
+                          >
+                            <Text className="text-sm font-medium" numberOfLines={1}>
+                              {p.nombre}
+                            </Text>
+                            <FilaDetalle
+                              etiqueta={`Ref. ${p.referencia} · ${formatEUR(p.precio_base)}`}
+                              valor={formatEUR(p.precio_final)}
+                            />
+                          </ListCard>
+                        );
+                      })}
+                    </View>
+                  )}
+                  {productoSeleccionado ? (
+                    <View className="gap-2">
+                      <Separator />
+                      <Text className="text-xs text-muted-foreground">
+                        Producto seleccionado: {productoElegido?.nombre ?? productoSeleccionado}
+                      </Text>
+                      <FormField etiqueta="Porcentaje">
+                        <View className="flex-row flex-wrap items-center gap-2">
+                          <Input
+                            keyboardType="decimal-pad"
+                            value={pctProducto}
+                            onChangeText={setPctProducto}
+                            placeholder="%"
+                            className="h-10 w-24 text-sm"
+                          />
+                          <Button size="sm" onPress={() => void guardarProductoPct()}>
+                            <Text>Añadir descuento</Text>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onPress={() => {
+                              setProductoSeleccionado(null);
+                              setPctProducto('');
+                            }}
+                          >
+                            <Text className="text-xs">Cancelar</Text>
+                          </Button>
+                        </View>
+                      </FormField>
+                    </View>
+                  ) : null}
+                </View>
               </CardContent>
             </Card>
           ) : null}
         </View>
       )}
 
+      {errorRama ? <Text className="text-xs text-destructive">{errorRama}</Text> : null}
       {mensaje ? <Text className="text-sm text-muted-foreground">{mensaje}</Text> : null}
 
       {/* Historial de cambios */}

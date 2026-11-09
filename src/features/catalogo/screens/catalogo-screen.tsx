@@ -89,6 +89,17 @@ export default function CatalogoScreen({
       ? 'Catálogo'
       : (COMBUSTIBLES.find((c) => c.id === cat.combustible)?.etiqueta ?? 'Catálogo'));
 
+  // Menú lateral: con el proveedor activo, SOLO sus combustibles y categorías
+  // (el hook los calcula desde el snapshot completo, sin búsqueda/paginación).
+  // Mientras no estén listos (carga inicial o camino de red sin SQLite) se cae
+  // al comportamiento anterior: todos los combustibles y categorías globales.
+  const combustiblesMenu = cat.filtrosProveedor.listo
+    ? cat.filtrosProveedor.combustibles
+    : COMBUSTIBLES.map((c) => c.id);
+  const categoriasMenu = cat.filtrosProveedor.listo
+    ? cat.filtrosProveedor.categorias
+    : cat.categorias;
+
   return (
     // El PRIMARIO del catálogo es el color del proveedor activo: esta pantalla
     // SÍ está dentro del contexto de navegación, así que aquí (y solo aquí) se
@@ -226,7 +237,8 @@ export default function CatalogoScreen({
         abierto={menuAbierto}
         onCerrar={() => setMenuAbierto(false)}
         combustible={cat.combustible}
-        categorias={cat.categorias}
+        combustibles={combustiblesMenu}
+        categorias={categoriasMenu}
         setCombustible={cat.setCombustible}
         categoria={cat.categoria}
         setCategoria={cat.setCategoria}

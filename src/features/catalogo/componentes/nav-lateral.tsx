@@ -14,13 +14,15 @@ import { supabase } from '@/shared/lib/supabase';
 import { useColoresIcono } from '@/shared/lib/theme';
 import { cn } from '@/shared/lib/utils';
 
-// Navegación lateral (cajón) del catálogo: las dos secciones de combustible
-// con sus subsecciones y, al pie, el acceso a la cuenta. El estado del
-// catálogo lo posee la pantalla; aquí solo se recibe y se actualiza.
+// Navegación lateral (cajón) del catálogo: las secciones de combustible que
+// EXISTEN en el proveedor activo (prop `combustibles`) con sus subsecciones
+// (categorías de ese proveedor) y, al pie, el acceso a la cuenta. El estado
+// del catálogo lo posee la pantalla; aquí solo se recibe y se actualiza.
 export function NavLateral({
   abierto,
   onCerrar,
   combustible,
+  combustibles,
   categorias,
   setCombustible,
   categoria,
@@ -29,6 +31,8 @@ export function NavLateral({
   abierto: boolean;
   onCerrar: () => void;
   combustible: Combustible;
+  /** Combustibles presentes en los productos del proveedor activo. */
+  combustibles: Combustible[];
   categorias: Categoria[];
   setCombustible: (c: Combustible) => void;
   categoria: string | null;
@@ -97,9 +101,11 @@ export function NavLateral({
             </Pressable>
           </View>
 
-          {/* Secciones: combustibles con sus subsecciones */}
+          {/* Secciones: SOLO los combustibles que existen en el proveedor
+              activo (el orden de las etiquetas lo da COMBUSTIBLES), cada una
+              con las categorías de ese proveedor. */}
           <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
-            {COMBUSTIBLES.map((c) => {
+            {COMBUSTIBLES.filter((c) => combustibles.includes(c.id)).map((c) => {
               const activo = combustible === c.id;
               const subsecciones = categorias.filter(
                 (x) => x.combustible === c.id && x.clave !== 'pellet' && x.clave !== 'lena'
@@ -198,6 +204,14 @@ export function NavLateral({
                   );
                 })}
               </View>
+            )}
+
+            {/* Caso límite: el proveedor no tiene combustibles ni categorías
+                agnósticas (no debería pasar con datos sanos). */}
+            {combustibles.length === 0 && agnosticas.length === 0 && (
+              <Text className="px-4 py-3 text-sm text-muted-foreground">
+                Este proveedor no tiene categorías.
+              </Text>
             )}
           </ScrollView>
 

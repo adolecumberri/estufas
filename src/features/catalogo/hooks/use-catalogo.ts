@@ -8,6 +8,7 @@ import {
   filaAProductoCatalogo,
   inicializarBd,
   obtenerCategorias,
+  obtenerFiltrosProveedor,
   obtenerMarcas,
   sincronizarCatalogo,
 } from '@/features/catalogo/lib/catalogo-local';
@@ -92,6 +93,33 @@ export function useCatalogo(clienteId?: string | null, proveedorId?: string | nu
     modoLocal: boolean;
     reglas: ReglasCuenta | null;
   } | null>(null);
+
+  // Filtros del menú lateral: combustibles y categorías presentes en los
+  // productos del proveedor activo (conjunto completo del snapshot, sin
+  // búsqueda ni paginación). `listo` distingue "aún sin calcular" (o camino
+  // de red, sin datos completos) de "calculado y puede estar vacío" (p. ej.
+  // Fansa no tiene pellets/leña): con listo=false la pantalla cae al
+  // comportamiento anterior (todos los combustibles y categorías globales).
+  const [filtrosProveedor, setFiltrosProveedor] = React.useState<{
+    listo: boolean;
+    combustibles: Combustible[];
+    categorias: Categoria[];
+  }>({ listo: false, combustibles: [], categorias: [] });
+
+  // Recalcula al cambiar de proveedor (sin recargar: es una lectura síncrona
+  // de la BD local ya sincronizada).
+  React.useEffect(() => {
+    if (!datosBase?.modoLocal) {
+      setFiltrosProveedor({ listo: false, combustibles: [], categorias: [] });
+      return;
+    }
+    try {
+      const { combustibles, categorias } = obtenerFiltrosProveedor(proveedorId ?? null);
+      setFiltrosProveedor({ listo: true, combustibles, categorias });
+    } catch {
+      setFiltrosProveedor({ listo: false, combustibles: [], categorias: [] });
+    }
+  }, [datosBase, proveedorId]);
 
   const claveProductosActual = claveProductos(
     uid,
@@ -335,5 +363,6 @@ export function useCatalogo(clienteId?: string | null, proveedorId?: string | nu
     error,
     limpiarFiltros,
     proveedor: proveedorId ?? null,
+    filtrosProveedor,
   };
 }

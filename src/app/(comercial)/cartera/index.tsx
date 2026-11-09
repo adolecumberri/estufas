@@ -4,6 +4,7 @@ import * as React from 'react';
 import { View } from 'react-native';
 
 import { TarjetaCliente } from '@/features/cartera/componentes/tarjeta-cliente';
+import type { ResumenDescuentosCliente } from '@/features/cartera/componentes/tarjeta-cliente';
 import { useAuth } from '@/features/auth/use-auth';
 import { useCartera } from '@/features/cartera/hooks/use-comercial';
 import { EmptyState, ErrorView, LoadingView } from '@/shared/componentes/estados';
@@ -15,14 +16,17 @@ import { Card } from '@/shared/ui/card';
 import { Text } from '@/shared/ui/text';
 import { supabase } from '@/shared/lib/supabase';
 
-// Resumen por cliente para las tarjetas: descuentos específicos y por
-// combustible VIGENTES + número de pedidos visibles. useCartera no expone
-// estos contadores, así que se consultan agregados (solo cliente_id) y se
-// agrupan en Maps; RLS ya limita el resultado a la cartera del comercial.
+// Resumen por cliente para las tarjetas (REQUISITOS_FICHA_CLIENTE §A):
+// descuentos vigentes por nivel (producto, proveedor, categoría) + nº de
+// pedidos visibles. useCartera no expone estos contadores, así que se
+// consultan una sola vez aquí, agregados (solo cliente_id/proveedor_id) y
+// agrupados en Maps; RLS ya limita el resultado a la cartera del comercial.
 // Si alguna consulta falla, su Map queda vacío y la tarjeta muestra 0.
 interface ContadoresCartera {
   producto: Map<string, number>;
-  combustible: Map<string, number>;
+  proveedor: Map<string, number>;
+  categoria: Map<string, number>;
+  proveedores: Map<string, { nombre: string; nReglas: number }[]>;
   pedidos: Map<string, number>;
 }
 
@@ -34,7 +38,7 @@ export default function Cartera() {
   const cargarContadores = React.useCallback(async () => {
     const hoy = new Date().toISOString().slice(0, 10);
     const vigencia = `fecha_fin.is.null,fecha_fin.gt.${hoy}`;
-    const [resProd, resComb, resPed] = await Promise.all([
+    const [resProd, resProv, resCat, resPed] = await Promise.all([
       supabase
         .from('descuentos_cliente_producto')
         .select('cliente_id')
@@ -42,11 +46,13 @@ export default function Cartera() {
         .lte('fecha_inicio', hoy)
         .or(vigencia),
       supabase
-        .from('descuentos_cliente_combustible')
-        .select('cliente_id')
-        .eq('borrado', false)
-        .lte('fecha_inicio', hoy)
-        .or(vigencia),
+        .from('descuentos_cliente_proveedor')
+        .select('cliente_id, proveedor_id, proveedor:proveedores(nombre)')
+        .eq('borrado', false),
+      supabase
+        .from('descuentos_cliente_categoria')
+        .select('cliente_id, proveedor_id')
+        .eq('borrado', false),
       supabase.from('pedidos').select('cliente_id').eq('borrado', false),
     ]);
     const agrupar = (filas: { cliente_id: string }[] | null) => {
@@ -56,13 +62,58 @@ export default function Cartera() {
       }
       return mapa;
     };
+    const producto = resProd.error
+      ? new Map()
+      : agrupar(resProd.data as { cliente_id: string }[] | null);
+
+    const proveedor = new Map<string, number>();
+    const categoria = new Map<string, number>();
+    const detalle = new Map<string, Map<string, { nombre: string; nReglas: number }>>();
+    const sumarRegla = (clienteId: string, proveedorId: string, nombreProveedor: string | null) => {
+      const porCliente = detalle.get(clienteId) ?? new Map();
+      const previa = porCliente.get(proveedorId) ?? {
+        nombre: nombreProveedor ?? 'Proveedor',
+        nReglas: 0,
+      };
+      porCliente.set(proveedorId, {
+        nombre: nombreProveedor ?? previa.nombre,
+        nReglas: previa.nReglas + 1,
+      });
+      detalle.set(clienteId, porCliente);
+    };
+    if (!resProv.error) {
+      for (const f of (resProv.data ?? []) as {
+        cliente_id: string;
+        proveedor_id: string;
+        proveedor: { nombre: string } | { nombre: string }[] | null;
+      }[]) {
+        proveedor.set(f.cliente_id, (proveedor.get(f.cliente_id) ?? 0) + 1);
+        // postgrest-js tipa los embeds to-one como arrays; en runtime es objeto.
+        const embed = f.proveedor;
+        const nombre = embed
+          ? Array.isArray(embed)
+            ? (embed[0]?.nombre ?? null)
+            : embed.nombre
+          : null;
+        sumarRegla(f.cliente_id, f.proveedor_id, nombre);
+      }
+    }
+    if (!resCat.error) {
+      for (const f of (resCat.data ?? []) as { cliente_id: string; proveedor_id: string }[]) {
+        categoria.set(f.cliente_id, (categoria.get(f.cliente_id) ?? 0) + 1);
+        sumarRegla(f.cliente_id, f.proveedor_id, null);
+      }
+    }
+    const proveedores = new Map<string, { nombre: string; nReglas: number }[]>();
+    for (const [clienteId, porProveedor] of detalle) {
+      proveedores.set(clienteId, Array.from(porProveedor.values()));
+    }
+
     setContadores({
-      producto: resProd.error
-        ? new Map()
-        : agrupar(resProd.data as { cliente_id: string }[] | null),
-      combustible: resComb.error
-        ? new Map()
-        : agrupar(resComb.data as { cliente_id: string }[] | null),
+      producto,
+      proveedor,
+      categoria,
+      proveedores,
       pedidos: resPed.error ? new Map() : agrupar(resPed.data as { cliente_id: string }[] | null),
     });
   }, []);
@@ -74,6 +125,16 @@ export default function Cartera() {
   const refrescar = () => {
     void recargar();
     void cargarContadores();
+  };
+
+  const resumenDe = (clienteId: string): ResumenDescuentosCliente | undefined => {
+    if (!contadores) return undefined;
+    return {
+      proveedor: contadores.proveedor.get(clienteId) ?? 0,
+      categoria: contadores.categoria.get(clienteId) ?? 0,
+      producto: contadores.producto.get(clienteId) ?? 0,
+      proveedores: contadores.proveedores.get(clienteId) ?? [],
+    };
   };
 
   return (
@@ -111,15 +172,8 @@ export default function Cartera() {
             {clientes.map((c) => (
               <TarjetaCliente
                 key={c.id}
-                cliente={{
-                  ...c,
-                  ...(contadores
-                    ? {
-                        nDescuentosProducto: contadores.producto.get(c.id) ?? 0,
-                        nDescuentosCombustible: contadores.combustible.get(c.id) ?? 0,
-                      }
-                    : {}),
-                }}
+                cliente={c}
+                resumen={resumenDe(c.id)}
                 pedidos={contadores?.pedidos.get(c.id) ?? 0}
                 onPress={() => router.push(`/cartera/${c.id}`)}
               />

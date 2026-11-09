@@ -5,6 +5,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TarjetaCliente } from '@/features/cartera/componentes/tarjeta-cliente';
+import type { ResumenDescuentosCliente } from '@/features/cartera/componentes/tarjeta-cliente';
 import { EmptyState, ErrorView, LoadingView } from '@/shared/componentes/estados';
 import { Screen } from '@/shared/componentes/screen';
 import { ScreenHeader } from '@/shared/componentes/screen-header';
@@ -14,6 +15,7 @@ import { Text } from '@/shared/ui/text';
 import { ESTADOS_PEDIDO, type EstadoPedido } from '@/shared/constantes';
 import { useComercialDetalle } from '@/features/admin/hooks/use-admin';
 import { formatEUR, formatFecha } from '@/shared/lib/format';
+import { supabase } from '@/shared/lib/supabase';
 import { useColoresIcono } from '@/shared/lib/theme';
 import { cn } from '@/shared/lib/utils';
 import type { Pedido, PerfilUsuario } from '@/shared/lib/types';
@@ -56,6 +58,111 @@ export default function AdminComercialDetalle() {
 
   // Vista activa del "app del comercial": Cartera por defecto.
   const [seccion, setSeccion] = React.useState<SeccionPreview>('cartera');
+
+  // Resumen de descuentos por cliente para las tarjetas (REQUISITOS_FICHA_CLIENTE
+  // §A.3-4): reglas por nivel y nº de reglas por proveedor, agregadas en la
+  // pantalla (el admin tiene SELECT por RLS; no se pudo reutilizar el hook de
+  // la cartera del comercial porque vive en otro feature).
+  const [resumenes, setResumenes] = React.useState<Map<string, ResumenDescuentosCliente> | null>(
+    null
+  );
+
+  React.useEffect(() => {
+    if (clientes.length === 0) {
+      setResumenes(new Map());
+      return;
+    }
+    let cancelado = false;
+    const ids = clientes.map((c) => c.id);
+    void (async () => {
+      const hoy = new Date().toISOString().slice(0, 10);
+      const vigencia = `fecha_fin.is.null,fecha_fin.gt.${hoy}`;
+      const [resProd, resProv, resCat] = await Promise.all([
+        supabase
+          .from('descuentos_cliente_producto')
+          .select('cliente_id')
+          .eq('borrado', false)
+          .lte('fecha_inicio', hoy)
+          .or(vigencia)
+          .in('cliente_id', ids),
+        supabase
+          .from('descuentos_cliente_proveedor')
+          .select('cliente_id, proveedor_id, proveedor:proveedores(nombre)')
+          .eq('borrado', false)
+          .in('cliente_id', ids),
+        supabase
+          .from('descuentos_cliente_categoria')
+          .select('cliente_id, proveedor_id')
+          .eq('borrado', false)
+          .in('cliente_id', ids),
+      ]);
+      if (cancelado) return;
+      const cuenta = (filas: { cliente_id: string }[] | null) => {
+        const mapa = new Map<string, number>();
+        for (const f of filas ?? []) {
+          mapa.set(f.cliente_id, (mapa.get(f.cliente_id) ?? 0) + 1);
+        }
+        return mapa;
+      };
+      const producto = resProd.error
+        ? new Map()
+        : cuenta(resProd.data as { cliente_id: string }[] | null);
+      const proveedor = new Map<string, number>();
+      const categoria = new Map<string, number>();
+      const detalle = new Map<string, Map<string, { nombre: string; nReglas: number }>>();
+      const sumarRegla = (
+        clienteId: string,
+        proveedorId: string,
+        nombreProveedor: string | null
+      ) => {
+        const porCliente = detalle.get(clienteId) ?? new Map();
+        const previa = porCliente.get(proveedorId) ?? {
+          nombre: nombreProveedor ?? 'Proveedor',
+          nReglas: 0,
+        };
+        porCliente.set(proveedorId, {
+          nombre: nombreProveedor ?? previa.nombre,
+          nReglas: previa.nReglas + 1,
+        });
+        detalle.set(clienteId, porCliente);
+      };
+      if (!resProv.error) {
+        for (const f of (resProv.data ?? []) as {
+          cliente_id: string;
+          proveedor_id: string;
+          proveedor: { nombre: string } | { nombre: string }[] | null;
+        }[]) {
+          proveedor.set(f.cliente_id, (proveedor.get(f.cliente_id) ?? 0) + 1);
+          const embed = f.proveedor;
+          const nombre = embed
+            ? Array.isArray(embed)
+              ? (embed[0]?.nombre ?? null)
+              : embed.nombre
+            : null;
+          sumarRegla(f.cliente_id, f.proveedor_id, nombre);
+        }
+      }
+      if (!resCat.error) {
+        for (const f of (resCat.data ?? []) as { cliente_id: string; proveedor_id: string }[]) {
+          categoria.set(f.cliente_id, (categoria.get(f.cliente_id) ?? 0) + 1);
+          sumarRegla(f.cliente_id, f.proveedor_id, null);
+        }
+      }
+      const mapa = new Map<string, ResumenDescuentosCliente>();
+      for (const c of clientes) {
+        mapa.set(c.id, {
+          proveedor: proveedor.get(c.id) ?? 0,
+          categoria: categoria.get(c.id) ?? 0,
+          producto: producto.get(c.id) ?? 0,
+          proveedores: Array.from(detalle.get(c.id)?.values() ?? []),
+        });
+      }
+      setResumenes(mapa);
+    })();
+    return () => {
+      cancelado = true;
+    };
+  }, [clientes]);
 
   const totalDe = (p: Pedido) => (p.pedido_lineas ?? []).reduce((acc, l) => acc + l.total_linea, 0);
   const productosDe = (p: Pedido) =>
@@ -103,6 +210,7 @@ export default function AdminComercialDetalle() {
                   <TarjetaCliente
                     key={c.id}
                     cliente={c}
+                    resumen={resumenes?.get(c.id)}
                     onPress={() => router.push(`/cartera/${c.id}`)}
                   />
                 ))
