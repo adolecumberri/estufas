@@ -7,14 +7,20 @@ import { Text } from '@/shared/ui/text';
 import { volverA } from '@/shared/lib/navegacion';
 import { useColoresIcono } from '@/shared/lib/theme';
 
-// Cabecera de pantalla: flecha atrás (volverA con respaldo, nunca
-// router.back() suelto) + título + subtítulo opcional + slot derecho.
+// Cabecera de pantalla: fila de ALTURA FIJA (h-14) con flecha atrás
+// (volverA con respaldo, nunca router.back() suelto) + columna de título +
+// zona de acciones anclada a la derecha y centrada verticalmente.
 //
-// El slot derecho trae POR DEFECTO la acción de cuenta (avatar → hoja con
-// info del usuario, "Mi cuenta" y "Cerrar sesión"): toda pantalla que use
-// ScreenHeader tiene acceso a la cuenta sin montarla a mano. Se sustituye
-// pasando `accion` (p. ej. "Nuevo comercial" — el header añade la cuenta al
-// lado) y se excluye con `sinCuenta`.
+// El subtítulo vive DENTRO de la columna del título con numberOfLines={1}:
+// por largo que sea, la fila no crece y la zona de acciones no se desplaza
+// (feedback 2026-11-10: la burbuja de cuenta no se mueve con subtítulos
+// largos). El título también lleva numberOfLines={1}.
+//
+// La burbuja de cuenta (avatar → hoja con info del usuario, "Mi cuenta" y
+// "Cerrar sesión") se renderiza POR DEFECTO y SIEMPRE a la DERECHA de la zona
+// de acciones; cualquier `accion` (p. ej. el botón de refresco) va a SU
+// IZQUIERDA, de modo que al aparecer no desplaza la burbuja. `sinCuenta` la
+// excluye.
 export function ScreenHeader({
   titulo,
   subtitulo,
@@ -31,16 +37,8 @@ export function ScreenHeader({
   sinCuenta?: boolean;
 }) {
   const colores = useColoresIcono();
-  // Si se pasa `accion`, va la cuenta delante (acceso siempre visible) y el
-  // contenido del slot detrás; `sinCuenta` la elimina del todo.
-  const slotDerecho = sinCuenta ? (accion ?? null) : (
-    <View className="flex-row items-center gap-1.5">
-      <AccionCuenta />
-      {accion}
-    </View>
-  );
   return (
-    <View className="flex-row items-center gap-2">
+    <View className="h-14 flex-row items-center gap-2">
       {atras && (
         <Pressable
           accessibilityRole="button"
@@ -51,15 +49,26 @@ export function ScreenHeader({
           <ChevronLeft size={24} color={colores.primerPlano} />
         </Pressable>
       )}
-      <View className="flex-1 gap-0.5">
-        <Text accessibilityRole="header" className="text-xl font-bold tracking-tight">
+      <View className="flex-1 justify-center gap-0.5">
+        <Text
+          numberOfLines={1}
+          accessibilityRole="header"
+          className="text-xl font-bold tracking-tight"
+        >
           {titulo}
         </Text>
         {/* OJO: `{subtitulo && <Text>}` devuelve `''` cuando subtitulo es '',
             y react-native-web lo rechaza ("Unexpected text node"). Usar ternario. */}
-        {subtitulo ? <Text className="text-xs text-muted-foreground">{subtitulo}</Text> : null}
+        {subtitulo ? (
+          <Text numberOfLines={1} className="text-xs text-muted-foreground">
+            {subtitulo}
+          </Text>
+        ) : null}
       </View>
-      {slotDerecho}
+      <View className="flex-row items-center gap-1.5">
+        {accion}
+        {!sinCuenta && <AccionCuenta />}
+      </View>
     </View>
   );
 }

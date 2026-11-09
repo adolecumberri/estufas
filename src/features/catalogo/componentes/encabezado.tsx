@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Flame, LogIn, Menu, ShoppingCart, UserRound } from 'lucide-react-native';
+import { Flame, LogIn, Menu, ShoppingCart } from 'lucide-react-native';
 import * as React from 'react';
 import { Pressable, View } from 'react-native';
 
@@ -7,13 +7,20 @@ import { Badge } from '@/shared/ui/badge';
 import { IconButton } from '@/shared/ui/icon-button';
 import { Text } from '@/shared/ui/text';
 import { APP, RUTAS } from '@/shared/constantes';
+import { AccionCuenta } from '@/shared/componentes/accion-cuenta';
 import { useSolicitud } from '@/features/carrito/contexto';
 import { useAuth } from '@/features/auth/use-auth';
 import { useColoresIcono } from '@/shared/lib/theme';
 
 // Cabecera fija del catálogo (diseño Stitch): marca + acceso al carrito y a
-// la cuenta. El destino de la cuenta depende del rol del perfil autenticado.
-// Con `onAbrirMenu` se muestra el botón que abre la navegación lateral.
+// la cuenta. Con `onAbrirMenu` se muestra el botón que abre la navegación
+// lateral.
+//
+// La burbuja de cuenta del usuario logeado está SIEMPRE visible (incluido el
+// admin): misma componente y hoja que el resto de la app (AccionCuenta, con
+// info + "Mi cuenta" + "Cerrar sesión"). Sin sesión se muestra el icono de
+// Iniciar sesión. (Feedback 2026-11-10 punto 3: la burbuja vive en el top
+// navbar por defecto; el "Mi cuenta" del drawer puede quedarse.)
 export function EncabezadoCatalogo({ onAbrirMenu }: { onAbrirMenu?: () => void }) {
   const { session, perfil } = useAuth();
   const { lineas, clienteObjetivoId } = useSolicitud();
@@ -21,21 +28,7 @@ export function EncabezadoCatalogo({ onAbrirMenu }: { onAbrirMenu?: () => void }
 
   const totalLineas = lineas.reduce((acc, l) => acc + l.cantidad, 0);
 
-  const destinoCuenta = () => {
-    if (!session) {
-      router.push(RUTAS.login);
-      return;
-    }
-    // El acceso de administración vive en la pestaña Admin del navbar
-    // inferior (5ª pestaña del admin), no en la cabecera.
-    if (perfil?.rol === 'comercial') router.push(RUTAS.cartera);
-    else router.push(RUTAS.pedidos);
-  };
-
-  // El admin no usa el icono de cuenta de la cabecera: su acceso al panel
-  // está en la barra inferior.
-  const mostrarCuenta = !(session && perfil?.rol === 'admin');
-  // El admin tampoco ve el carrito: navega el catálogo en solo lectura.
+  // El admin no ve el carrito: no tiene carrito:usar (decisión S0, 10/11/2026).
   const mostrarCarrito = session && perfil?.rol !== 'admin';
 
   return (
@@ -86,12 +79,14 @@ export function EncabezadoCatalogo({ onAbrirMenu }: { onAbrirMenu?: () => void }
           </Badge>
         )}
 
-        {mostrarCuenta && (
+        {session ? (
+          <AccionCuenta />
+        ) : (
           <IconButton
-            icono={session ? UserRound : LogIn}
+            icono={LogIn}
             tamano={20}
-            etiquetaAccesibilidad={session ? 'Cuenta de usuario' : 'Iniciar sesión'}
-            onPress={destinoCuenta}
+            etiquetaAccesibilidad="Iniciar sesión"
+            onPress={() => router.push(RUTAS.login)}
           />
         )}
       </View>

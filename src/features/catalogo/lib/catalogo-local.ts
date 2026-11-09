@@ -293,16 +293,18 @@ export interface OpcionesConsulta {
   proveedorId?: string | null;
 }
 
-// Consulta local con los mismos criterios que fn_catalogo_usuario_v2:
-// búsqueda sobre nombre/referencia, combustible (producto con ESE combustible
-// O agnóstico), categoría por pertenencia, marca exacta, orden
-// destacado DESC + nombre ASC y paginación con +1 para saber si hay más.
-// Solo se usan parámetros (nada de interpolación de texto de usuario en SQL).
-export function consultarCatalogo(opciones: OpcionesConsulta): {
-  filas: FilaProductoLocal[];
-  hayMas: boolean;
-} {
-  const db = obtenerBd();
+// Filtros comunes de la consulta local (mismos criterios que
+// fn_catalogo_usuario_v2: búsqueda normalizada sobre nombre/referencia,
+// combustible con agnósticos, categoría por pertenencia, marca exacta y
+// visibilidad/filtro de proveedor). Solo parámetros, nunca interpolación.
+function construirFiltros(opciones: {
+  busqueda: string;
+  combustible: Combustible | null;
+  categoria: string | null;
+  marca: string | null;
+  proveedoresVisibles: string[] | null;
+  proveedorId?: string | null;
+}): { condiciones: string[]; parametros: (string | number | null)[] } {
   const condiciones: string[] = ['activo = 1'];
   const parametros: (string | number | null)[] = [];
 
@@ -334,12 +336,23 @@ export function consultarCatalogo(opciones: OpcionesConsulta): {
       parametros.push(...habilitados);
     }
   }
-  // Filtro por un proveedor concreto (vista de proveedor): se añade en el
-  // WHERE para no cortar la paginación con un filtro posterior en JS.
+  // Filtro por un proveedor concreto (vista de proveedor).
   if (opciones.proveedorId != null) {
     condiciones.push('proveedor_id = ?');
     parametros.push(opciones.proveedorId);
   }
+
+  return { condiciones, parametros };
+}
+
+// Consulta local paginada (compatibilidad: ya sin uso tras eliminar la
+// paginación del catálogo — feedback 10/11/2026 — pero se conserva).
+export function consultarCatalogo(opciones: OpcionesConsulta): {
+  filas: FilaProductoLocal[];
+  hayMas: boolean;
+} {
+  const db = obtenerBd();
+  const { condiciones, parametros } = construirFiltros(opciones);
 
   const limite = Math.max(1, opciones.limite + 1); // +1 para saber si hay más
   const offset = Math.max(0, opciones.pagina) * opciones.limite;
@@ -349,6 +362,26 @@ export function consultarCatalogo(opciones: OpcionesConsulta): {
     [...parametros, limite, offset]
   );
   return { filas: filas.slice(0, opciones.limite), hayMas: filas.length > opciones.limite };
+}
+
+// Consulta local COMPLETA (feedback 10/11/2026): todos los productos que
+// cumplen los filtros, sin paginación. El snapshot completo ya vive en
+// SQLite: el coste es una única lectura síncrona (Fansa: 1.364 filas).
+export function consultarCatalogoCompleto(opciones: {
+  busqueda: string;
+  combustible: Combustible | null;
+  categoria: string | null;
+  marca: string | null;
+  proveedoresVisibles: string[] | null;
+  proveedorId?: string | null;
+}): FilaProductoLocal[] {
+  const db = obtenerBd();
+  const { condiciones, parametros } = construirFiltros(opciones);
+  return db.getAllSync<FilaProductoLocal>(
+    `SELECT * FROM productos WHERE ${condiciones.join(' AND ')}
+     ORDER BY destacado DESC, nombre ASC`,
+    parametros
+  );
 }
 
 export function obtenerProducto(id: string): FilaProductoLocal | null {

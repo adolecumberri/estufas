@@ -142,7 +142,8 @@ export default function Solicitud() {
                 <View className="flex-1 gap-1">
                   <Text className="text-sm font-medium">Pedido para un cliente asignado</Text>
                   <Text className="text-xs text-muted-foreground">
-                    Los precios mostrados son los del cliente.
+                    Los precios mostrados son los del cliente. Al crear el pedido se vaciará la
+                    solicitud actual.
                   </Text>
                 </View>
               ) : (
@@ -154,7 +155,11 @@ export default function Solicitud() {
                 variant="outline"
                 size="sm"
                 onPress={() =>
-                  clienteObjetivoId ? setClienteObjetivoId(null) : router.push('/cartera')
+                  clienteObjetivoId
+                    ? setClienteObjetivoId(null)
+                    : // FEEDBACK 10/11 §6: la cartera entra en modo selección y,
+                      // al elegir cliente, vuelve aquí sin abrir su ficha.
+                      router.push('/cartera?seleccion=1')
                 }
               >
                 <Text>{clienteObjetivoId ? 'Cambiar' : 'Seleccionar'}</Text>

@@ -1,9 +1,15 @@
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Boxes, RefreshCw, X } from 'lucide-react-native';
+import { Boxes, X } from 'lucide-react-native';
 import { vars } from 'nativewind';
 import * as React from 'react';
-import { FlatList, View } from 'react-native';
+import {
+  Animated,
+  FlatList,
+  View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import banner from '../../../../assets/images/banner.jpg';
@@ -31,7 +37,6 @@ import {
   tripletProveedor,
 } from '@/shared/lib/colores-proveedor';
 import { supabase } from '@/shared/lib/supabase';
-import { useColoresIcono } from '@/shared/lib/theme';
 import type { Proveedor } from '@/shared/lib/types';
 
 // Pantalla raíz de la app: catálogo público. Vive como componente compartido
@@ -96,7 +101,6 @@ export default function CatalogoScreen({
       : (proveedorActivo?.id ?? null));
   const cat = useCatalogo(clienteObjetivoId, proveedorId);
   const [menuAbierto, setMenuAbierto] = React.useState(false);
-  const colores = useColoresIcono();
 
   // Proveedor que tiñe el primario: en modo acotado, el del comercial; si no,
   // el activo del usuario (el color se usa también en el banner del override).
@@ -140,6 +144,36 @@ export default function CatalogoScreen({
   // se mantienen las anteriores (atenuadas) o skeletons en la primera carga.
   const filtrosMenu = cat.filtrosProveedor;
 
+  // Ocultar banner + buscador al hacer scroll hacia abajo y mostrarlos al
+  // subir (feedback 10/11/2026). La altura se anima (no usa native driver)
+  // y se mide una sola vez al montar; el FlatList crece al colapsarse.
+  const animFiltros = React.useRef(new Animated.Value(1)).current;
+  const filtrosVisibles = React.useRef(true);
+  const ultimoOffsetY = React.useRef(0);
+  const [alturaFiltros, setAlturaFiltros] = React.useState<number | null>(null);
+
+  const animarFiltros = (visible: boolean) => {
+    if (filtrosVisibles.current === visible) return;
+    filtrosVisibles.current = visible;
+    Animated.timing(animFiltros, {
+      toValue: visible ? 1 : 0,
+      duration: 180,
+      useNativeDriver: false, // animamos altura: no soporta native driver
+    }).start();
+  };
+
+  const manejarScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const y = e.nativeEvent.contentOffset.y;
+    const dy = y - ultimoOffsetY.current;
+    ultimoOffsetY.current = y;
+    if (y < 40) {
+      animarFiltros(true); // arriba del todo: siempre visibles
+      return;
+    }
+    if (dy > 8) animarFiltros(false);
+    else if (dy < -8) animarFiltros(true);
+  };
+
   return (
     // El PRIMARIO del catálogo es el color del proveedor activo: esta pantalla
     // SÍ está dentro del contexto de navegación, así que aquí (y solo aquí) se
@@ -160,13 +194,28 @@ export default function CatalogoScreen({
       {/* Cabecera */}
       <EncabezadoCatalogo onAbrirMenu={() => setMenuAbierto(true)} />
 
-      {/* Banner decorativo */}
-      <Image source={banner} className="h-[60px] w-full" contentFit="cover" transition={200} />
+      {/* Banner decorativo + buscador: se ocultan al bajar y reaparecen al
+          subir (altura animada; se mide una sola vez en el primer layout). */}
+      <Animated.View
+        onLayout={(e) => {
+          if (alturaFiltros === null) setAlturaFiltros(e.nativeEvent.layout.height);
+        }}
+        style={{
+          height:
+            alturaFiltros === null
+              ? undefined
+              : animFiltros.interpolate({ inputRange: [0, 1], outputRange: [0, alturaFiltros] }),
+          opacity: animFiltros,
+          overflow: 'hidden',
+        }}
+      >
+        <Image source={banner} className="h-[60px] w-full" contentFit="cover" transition={200} />
 
-      {/* Buscador */}
-      <View className="mt-2 px-4 pb-2">
-        <Buscador valor={cat.busqueda} onChange={cat.setBusqueda} />
-      </View>
+        {/* Buscador */}
+        <View className="mt-2 px-4 pb-2">
+          <Buscador valor={cat.busqueda} onChange={cat.setBusqueda} />
+        </View>
+      </Animated.View>
 
       {/* Banner: catálogo filtrado por proveedor (vista de admin). El nombre
           sale del primer producto cargado; sin resultados, texto genérico.
@@ -230,7 +279,23 @@ export default function CatalogoScreen({
           keyExtractor={(p) => p.producto_id}
           numColumns={2}
           columnWrapperStyle={{ gap: 12, paddingHorizontal: 16 }}
-          contentContainerStyle={{ gap: 12, paddingBottom: (session ? 88 : 24) + insets.bottom }}
+          // Margen inferior: la tab bar (NavInferior) mide 64 + insets.bottom y
+          // el catálogo vive en el grupo (publico) SIN shell → el padding se
+          // aplica aquí (64 + 32 de respiro con sesión; 32 sin ella).
+          contentContainerStyle={{
+            gap: 12,
+            paddingBottom: (session ? 64 + 32 : 32) + insets.bottom,
+          }}
+          // Rendimiento con el catálogo COMPLETO (Fansa: 1.364 filas): la
+          // rejilla solo materializa la ventana visible. Sin getItemLayout
+          // porque las tarjetas tienen altura variable (nombre a 2 líneas).
+          initialNumToRender={10}
+          maxToRenderPerBatch={16}
+          windowSize={7}
+          updateCellsBatchingPeriod={50}
+          removeClippedSubviews
+          onScroll={manejarScroll}
+          scrollEventThrottle={16}
           renderItem={({ item }) => (
             <TarjetaProducto producto={item} origen={origen} onAnadir={anadir} />
           )}
@@ -252,20 +317,6 @@ export default function CatalogoScreen({
                 }
               />
             )
-          }
-          ListFooterComponent={
-            cat.hayMas ? (
-              <View className="px-4 pb-4 pt-2">
-                <Button
-                  variant="outline"
-                  className="w-full rounded-lg py-2.5"
-                  onPress={() => cat.setPagina((p) => p + 1)}
-                >
-                  <RefreshCw size={18} color={colores.tenue} className="size-[18px]" />
-                  <Text>Cargar más estufas</Text>
-                </Button>
-              </View>
-            ) : null
           }
         />
       )}

@@ -1,18 +1,19 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { CircleCheck, Flame, Mail, Percent, ShieldCheck, Trash2 } from 'lucide-react-native';
+import { CircleCheck, Copy, Flame, Mail, Percent, ShieldCheck, Trash2 } from 'lucide-react-native';
 import * as React from 'react';
-import { View } from 'react-native';
+import { Share, View } from 'react-native';
 
 import { EmptyState, ErrorView, LoadingView } from '@/shared/componentes/estados';
 import { FilaDetalle, ListCard } from '@/shared/componentes/list-card';
 import { ScreenScroll } from '@/shared/componentes/screen';
 import { ScreenHeader } from '@/shared/componentes/screen-header';
 import { SectionTitle } from '@/shared/componentes/section-title';
-import { FormField } from '@/shared/ui';
+import { IconButton } from '@/shared/ui';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Input } from '@/shared/ui/input';
+import { Label } from '@/shared/ui/label';
 import { Text } from '@/shared/ui/text';
 import { COMBUSTIBLES, ESTADOS_PEDIDO, TIPOS_CLIENTE } from '@/shared/constantes';
 import type { CombustibleId } from '@/shared/constantes';
@@ -116,6 +117,15 @@ export default function ClienteDetalle() {
             : ''
         }
         respaldo={desde ?? '/cartera'}
+        accion={
+          cliente ? (
+            <IconButton
+              icono={Copy}
+              onPress={() => void Share.share({ message: cliente.email })}
+              etiquetaAccesibilidad={`Copiar email de ${cliente.email}`}
+            />
+          ) : undefined
+        }
       />
 
       {cargando ? (
@@ -199,16 +209,16 @@ export default function ClienteDetalle() {
                 promociones de tienda superiores.
               </Text>
               <View className="gap-2 rounded-lg bg-muted p-3">
-                <FormField etiqueta="Valor Porcentual">
+                <View className="flex-row flex-wrap items-center gap-2">
+                  <Label nativeID="pct-general">%</Label>
                   <Input
+                    id="pct-general"
                     keyboardType="decimal-pad"
                     value={pctGeneral}
                     onChangeText={setPctGeneral}
-                    placeholder="%"
+                    placeholder="0"
                     className="h-10 w-24 text-sm"
                   />
-                </FormField>
-                <View className="flex-row items-center gap-3">
                   <Button size="sm" variant="secondary" onPress={() => void guardarGeneral()}>
                     <Text>Aplicar</Text>
                   </Button>
@@ -262,39 +272,39 @@ export default function ClienteDetalle() {
                         <Text className="text-xs text-muted-foreground">Sin descuento</Text>
                       )}
                     </View>
-                    <FormField etiqueta="Porcentaje">
-                      <View className="flex-row items-center gap-2">
-                        <Input
-                          keyboardType="decimal-pad"
-                          value={pctCombustibles[c.id]}
-                          onChangeText={(v) =>
-                            setPctCombustibles((prev) => {
-                              const siguiente = { ...prev };
-                              siguiente[c.id] = v;
-                              return siguiente;
-                            })
-                          }
-                          placeholder="%"
-                          className="h-10 w-24 text-sm"
-                        />
+                    <View className="flex-row flex-wrap items-center gap-2">
+                      <Label nativeID={`pct-combustible-${c.id}`}>%</Label>
+                      <Input
+                        nativeID={`pct-combustible-${c.id}`}
+                        keyboardType="decimal-pad"
+                        value={pctCombustibles[c.id]}
+                        onChangeText={(v) =>
+                          setPctCombustibles((prev) => {
+                            const siguiente = { ...prev };
+                            siguiente[c.id] = v;
+                            return siguiente;
+                          })
+                        }
+                        placeholder="0"
+                        className="h-10 w-24 text-sm"
+                      />
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onPress={() => void guardarCombustible(c.id, pctCombustibles[c.id])}
+                      >
+                        <Text>Guardar</Text>
+                      </Button>
+                      {descuento ? (
                         <Button
                           size="sm"
-                          variant="secondary"
-                          onPress={() => void guardarCombustible(c.id, pctCombustibles[c.id])}
+                          variant="outline"
+                          onPress={() => void anularCombustibleDescuento(c.id)}
                         >
-                          <Text>Guardar</Text>
+                          <Text className="text-xs">Anular</Text>
                         </Button>
-                        {descuento ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onPress={() => void anularCombustibleDescuento(c.id)}
-                          >
-                            <Text className="text-xs">Anular</Text>
-                          </Button>
-                        ) : null}
-                      </View>
-                    </FormField>
+                      ) : null}
+                    </View>
                   </CardContent>
                 </Card>
               );

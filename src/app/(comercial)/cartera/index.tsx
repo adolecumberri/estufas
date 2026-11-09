@@ -7,6 +7,7 @@ import { TarjetaCliente } from '@/features/cartera/componentes/tarjeta-cliente';
 import type { ResumenDescuentosCliente } from '@/features/cartera/componentes/tarjeta-cliente';
 import { useAuth } from '@/features/auth/use-auth';
 import { useCartera } from '@/features/cartera/hooks/use-comercial';
+import { useSolicitud } from '@/features/carrito/contexto';
 import { EmptyState, ErrorView, LoadingView } from '@/shared/componentes/estados';
 import { ScreenScroll } from '@/shared/componentes/screen';
 import { ScreenHeader } from '@/shared/componentes/screen-header';
@@ -31,9 +32,16 @@ interface ContadoresCartera {
 
 export default function Cartera() {
   const { perfil } = useAuth();
+  const { setClienteObjetivoId } = useSolicitud();
   // Alcance opcional por comercial (`?comercial=<id>`): el admin, desde la
   // ficha de un comercial, ve SOLO los clientes de ese comercial.
-  const { comercial } = useLocalSearchParams<{ comercial?: string }>();
+  // `?seleccion` = modo selección (FEEDBACK 10/11 §6): al pulsar un cliente se
+  // vuelve a /solicitud con ese cliente elegido, sin abrir su ficha.
+  const { comercial, seleccion } = useLocalSearchParams<{
+    comercial?: string;
+    seleccion?: string;
+  }>();
+  const modoSeleccion = seleccion != null;
   const { clientes, cargando, error, recargar } = useCartera(comercial);
   const [contadores, setContadores] = React.useState<ContadoresCartera | null>(null);
 
@@ -164,6 +172,14 @@ export default function Cartera() {
           </Card>
         ) : null}
 
+        {/* Modo selección (FEEDBACK 10/11 §6): elegir cliente destinatario
+            para la solicitud, sin abrir la ficha. */}
+        {modoSeleccion ? (
+          <Card className="gap-1 rounded-lg border-primary/40 bg-primary/10 p-3">
+            <Text className="text-sm">Selecciona el cliente para el pedido</Text>
+          </Card>
+        ) : null}
+
         {cargando ? (
           <LoadingView />
         ) : error ? (
@@ -178,7 +194,18 @@ export default function Cartera() {
                 cliente={c}
                 resumen={resumenDe(c.id)}
                 pedidos={contadores?.pedidos.get(c.id) ?? 0}
-                onPress={() => router.push(`/cartera/${c.id}`)}
+                onPress={() => {
+                  if (modoSeleccion) {
+                    setClienteObjetivoId(c.id);
+                    if (seleccion !== '1' && seleccion.startsWith('/')) {
+                      router.replace(seleccion as never);
+                    } else {
+                      router.back();
+                    }
+                    return;
+                  }
+                  router.push(`/cartera/${c.id}`);
+                }}
               />
             ))}
           </View>

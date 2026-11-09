@@ -1,10 +1,9 @@
 import * as React from 'react';
 
-import { PAGINACION } from '@/shared/constantes';
 import { useAuth } from '@/features/auth/use-auth';
 import { cacheEscribir, cacheLeer } from '@/shared/lib/cache';
 import {
-  consultarCatalogo,
+  consultarCatalogoCompleto,
   filaAProductoCatalogo,
   inicializarBd,
   obtenerCategorias,
@@ -24,14 +23,20 @@ const DEBOUNCE_MS = 300;
 // productos porque un swap de proveedores puede dispararlo varias veces.
 const DEBOUNCE_FILTROS_MS = 400;
 
+// Sin paginación (feedback 10/11/2026): el catálogo se sirve completo. La RPC
+// fn_catalogo_usuario_v2 acepta hasta 2000 filas (0016), suficiente para el
+// catálogo actual (Fansa: 1.364); SQLite lee el snapshot entero sin límite.
+const LIMITE_TODO = 2000;
+
 // Caché AsyncStorage (solo para el camino de red, cuando SQLite no está
-// disponible): filtros 24 h y páginas stale-while-revalidate, como antes.
+// disponible): filtros 24 h y productos versionados por catalogo_version.
 const CLAVE_CATEGORIAS = 'estufas.cache.categorias.v1';
 const CLAVE_MARCAS = 'estufas.cache.marcas.v1';
 
-// La clave de productos incluye la CUENTA autenticada: los precios se
-// personalizan por usuario, y sin esto un visitante anónimo u otro cliente
-// podría ver precios de una cuenta previa desde la caché.
+// La clave de productos incluye la CUENTA autenticada (los precios se
+// personalizan por usuario) y la VERSIÓN del catálogo: al cambiar la base de
+// datos (catalogo_version) la caché se invalida sola; hasta entonces, se
+// sirve sin volver a consultar.
 const claveProductos = (
   uid: string | null,
   clienteId: string | null | undefined,
@@ -39,10 +44,10 @@ const claveProductos = (
   combustible: Combustible,
   categoria: string | null,
   marca: string | null,
-  pagina: number,
-  proveedorId: string | null | undefined
+  proveedorId: string | null | undefined,
+  version: number
 ) =>
-  `estufas.cache.productos.v1:${uid ?? 'anon'}:${clienteId ?? 'anon'}:${busqueda}|${combustible}|${categoria ?? ''}|${marca ?? ''}|${pagina}|${proveedorId ?? ''}`;
+  `estufas.cache.productos.v2:${uid ?? 'anon'}:${clienteId ?? 'anon'}:${busqueda}|${combustible}|${categoria ?? ''}|${marca ?? ''}|${proveedorId ?? ''}|v${version}`;
 
 // Visibilidad por proveedor replicando fn_catalogo_usuario_v2 (0007/0009):
 // anónimo y admin sin cliente objetivo ven todo (null); el resto ve los
@@ -73,17 +78,15 @@ export function useCatalogo(clienteId?: string | null, proveedorId?: string | nu
   const [combustible, setCombustibleState] = React.useState<Combustible>('pellets');
   const [categoria, setCategoria] = React.useState<string | null>(null);
   const [marca, setMarca] = React.useState<string | null>(null);
-  const [pagina, setPagina] = React.useState(0);
 
   // Cambiar de combustible invalida la categoría (puede no existir en el otro).
   const setCombustible = (c: Combustible) => {
     setCombustibleState(c);
     setCategoria(null);
-    setPagina(0);
   };
 
   const [productosBruto, setProductos] = React.useState<ProductoCatalogo[]>([]);
-  // Clave (cuenta/cliente/filtros/página) a la que pertenece el resultado
+  // Clave (cuenta/cliente/filtros/versión) a la que pertenece el resultado
   // mostrado. Mientras no coincida con la petición actual no se muestra nada:
   // evita pintar precios de la identidad anterior durante una transición.
   const [claveMostrada, setClaveMostrada] = React.useState<string | null>(null);
@@ -91,13 +94,14 @@ export function useCatalogo(clienteId?: string | null, proveedorId?: string | nu
   const [marcas, setMarcas] = React.useState<Marca[]>([]);
   const [cargando, setCargando] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
-  const [hayMas, setHayMas] = React.useState(false);
 
-  // Datos base de la cuenta actual: si el catálogo local está disponible y
-  // las reglas de precio ya cargadas. null = sincronizando (no se pinta nada).
+  // Datos base de la cuenta actual: si el catálogo local está disponible, las
+  // reglas de precio ya cargadas y la versión del catálogo (para versionar la
+  // caché del camino de red). null = sincronizando (no se pinta nada).
   const [datosBase, setDatosBase] = React.useState<{
     modoLocal: boolean;
     reglas: ReglasCuenta | null;
+    version: number;
   } | null>(null);
 
   // Filtros del menú lateral: combustibles y categorías del proveedor activo,
@@ -161,8 +165,8 @@ export function useCatalogo(clienteId?: string | null, proveedorId?: string | nu
     combustible,
     categoria,
     marca,
-    pagina,
-    proveedorId
+    proveedorId,
+    datosBase?.version ?? 0
   );
   const productos = claveMostrada === claveProductosActual ? productosBruto : [];
   const mostrandoCarga = cargando || claveMostrada !== claveProductosActual;
@@ -209,18 +213,24 @@ export function useCatalogo(clienteId?: string | null, proveedorId?: string | nu
           setCargando(false);
           return;
         }
-        setDatosBase({ modoLocal: true, reglas });
+        // En SQLite la versión la gestiona el snapshot (descarga solo si
+        // cambia); para la clave de caché de red basta con 0.
+        setDatosBase({ modoLocal: true, reglas, version: 0 });
         return;
       }
 
-      // Camino de red (sin SQLite): filtros desde caché/red como antes.
-      const [cCat, cMar] = await Promise.all([
+      // Camino de red (sin SQLite): filtros desde caché/red como antes y
+      // VERSIÓN del catálogo para invalidar la caché de productos cuando la
+      // base de datos cambia (feedback 10/11/2026: carga única versionada).
+      const [cCat, cMar, resVersion] = await Promise.all([
         cacheLeer<Categoria[]>(CLAVE_CATEGORIAS),
         cacheLeer<Marca[]>(CLAVE_MARCAS),
+        supabase.rpc('fn_catalogo_version'),
       ]);
       if (cancelado) return;
       if (cCat) setCategorias(cCat);
       if (cMar) setMarcas(cMar);
+      const version = typeof resVersion.data === 'number' ? resVersion.data : 0;
 
       const [resCat, resMar] = await Promise.all([
         supabase
@@ -247,7 +257,7 @@ export function useCatalogo(clienteId?: string | null, proveedorId?: string | nu
         setMarcas(filas);
         void cacheEscribir(CLAVE_MARCAS, filas);
       }
-      setDatosBase({ modoLocal: false, reglas });
+      setDatosBase({ modoLocal: false, reglas, version });
     })();
 
     return () => {
@@ -278,20 +288,19 @@ export function useCatalogo(clienteId?: string | null, proveedorId?: string | nu
             clienteId,
             datosBase.reglas
           );
-          const { filas, hayMas: mas } = consultarCatalogo({
+          // Carga COMPLETA sin paginación (feedback 10/11/2026): una única
+          // lectura síncrona del snapshot (Fansa: 1.364 filas) y precios
+          // calculados en memoria con las reglas de la cuenta.
+          const filas = consultarCatalogoCompleto({
             busqueda,
             combustible: busqueda.trim() ? null : combustible,
             categoria,
             marca,
-            pagina,
-            limite: PAGINACION.catalogo,
             proveedoresVisibles: visibles,
-            // Filtro por proveedor en SQL: paginación y hayMas correctos.
             proveedorId,
           });
           if (cancelado) return;
           setProductos(filas.map((f) => filaAProductoCatalogo(f, datosBase.reglas)));
-          setHayMas(mas);
         } catch (e) {
           if (cancelado) return;
           setError(e instanceof Error ? e.message : 'No se pudo consultar el catálogo local.');
@@ -310,7 +319,9 @@ export function useCatalogo(clienteId?: string | null, proveedorId?: string | nu
       };
     }
 
-    // Camino de red (sin SQLite): stale-while-revalidate como antes.
+    // Camino de red (sin SQLite): stale-while-revalidate como antes. La clave
+    // incluye catalogo_version: si la base de datos no cambió, la caché sirve
+    // el catálogo completo sin volver a consultar.
     void (async () => {
       const enCache = await cacheLeer<ProductoCatalogo[]>(clave);
       if (cancelado || aplicadoRed) return;
@@ -323,14 +334,14 @@ export function useCatalogo(clienteId?: string | null, proveedorId?: string | nu
 
     const t = setTimeout(() => {
       void (async () => {
-        const limite = PAGINACION.catalogo + 1; // +1 para saber si hay más páginas
+        // Todo el catálogo del tirón: la RPC acepta hasta 2000 filas (0016).
         const { data, error } = await supabase.rpc('fn_catalogo_usuario_v2', {
           p_busqueda: busqueda.trim() || null,
           p_combustible: busqueda.trim() ? null : combustible,
           p_categoria: categoria,
           p_marca: marca,
-          p_limite: limite,
-          p_offset: pagina * PAGINACION.catalogo,
+          p_limite: LIMITE_TODO,
+          p_offset: 0,
           p_cliente: clienteId ?? null,
           p_proveedor: proveedorId ?? null,
         });
@@ -343,13 +354,11 @@ export function useCatalogo(clienteId?: string | null, proveedorId?: string | nu
           return;
         }
         const filas = (data ?? []) as ProductoCatalogo[];
-        setHayMas(filas.length > PAGINACION.catalogo);
-        const paginaFilas = filas.slice(0, PAGINACION.catalogo);
         aplicadoRed = true;
-        setProductos(paginaFilas);
+        setProductos(filas);
         setClaveMostrada(clave);
         setCargando(false);
-        void cacheEscribir(clave, paginaFilas);
+        void cacheEscribir(clave, filas);
       })();
     }, DEBOUNCE_MS);
 
@@ -362,7 +371,6 @@ export function useCatalogo(clienteId?: string | null, proveedorId?: string | nu
     busqueda,
     categoria,
     marca,
-    pagina,
     clienteId,
     combustible,
     uid,
@@ -374,7 +382,6 @@ export function useCatalogo(clienteId?: string | null, proveedorId?: string | nu
     setBusqueda('');
     setCategoria(null);
     setMarca(null);
-    setPagina(0);
   };
 
   return {
@@ -389,9 +396,6 @@ export function useCatalogo(clienteId?: string | null, proveedorId?: string | nu
     setCategoria,
     marca,
     setMarca,
-    pagina,
-    setPagina,
-    hayMas,
     cargando: mostrandoCarga,
     error,
     limpiarFiltros,
