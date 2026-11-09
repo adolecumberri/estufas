@@ -1,8 +1,11 @@
-# Navigation brief — inventory, observed problems, candidate patterns
+# Navigation brief — inventory, observed problems, candidate patterns, decision
 
-Status: **pending user answers; do not launch Goldfish review.**
+Status: **user answers received (10/11/2026); Pattern A implementation in
+progress on `main`. Goldfish review pending until the shell is adopted and
+stable.**
 
-Date: 2026-11-09. Source: direct reading of the current code tree
+Date: 2026-11-09 (inventory), updated 2026-11-10 (decision + answers).
+Source: direct reading of the current code tree
 (`src/app/**`, `src/shared/navegacion/**`, `src/features/catalogo/**`,
 `src/shared/seguridad/**`) plus the user feedback recorded in
 [docs/design/REQUISITOS_FICHA_CLIENTE.md](../design/REQUISITOS_FICHA_CLIENTE.md)
@@ -148,14 +151,11 @@ Source: review of `/admin/comerciales/[id]` and `/cartera/[id]` recorded in
 
 ---
 
-## 3. Candidate patterns (no choice made here)
+## 3. Candidate patterns (decision made 10/11/2026)
 
-For each option: what it solves, what it costs, what it breaks. No ranking,
-no default. A persistent account menu (user info + logout reachable from
-every screen) is a cross-cutting requirement that **any** option below must
-include; it is not treated as a standalone option.
+For each option: what it solves, what it costs, what it breaks.
 
-### Option A — Single app shell (persistent header + persistent tabs)
+### Option A — Single app shell (persistent header + persistent tabs) — **CHOSEN**
 
 - **Solves:** menus stop disappearing between groups; account access is
   constant; admin keeps the same frame as the rest of the app.
@@ -201,26 +201,86 @@ include; it is not treated as a standalone option.
 
 ---
 
-## 4. Open questions for the user
+## 4. Decision (user, 10/11/2026): Pattern A — single app shell with a "mode"
 
-1. Should the bottom tab bar appear in admin screens at all, or should admin
-   have its own navigation model?
-2. Where should logout and user info live: a persistent header, the drawer,
-   or a dedicated account screen reachable from every context?
-3. Should the catalog drawer stay catalog-only (fuel filters) with a
-   separate global menu added, or should the drawer become the global menu?
-4. When an admin opens `/cartera/[id]` from a comercial preview, where should
-   "back" land: the comercial preview (`/admin/comerciales/[id]`) or the
-   admin home?
-5. Is the "Catálogo" tab inside the admin comercial preview (which leaves
-   the admin flow and opens the real catalog) desired, or should it be
-   removed?
+The user chose **Option A**: one shell that receives a mode
+(`admin` | `comercial` | `admin-viendo-como-comercial`), a tab bar derived
+from mode data, a global header with an account menu, per-screen overrides,
+a catalog-only drawer, and back with a fallback to the mode entry point
+(replacing hardcoded `respaldo`).
+
+User feedback recorded with the decision:
+
+1. **(i) Helpdesk view of a comercial.** In `/admin/comerciales/[id]` the
+   admin needs to see and operate as that comercial: his orders, his
+   portfolio, and the ability to open orders for his clients.
+2. **(ii) Catalog bug.** The preview footer navigated to `/` and showed the
+   ADMIN's catalog. It must show THAT comercial's catalog (his providers).
+3. **(iii) Agreed design.** Single shell with a "mode": tabs derived from
+   mode data (not duplicated JSX), global header with account menu (info +
+   logout), per-screen overrides (banner "Viendo como `<nombre>`" plus a
+   persistent "Salir" action in helpdesk mode), drawer only in the catalog,
+   and back with a fallback to the mode entry point.
 
 ---
 
-## 5. Readiness
+## 5. Open questions — resolved (user answers, 10/11/2026)
 
-**Pendiente de respuestas del usuario; no lanzar revisión Goldfish.**
+1. **Tab bar in admin?** Yes, with the ADMIN's tab set (Comerciales plus
+   whatever he manages), not the comercial's. Same shell, tabs per mode. In
+   the comercial preview: the comercial's tabs plus the "Viendo como
+   `<nombre>`" banner.
+2. **Where do logout and user info live?** Persistent header with an account
+   button (avatar/initials) that opens a menu/sheet with user info, mode
+   switch where it applies, and logout. One tap from any screen; it must not
+   depend on the drawer. An account screen may exist as a destination, but
+   not as the only access.
+3. **Drawer global or catalog-only?** Catalog-only. The fuels are filters,
+   not global navigation; later it should be reframed as a "Filtros" panel
+   opened from the catalog header. Global navigation = tab bar + header
+   account menu.
+4. **Back behavior?** Pop if there is history; otherwise the mode entry
+   point (in preview = the preview root; otherwise the admin home). Remove
+   the hardcoded `respaldo` values: a "pop or mode root" helper.
+5. **Catálogo tab in the preview?** Keep it, but WITHOUT leaving the mode
+   (the catalog renders inside the shell with the "Viendo como" banner). If
+   the cost is high for the first iteration, remove the tab temporarily
+   rather than having one that expels from the flow.
 
-All file paths cited in this brief were verified to exist on 2026-11-09.
-Typecheck and lint do not apply to a documentation-only change.
+---
+
+## 6. First-iteration implementation choices (documented)
+
+- **Preview bar fix (shipped): the Catálogo tab was removed from
+  `PESTANAS_PREVIEW`** in `/admin/comerciales/[id]`. The bar now shows
+  Solicitud (disabled), Pedidos and Cartera; no tab navigates to `/`
+  anymore, so the preview can no longer expel the admin into his own
+  catalog. This is the fallback sanctioned by answer 5.
+- **Shell implementation: PAUSED.** The first Goldfish review rejected the
+  proposal (`docs/egm/reviews/ux.md`, blockers F1–F3: the "mode" mixes
+  identity/role with section and collides with `INICIO_POR_ROL`; the
+  admin-as-comercial tab set is impossible under the current capabilities;
+  "back = pop else mode root" is inverted because tabs use `router.push`).
+  The in-flight `app-shell.tsx` / `volverAlModo` work was reverted and is
+  not shipped. Awaiting the Lead's consolidation of the review before
+  continuing.
+- **Planned route for the comercial-scoped catalog** (not implemented):
+  `/catalogo?comercial=<id>` handled by `catalogo-screen`, with the provider
+  selector limited to that comercial's providers; a single provider would
+  shortcut to `/catalogo/proveedor/[id]`. The comercial's providers come
+  from `comercial_proveedor` (admin can read it).
+- **Capabilities unchanged:** the admin in helpdesk mode does not get his
+  own cart; creating orders for the comercial's clients stays governed by
+  `pedidos:crear_para_cliente` and RLS/RPC.
+
+---
+
+## 7. Readiness
+
+**Respuestas recibidas (10/11/2026). Implementación del shell PAUSADA tras
+el rechazo Goldfish (`docs/egm/reviews/ux.md`); único cambio vivo: retirada
+de la pestaña Catálogo de la barra de preview. No lanzar revisión Goldfish
+hasta que el Lead consolide los bloqueadores.**
+
+All file paths cited in this brief were verified to exist on 2026-11-09 /
+2026-11-10. Typecheck and lint do not apply to a documentation-only change.
