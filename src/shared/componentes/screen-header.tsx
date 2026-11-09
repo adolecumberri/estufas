@@ -39,9 +39,11 @@ export function ScreenHeader({
         <Text accessibilityRole="header" className="text-xl font-bold tracking-tight">
           {titulo}
         </Text>
-        {subtitulo && <Text className="text-xs text-muted-foreground">{subtitulo}</Text>}
+        {/* OJO: `{subtitulo && <Text>}` devuelve `''` cuando subtitulo es '',
+            y react-native-web lo rechaza ("Unexpected text node"). Usar ternario. */}
+        {subtitulo ? <Text className="text-xs text-muted-foreground">{subtitulo}</Text> : null}
       </View>
-      {accion}
+      {accion ?? null}
     </View>
   );
 }

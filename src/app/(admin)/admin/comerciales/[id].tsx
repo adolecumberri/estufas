@@ -74,7 +74,7 @@ export default function AdminComercialDetalle() {
             titulo={
               comercial ? `${comercial.nombre} ${comercial.apellidos ?? ''}`.trim() : 'Comercial'
             }
-            subtitulo={comercial?.email ?? ''}
+            subtitulo={comercial?.email ?? undefined}
             respaldo="/admin/comerciales"
           />
 
