@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { Flame, LogIn, LogOut, X } from 'lucide-react-native';
+import { Boxes, Flame, Flower, LogIn, LogOut, X } from 'lucide-react-native';
 import { vars } from 'nativewind';
 import * as React from 'react';
 import { Modal, Pressable, ScrollView, View } from 'react-native';
@@ -12,9 +12,8 @@ import { APP, COMBUSTIBLES, RUTAS } from '@/shared/constantes';
 import { useAuth } from '@/features/auth/use-auth';
 import { usePermisos } from '@/shared/seguridad/use-permisos';
 import { useProveedorActivo } from '@/features/catalogo/proveedor-activo-contexto';
-import { IconoProveedor } from '@/features/catalogo/componentes/selector-proveedor';
 import { useCambioProveedor } from '@/features/catalogo/use-cambio-proveedor';
-import type { Categoria, Combustible } from '@/shared/lib/types';
+import type { Categoria, Combustible, Proveedor } from '@/shared/lib/types';
 import {
   textoSobreProveedor,
   temaProveedor,
@@ -23,6 +22,21 @@ import {
 import { supabase } from '@/shared/lib/supabase';
 import { useColoresIcono } from '@/shared/lib/theme';
 import { cn } from '@/shared/lib/utils';
+
+// Icono lucide según el campo `icono` del proveedor (seed: 'flame'/'flower').
+// Cualquier valor no reconocido cae en Flame.
+function IconoProveedor({
+  icono,
+  size,
+  color,
+}: {
+  icono?: string | null;
+  size: number;
+  color: string;
+}) {
+  const Icono = icono === 'flower' ? Flower : icono === 'boxes' ? Boxes : Flame;
+  return <Icono size={size} color={color} />;
+}
 
 // Navegación lateral (cajón) del catálogo: selector de proveedores (si hay
 // varios), las secciones de combustible que EXISTEN en el proveedor activo
@@ -43,6 +57,9 @@ export function NavLateral({
   categoria,
   setCategoria,
   conSelectorProveedor = true,
+  proveedores,
+  activo,
+  onSeleccionar,
 }: {
   abierto: boolean;
   onCerrar: () => void;
@@ -56,6 +73,12 @@ export function NavLateral({
   /** Muestra el selector de proveedores dentro del cajón (solo catálogo
       general; la ruta dedicada /catalogo/proveedor/[id] lo oculta). */
   conSelectorProveedor?: boolean;
+  /** Lista/activo/selección EXTERNOS (catálogo acotado a un comercial vía
+      /catalogo?comercial=<id>): sustituyen al contexto global y el cambio es
+      directo (sin diálogo de vaciar carrito: es una vista de consulta). */
+  proveedores?: Proveedor[];
+  activo?: string | null;
+  onSeleccionar?: (id: string) => void;
 }) {
   const insets = useSafeAreaInsets();
   const { session } = useAuth();
@@ -63,6 +86,24 @@ export function NavLateral({
   const colores = useColoresIcono();
   const { proveedores: proveedoresLista, activo: proveedorActivo } = useProveedorActivo();
   const cambio = useCambioProveedor();
+
+  // Selector del cajón: lista externa (modo acotado a un comercial) o la del
+  // contexto. En modo externo el cambio es directo y no usa el diálogo de
+  // vaciar carrito; en modo contexto usa el flujo compartido.
+  const proveedoresChips = proveedores ?? proveedoresLista;
+  const activoChips = activo ?? (proveedorActivo?.id ?? null);
+  const proveedorTintado = proveedores
+    ? (proveedores.find((p) => p.id === activoChips) ?? null)
+    : proveedorActivo;
+
+  const pulsarProveedor = (id: string) => {
+    if (onSeleccionar) {
+      if (activoChips === id) return;
+      onSeleccionar(id);
+      return;
+    }
+    cambio.pulsar(id);
+  };
 
   // Categorías sin combustible asignado (agnósticas): se muestran siempre,
   // independientemente de la sección de combustible seleccionada.
@@ -110,8 +151,8 @@ export function NavLateral({
               // sin esto los acentos (bg-primary/text-primary) saldrían con el
               // primario por defecto, no con el color del proveedor activo.
               vars({
-                '--primary': tripletProveedor(proveedorActivo?.color ?? null),
-                '--primary-foreground': textoSobreProveedor(proveedorActivo?.color ?? null),
+                '--primary': tripletProveedor(proveedorTintado?.color ?? null),
+                '--primary-foreground': textoSobreProveedor(proveedorTintado?.color ?? null),
               }),
             ]}
           >
@@ -141,14 +182,14 @@ export function NavLateral({
                 selector del cuerpo (contexto), con color e icono. Solo en el
                 catálogo general y con más de un proveedor (en la ruta
                 dedicada /catalogo/proveedor/[id] el proveedor es fijo). */}
-              {conSelectorProveedor && proveedoresLista.length > 1 && (
+              {conSelectorProveedor && proveedoresChips.length > 1 && (
                 <View className="border-b border-border px-4 pb-3 pt-1">
                   <Text className="mb-2 text-xs font-semibold text-muted-foreground">
                     Proveedor
                   </Text>
                   <View className="flex-row flex-wrap gap-2">
-                    {proveedoresLista.map((p) => {
-                      const esActivo = proveedorActivo?.id === p.id;
+                    {proveedoresChips.map((p) => {
+                      const esActivo = activoChips === p.id;
                       const tema = temaProveedor(p.color);
                       const colorTexto = textoSobreProveedor(p.color);
                       return (
@@ -157,7 +198,7 @@ export function NavLateral({
                           accessibilityRole="button"
                           accessibilityState={{ selected: esActivo }}
                           accessibilityLabel={`Proveedor ${p.nombre}${esActivo ? ' (activo)' : ''}`}
-                          onPress={() => cambio.pulsar(p.id)}
+                          onPress={() => pulsarProveedor(p.id)}
                           className={cn(
                             'flex-row items-center gap-1.5 rounded-lg border border-border px-3 py-1.5',
                             !esActivo && 'bg-muted'
