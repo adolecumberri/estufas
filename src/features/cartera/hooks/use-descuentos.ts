@@ -85,7 +85,7 @@ export function useDescuentosCliente(clienteId: string | null | undefined) {
       supabase
         .from('descuentos_historial')
         .select(
-          '*, proveedor:proveedores(nombre), categoria:categorias(nombre), producto:productos(nombre), actor:usuarios(nombre)'
+          '*, proveedor:proveedores(nombre), categoria:categorias(nombre), producto:productos(nombre), actor:usuarios!descuentos_historial_actor_id_fkey(nombre)'
         )
         .eq('cliente_id', clienteId)
         .order('created_at', { ascending: false })
