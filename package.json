@@ -10,7 +10,7 @@
     "web": "expo start --web",
     "export:web": "expo export --platform web",
     "typecheck": "tsc --noEmit",
-    "lint": "expo lint",
+    "lint": "eslint src",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "verify": "npm run typecheck && npm run lint && npx expo export --platform android --no-bytecode --output-dir .tmp-verify && node -e \"require('fs').rmSync('.tmp-verify',{recursive:true,force:true})\""
