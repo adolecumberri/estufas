@@ -249,38 +249,51 @@ User feedback recorded with the decision:
 
 ---
 
-## 6. First-iteration implementation choices (documented)
+## 6. Implementation state (YAGNI minimal plan S1–S4, shipped)
 
-- **Preview bar fix (shipped): the Catálogo tab was removed from
-  `PESTANAS_PREVIEW`** in `/admin/comerciales/[id]`. The bar now shows
-  Solicitud (disabled), Pedidos and Cartera; no tab navigates to `/`
-  anymore, so the preview can no longer expel the admin into his own
-  catalog. This is the fallback sanctioned by answer 5.
-- **Shell implementation: PAUSED.** The first Goldfish review rejected the
-  proposal (`docs/egm/reviews/ux.md`, blockers F1–F3: the "mode" mixes
-  identity/role with section and collides with `INICIO_POR_ROL`; the
-  admin-as-comercial tab set is impossible under the current capabilities;
-  "back = pop else mode root" is inverted because tabs use `router.push`).
-  The in-flight `app-shell.tsx` / `volverAlModo` work was reverted and is
-  not shipped. Awaiting the Lead's consolidation of the review before
-  continuing.
-- **Planned route for the comercial-scoped catalog** (not implemented):
-  `/catalogo?comercial=<id>` handled by `catalogo-screen`, with the provider
-  selector limited to that comercial's providers; a single provider would
-  shortcut to `/catalogo/proveedor/[id]`. The comercial's providers come
-  from `comercial_proveedor` (admin can read it).
-- **Capabilities unchanged:** the admin in helpdesk mode does not get his
-  own cart; creating orders for the comercial's clients stays governed by
-  `pedidos:crear_para_cliente` and RLS/RPC.
+The shell was rejected by two Goldfish reviews (`docs/egm/reviews/ux.md`,
+`docs/egm/reviews/yagni.md`). The in-flight `app-shell.tsx` / `TABS_POR_MODO` /
+`RAIZ_DEL_MODO` / `volverAlModo` work was reverted. The minimal plan below is
+what actually shipped (2026-11-10, branch `main`, uncommitted):
+
+- **S1 — context by URL, not by mode.** In the comercial preview
+  (`/admin/comerciales/[id]`), the client card navigates to
+  `/cartera/<id>?desde=/admin/comerciales/<id>` and each pedido row navigates
+  to `/pedidos/<id>?desde=…`. `cartera/[id]` and `pedidos/[id]` read `desde`
+  and use it as the `ScreenHeader` `respaldo` (fallback: `/cartera` /
+  `/pedidos`). The preview keeps its `ScreenHeader` (comercial name + email);
+  there is no banner and no Exit.
+- **S2 — account access.** New `src/shared/componentes/accion-cuenta.tsx`
+  (`AccionCuenta`): avatar button in the `accion` slot of `ScreenHeader` that
+  opens a sheet with user info (name, email, role), "Mi cuenta" (capability
+  destination, same rule as the drawer) and "Cerrar sesión" (local sign-out).
+  Mounted on `/admin`, `/admin/comerciales` and `/admin/comerciales/[id]`.
+- **S3 — tab bar in admin.** `<NavInferior activa="admin" />` rendered on
+  `/admin` and `/admin/comerciales` (Capability-filtered: Catálogo + Admin).
+- **S4 — the reported catalog bug.** The preview's Catálogo tab navigates to
+  `/catalogo?comercial=<id>` (new route entry
+  `src/app/(publico)/catalogo/index.tsx` rendering the same `CatalogoScreen`).
+  `catalogo-screen` reads the `comercial` param, fetches that comercial's
+  providers from `comercial_proveedor` (admin read via RLS) and limits the
+  provider selector to them (`SelectorProveedor` gained optional
+  `proveedores`/`activo`/`onSeleccionar` overrides); a comercial with no
+  providers shows an empty state instead of the full catalog. The provider
+  tint follows the scoped provider.
+- **Deferred (Lead decides):** whether the admin may confirm/advance/cancel
+  pedidos (S0 capability decision, `pedidos:confirmar` for admin) — no
+  capability change was made.
+- **Deleted/deferred by the reviews:** the "mode" type, the global header
+  migration, the preview banner/Exit, and the drawer move (drawer stays
+  catalog-only, which is already the case).
 
 ---
 
 ## 7. Readiness
 
-**Respuestas recibidas (10/11/2026). Implementación del shell PAUSADA tras
-el rechazo Goldfish (`docs/egm/reviews/ux.md`); único cambio vivo: retirada
-de la pestaña Catálogo de la barra de preview. No lanzar revisión Goldfish
-hasta que el Lead consolide los bloqueadores.**
+**Respuestas recibidas (10/11/2026). Shell rechazado por las dos revisiones
+Goldfish; plan mínimo YAGNI S1–S4 implementado (2026-11-10). Pendiente de
+decisión del Lead: S0 (¿el admin confirma/avanza/cancela pedidos?). No
+lanzar más revisiones Goldfish hasta que esa decisión esté registrada.**
 
 All file paths cited in this brief were verified to exist on 2026-11-09 /
 2026-11-10. Typecheck and lint do not apply to a documentation-only change.

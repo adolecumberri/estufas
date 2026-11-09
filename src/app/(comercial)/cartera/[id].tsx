@@ -31,7 +31,7 @@ const DESCRIPCIONES_COMBUSTIBLE: Record<CombustibleId, string> = {
 };
 
 export default function ClienteDetalle() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, desde } = useLocalSearchParams<{ id: string; desde?: string }>();
   const { setClienteObjetivoId } = useSolicitud();
   // Comercial Y admin pueden abrir una solicitud para este cliente; el resto
   // del alcance lo valida el backend (RLS/RPC, anillo 1).
@@ -115,7 +115,7 @@ export default function ClienteDetalle() {
             ? `${cliente.email}${cliente.tipo_cliente ? ` · ${TIPOS_CLIENTE[cliente.tipo_cliente].etiqueta}` : ''}`
             : ''
         }
-        respaldo="/cartera"
+        respaldo={desde ?? '/cartera'}
       />
 
       {cargando ? (

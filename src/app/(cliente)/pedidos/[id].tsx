@@ -39,7 +39,7 @@ import { fuenteImagen } from '@/features/catalogo/lib/imagenes';
 import { useColoresIcono } from '@/shared/lib/theme';
 
 export default function PedidoDetalle() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, desde } = useLocalSearchParams<{ id: string; desde?: string }>();
   const { perfil } = useAuth();
   const { detalle, cargando, error, recargar } = usePedido(id);
   const { cancelar, confirmar, avanzar, ajustarDescuento } = useAccionesPedido();
@@ -161,7 +161,7 @@ export default function PedidoDetalle() {
       <ScreenHeader
         titulo={`Pedido nº ${pedido.numero_pedido}`}
         subtitulo="Detalle de Gestión"
-        respaldo="/pedidos"
+        respaldo={desde ?? '/pedidos'}
         accion={
           <Badge variant={varianteEstado(pedido.estado)}>
             <Text>{ESTADOS_PEDIDO[pedido.estado].etiqueta}</Text>

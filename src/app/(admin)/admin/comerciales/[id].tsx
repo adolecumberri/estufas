@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TarjetaCliente } from '@/features/cartera/componentes/tarjeta-cliente';
 import type { ResumenDescuentosCliente } from '@/features/cartera/componentes/tarjeta-cliente';
+import { AccionCuenta } from '@/shared/componentes/accion-cuenta';
 import { EmptyState, ErrorView, LoadingView } from '@/shared/componentes/estados';
 import { Screen } from '@/shared/componentes/screen';
 import { ScreenHeader } from '@/shared/componentes/screen-header';
@@ -40,7 +41,10 @@ const nombreDe = (c: PerfilUsuario | null | undefined) =>
   c ? (c.razon_social ?? `${c.nombre} ${c.apellidos ?? ''}`.trim()) : null;
 
 // Pestañas del footer de la vista previa: mismo aspecto que NavInferior, pero
-// con el estado local de esta pantalla (Catálogo navega, Solicitud no aplica).
+// con el estado local de esta pantalla. Catálogo abre el catálogo DE ESTE
+// comercial vía /catalogo?comercial=<id> (bug documentado en
+// docs/egm/navegacion_brief.md §4.ii: antes iba a '/' y mostraba el catálogo
+// del admin); Solicitud no aplica aquí (se llega desde la ficha del cliente).
 type SeccionPreview = 'cartera' | 'pedidos';
 
 const PESTANAS_PREVIEW = [
@@ -183,6 +187,7 @@ export default function AdminComercialDetalle() {
             }
             subtitulo={comercial?.email ?? undefined}
             respaldo="/admin/comerciales"
+            accion={<AccionCuenta />}
           />
 
           {cargando ? (
@@ -205,13 +210,17 @@ export default function AdminComercialDetalle() {
               ) : (
                 clientes.map((c) => (
                   /* El admin abre la ficha del cliente (cartera) para ver sus
-                     condiciones y crearle una solicitud de pedido. La tarjeta
-                     ya trae chevron y es un Pressable accesible. */
+                     condiciones y crearle una solicitud de pedido. El contexto
+                     de vuelta viaja en `desde` para volver a esta preview. */
                   <TarjetaCliente
                     key={c.id}
                     cliente={c}
                     resumen={resumenes?.get(c.id)}
-                    onPress={() => router.push(`/cartera/${c.id}`)}
+                    onPress={() =>
+                      router.push(
+                        `/cartera/${c.id}?desde=${encodeURIComponent(`/admin/comerciales/${id ?? ''}`)}`
+                      )
+                    }
                   />
                 ))
               )}
@@ -229,7 +238,17 @@ export default function AdminComercialDetalle() {
                 <Text className="text-sm text-muted-foreground">Sin pedidos registrados</Text>
               ) : (
                 pedidos.map((p) => (
-                  <View key={p.id} className="gap-1.5 rounded-md border border-border p-3">
+                  /* Fila de pedido navegable: abre el detalle real con
+                     `desde` para volver a esta preview (S1 del plan YAGNI). */
+                  <Pressable
+                    key={p.id}
+                    onPress={() =>
+                      router.push(
+                        `/pedidos/${p.id}?desde=${encodeURIComponent(`/admin/comerciales/${id ?? ''}`)}`
+                      )
+                    }
+                    className="gap-1.5 rounded-md border border-border p-3 active:opacity-80"
+                  >
                     <View className="flex-row items-center justify-between gap-2">
                       <View className="flex-row items-center gap-2">
                         <Text className="text-sm font-semibold">Pedido nº {p.numero_pedido}</Text>
@@ -253,7 +272,7 @@ export default function AdminComercialDetalle() {
                         {nombreDe(p.cliente) ?? 'Cliente sin asignar'}
                       </Text>
                     </View>
-                  </View>
+                  </Pressable>
                 ))
               )}
             </View>
@@ -262,28 +281,28 @@ export default function AdminComercialDetalle() {
       </ScrollView>
 
       {/* Footer estilo NavInferior (duplicado a propósito: no modifica el
-          componente compartido). Catálogo navega al catálogo real en solo
-          lectura; Solicitud no aplica en la vista de admin (sin onPress). */}
+          componente compartido). Solicitud no aplica en la vista de admin
+          (sin onPress). */}
       <View
         className="absolute bottom-0 left-0 right-0 h-16 flex-row items-center justify-around border-t border-border bg-background px-2"
         style={{ height: 64 + insets.bottom, paddingBottom: insets.bottom }}
       >
-        {PESTANAS_PREVIEW.map(({ id, etiqueta, icono: Icono }) => {
-          const esActiva = id === seccion;
-          const sinAccion = id === 'solicitud';
+        {PESTANAS_PREVIEW.map(({ id: tabId, etiqueta, icono: Icono }) => {
+          const esActiva = tabId === seccion;
+          const sinAccion = tabId === 'solicitud';
           return (
             <Pressable
-              key={id}
+              key={tabId}
               disabled={sinAccion}
               onPress={() => {
-                if (id === 'catalogo') {
-                  // El catálogo vive en la ruta raíz ('/') y el admin lo ve en
-                  // solo lectura (sin carrito ni botones de añadir).
-                  router.push('/');
+                if (tabId === 'catalogo') {
+                  // Catálogo de ESTE comercial (no el del admin): el contexto
+                  // viaja en la URL y el back devuelve a esta preview.
+                  router.push(`/catalogo?comercial=${id ?? ''}`);
                   return;
                 }
-                if (id === 'solicitud') return; // deshabilitada: sin acción.
-                setSeccion(id);
+                if (tabId === 'solicitud') return; // deshabilitada: sin acción.
+                setSeccion(tabId);
               }}
               className={cn(
                 'relative flex-col items-center justify-center gap-0.5 py-1 active:opacity-70',

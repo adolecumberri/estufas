@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Boxes, RefreshCw, X } from 'lucide-react-native';
 import { vars } from 'nativewind';
 import * as React from 'react';
@@ -31,7 +31,9 @@ import {
   textoSobreProveedor,
   tripletProveedor,
 } from '@/shared/lib/colores-proveedor';
+import { supabase } from '@/shared/lib/supabase';
 import { useColoresIcono } from '@/shared/lib/theme';
+import type { Proveedor } from '@/shared/lib/types';
 
 // Pantalla raíz de la app: catálogo público. Vive como componente compartido
 // para ser la ruta inicial (/) sin depender de un Redirect (que provoca el
@@ -53,10 +55,55 @@ export default function CatalogoScreen({
   // Filtro por proveedor: la ruta dedicada fija uno (prop); si no, el
   // proveedor activo del contexto (un solo proveedor a la vez).
   const { activo: proveedorActivo } = useProveedorActivo();
-  const proveedorId = proveedorIdOverride ?? proveedorActivo?.id ?? null;
+  // Catálogo acotado a un comercial (ruta /catalogo?comercial=<id> desde la
+  // vista previa del admin): se listan SOLO los proveedores de ese comercial
+  // (comercial_proveedor; el admin puede leerlo por RLS), no los del usuario.
+  // Así el admin ve el catálogo DEL comercial, no el suyo (bug del brief §4.ii).
+  const { comercial: comercialParam } = useLocalSearchParams<{ comercial?: string }>();
+  const [proveedoresComercial, setProveedoresComercial] = React.useState<Proveedor[] | null>(null);
+  const [proveedorScoped, setProveedorScoped] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!comercialParam) return;
+    let cancelado = false;
+    void (async () => {
+      const { data } = await supabase
+        .from('comercial_proveedor')
+        .select('proveedor_id, proveedor:proveedores(id, nombre, icono, color)')
+        .eq('comercial_id', comercialParam)
+        .eq('habilitado', true);
+      if (cancelado) return;
+      const filas = (data ?? []) as {
+        proveedor_id: string;
+        proveedor: Proveedor | Proveedor[] | null;
+      }[];
+      const lista = filas
+        .map((f) => (Array.isArray(f.proveedor) ? (f.proveedor[0] ?? null) : f.proveedor))
+        .filter((p): p is Proveedor => p !== null);
+      setProveedoresComercial(lista);
+      // Primer proveedor del comercial como selección inicial (no se pisa una
+      // selección ya hecha dentro de esta vista).
+      setProveedorScoped((prev) => prev ?? (lista[0]?.id ?? null));
+    })();
+    return () => {
+      cancelado = true;
+    };
+  }, [comercialParam]);
+
+  const proveedorId =
+    proveedorIdOverride ??
+    (comercialParam
+      ? (proveedorScoped ?? proveedoresComercial?.[0]?.id ?? null)
+      : proveedorActivo?.id ?? null);
   const cat = useCatalogo(clienteObjetivoId, proveedorId);
   const [menuAbierto, setMenuAbierto] = React.useState(false);
   const colores = useColoresIcono();
+
+  // Proveedor que tiñe el primario: en modo acotado, el del comercial; si no,
+  // el activo del usuario (el color se usa también en el banner del override).
+  const proveedorTintado = comercialParam
+    ? (proveedoresComercial?.find((p) => p.id === proveedorId) ?? null)
+    : proveedorActivo;
 
   // Al cambiar de proveedor se reinician búsqueda/categoría/página para no
   // arrastrar filtros de la selección anterior. limpiarFiltros se recrea en
@@ -113,8 +160,8 @@ export default function CatalogoScreen({
     <Screen
       className="flex-1"
       style={vars({
-        '--primary': tripletProveedor(proveedorActivo?.color ?? null),
-        '--primary-foreground': textoSobreProveedor(proveedorActivo?.color ?? null),
+        '--primary': tripletProveedor(proveedorTintado?.color ?? null),
+        '--primary-foreground': textoSobreProveedor(proveedorTintado?.color ?? null),
       })}
     >
       {/* Cabecera */}
@@ -123,11 +170,22 @@ export default function CatalogoScreen({
       {/* Banner decorativo */}
       <Image source={banner} className="h-[60px] w-full" contentFit="cover" transition={200} />
 
-      {/* Selector de proveedor (solo en el catálogo general: la ruta dedicada
-          tiene su proveedor fijo y su propio banner). */}
+      {/* Selector de proveedor: en modo acotado a un comercial, solo sus
+          proveedores (si tiene varios); en el catálogo general, el contexto;
+          la ruta dedicada no muestra selector (proveedor fijo). */}
       {!proveedorIdOverride && (
         <View className="mt-2">
-          <SelectorProveedor />
+          {comercialParam ? (
+            proveedoresComercial && proveedoresComercial.length > 1 ? (
+              <SelectorProveedor
+                proveedores={proveedoresComercial}
+                activo={proveedorId}
+                onSeleccionar={setProveedorScoped}
+              />
+            ) : null
+          ) : (
+            <SelectorProveedor />
+          )}
         </View>
       )}
 
@@ -185,8 +243,13 @@ export default function CatalogoScreen({
         <Text className="text-xs text-muted-foreground">{cat.productos.length} artículos</Text>
       </View>
 
-      {/* Rejilla de productos */}
-      <FlatList
+      {/* Rejilla de productos. En modo acotado a un comercial SIN proveedores
+          no se muestra el catálogo completo (sería el bug del admin viendo su
+          propio catálogo). */}
+      {comercialParam && proveedoresComercial !== null && proveedoresComercial.length === 0 ? (
+        <EmptyState titulo="Este comercial no tiene proveedores asignados" icono={Boxes} />
+      ) : (
+        <FlatList
         showsVerticalScrollIndicator={false}
         style={{ flex: 1 }}
         data={cat.productos}
@@ -231,6 +294,7 @@ export default function CatalogoScreen({
           ) : null
         }
       />
+      )}
 
       {/* Navegación lateral (cajón) */}
       <NavLateral

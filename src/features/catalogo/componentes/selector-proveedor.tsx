@@ -9,6 +9,7 @@ import { useSolicitud } from '@/features/carrito/contexto';
 import { textoSobreProveedor, temaProveedor } from '@/shared/lib/colores-proveedor';
 import { useColoresIcono } from '@/shared/lib/theme';
 import { cn } from '@/shared/lib/utils';
+import type { Proveedor } from '@/shared/lib/types';
 
 // Icono lucide según el campo `icono` del proveedor (seed: 'flame'/'flower').
 // Cualquier valor no reconocido cae en Flame.
@@ -34,12 +35,28 @@ function IconoProveedor({
 // se queda como está. Con el carrito vacío el cambio es directo. El anónimo
 // ve la misma lista (los proveedores del catálogo general que devuelve
 // fn_proveedores_visibles): no se oculta el selector por falta de sesión.
-export function SelectorProveedor({ compacto = false }: { compacto?: boolean }) {
-  const { proveedores, activo, setActivo } = useProveedorActivo();
+export function SelectorProveedor({
+  compacto = false,
+  proveedores: listaExterna,
+  activo: activoExterno,
+  onSeleccionar,
+}: {
+  compacto?: boolean;
+  // Lista/activo/selección externos (catálogo acotado a un comercial vía
+  // /catalogo?comercial=<id>): si vienen, sustituyen al contexto y el cambio
+  // es directo, sin el diálogo de vaciar carrito (ese es del propio usuario).
+  proveedores?: Proveedor[];
+  activo?: string | null;
+  onSeleccionar?: (id: string) => void;
+}) {
+  const contexto = useProveedorActivo();
   const { lineas, vaciar, proveedorDelCarrito } = useSolicitud();
   const colores = useColoresIcono();
   // Id del proveedor cuyo cambio está pendiente de confirmación.
   const [pendiente, setPendiente] = React.useState<string | null>(null);
+
+  const proveedores = listaExterna ?? contexto.proveedores;
+  const activo = activoExterno ?? (contexto.activo?.id ?? null);
 
   if (proveedores.length <= 1) {
     if (compacto && proveedores.length === 1) {
@@ -56,13 +73,18 @@ export function SelectorProveedor({ compacto = false }: { compacto?: boolean }) 
 
   const pulsar = (id: string) => {
     // Mismo proveedor: no hay nada que hacer.
-    if (activo?.id === id) return;
+    if (activo === id) return;
+    // Modo externo (catálogo de un comercial): cambio directo, sin carrito.
+    if (onSeleccionar) {
+      onSeleccionar(id);
+      return;
+    }
     // Carrito con artículos → confirmar antes (cambiar de proveedor lo vacía).
     if (lineas.length > 0) {
       setPendiente(id);
       return;
     }
-    setActivo(id);
+    contexto.setActivo(id);
   };
 
   const confirmarCambio = () => {
@@ -70,10 +92,11 @@ export function SelectorProveedor({ compacto = false }: { compacto?: boolean }) 
     setPendiente(null);
     if (!id) return;
     vaciar();
-    setActivo(id);
+    contexto.setActivo(id);
   };
 
-  const nombreProveedorCarrito = proveedorDelCarrito?.nombre ?? activo?.nombre ?? 'este proveedor';
+  const nombreProveedorCarrito =
+    proveedorDelCarrito?.nombre ?? contexto.activo?.nombre ?? 'este proveedor';
 
   return (
     <>
@@ -85,7 +108,7 @@ export function SelectorProveedor({ compacto = false }: { compacto?: boolean }) 
         contentContainerStyle={{ gap: 8 }}
       >
         {proveedores.map((p) => {
-          const esActivo = activo?.id === p.id;
+          const esActivo = activo === p.id;
           const tema = temaProveedor(p.color);
           const colorTexto = textoSobreProveedor(p.color);
           return (
