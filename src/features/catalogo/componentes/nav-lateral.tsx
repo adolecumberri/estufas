@@ -100,7 +100,7 @@ export function NavLateral({
   // contexto. En modo externo el cambio es directo y no usa el diálogo de
   // vaciar carrito; en modo contexto usa el flujo compartido.
   const proveedoresChips = proveedores ?? proveedoresLista;
-  const activoChips = activo ?? (proveedorActivo?.id ?? null);
+  const activoChips = activo ?? proveedorActivo?.id ?? null;
   const proveedorTintado = proveedores
     ? (proveedores.find((p) => p.id === activoChips) ?? null)
     : proveedorActivo;
@@ -250,112 +250,114 @@ export function NavLateral({
               ) : (
                 <View className={cn(cargandoFiltros && 'opacity-50')}>
                   {COMBUSTIBLES.filter((c) => combustibles.includes(c.id)).map((c) => {
-                const activo = combustible === c.id;
-                const subsecciones = categorias.filter(
-                  (x) => x.combustible === c.id && x.clave !== 'pellet' && x.clave !== 'lena'
-                );
-                return (
-                  <View key={c.id}>
-                    <Pressable
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: activo }}
-                      // Elegir combustible aplica el filtro y cierra el cajón.
-                      onPress={() => {
-                        setCombustible(c.id);
-                        onCerrar();
-                      }}
-                      className="px-4 py-1.5"
-                    >
-                      <View className={cn('rounded-lg px-3 py-2.5', activo && 'bg-primary')}>
-                        <Text
-                          className={cn(
-                            'text-sm font-semibold',
-                            activo ? 'text-primary-foreground' : 'text-foreground'
-                          )}
-                        >
-                          {c.etiqueta}
-                        </Text>
-                      </View>
-                    </Pressable>
-
-                    {subsecciones.map((x) => {
-                      const activa = x.id === categoria;
-                      return (
+                    const activo = combustible === c.id;
+                    const subsecciones = categorias.filter(
+                      (x) => x.combustible === c.id && x.clave !== 'pellet' && x.clave !== 'lena'
+                    );
+                    return (
+                      <View key={c.id}>
                         <Pressable
-                          key={x.id}
                           accessibilityRole="button"
-                          accessibilityState={{ selected: activa }}
+                          accessibilityState={{ selected: activo }}
+                          // Elegir combustible aplica el filtro y cierra el cajón.
                           onPress={() => {
-                            // Si la subsección pertenece al combustible inactivo,
-                            // se cambia el combustible antes que la categoría
-                            // (ambos filtros a la vez dejarían el catálogo vacío).
-                            if (!activo) setCombustible(c.id);
-                            setCategoria(activa ? null : x.id);
+                            setCombustible(c.id);
                             onCerrar();
                           }}
-                          className="rounded-[8px] py-2 pl-8 pr-4 active:bg-accent"
+                          className="px-4 py-1.5"
                         >
-                          <Text
-                            className={cn(
-                              'text-sm',
-                              activa ? 'font-medium text-primary' : 'text-muted-foreground'
-                            )}
-                          >
-                            {x.nombre}
-                          </Text>
+                          <View className={cn('rounded-lg px-3 py-2.5', activo && 'bg-primary')}>
+                            <Text
+                              className={cn(
+                                'text-sm font-semibold',
+                                activo ? 'text-primary-foreground' : 'text-foreground'
+                              )}
+                            >
+                              {c.etiqueta}
+                            </Text>
+                          </View>
                         </Pressable>
-                      );
-                    })}
-                  </View>
-                );
-              })}
 
-              {/* Categorías agnósticas (sin combustible): se listan bajo
-                "General" y no dependen del combustible activo; el RPC filtra
-                por p_categoria de forma independiente. */}
-              {agnosticas.length > 0 && (
-                <View className="pt-1">
-                  <View className="px-4 py-1.5">
-                    <View className="rounded-lg px-3 py-2.5">
-                      <Text className="text-sm font-semibold text-foreground">General</Text>
-                    </View>
-                  </View>
-                  {agnosticas.map((x) => {
-                    const activa = x.id === categoria;
-                    return (
-                      <Pressable
-                        key={x.id}
-                        accessibilityRole="button"
-                        accessibilityState={{ selected: activa }}
-                        onPress={() => {
-                          // La categoría agnóstica no depende del combustible:
-                          // solo se fija la categoría y se cierra el cajón. Una
-                          // segunda pulsación sobre la activa la deselecciona.
-                          setCategoria(activa ? null : x.id);
-                          onCerrar();
-                        }}
-                        className="rounded-[8px] py-2 pl-8 pr-4 active:bg-accent"
-                      >
-                        <Text
-                          className={cn(
-                            'text-sm',
-                            activa ? 'font-medium text-primary' : 'text-muted-foreground'
-                          )}
-                        >
-                          {x.nombre}
-                        </Text>
-                      </Pressable>
+                        {subsecciones.map((x) => {
+                          const activa = x.id === categoria;
+                          return (
+                            <Pressable
+                              key={x.id}
+                              accessibilityRole="button"
+                              accessibilityState={{ selected: activa }}
+                              onPress={() => {
+                                // Si la subsección pertenece al combustible inactivo,
+                                // se cambia el combustible antes que la categoría
+                                // (ambos filtros a la vez dejarían el catálogo vacío).
+                                if (!activo) setCombustible(c.id);
+                                setCategoria(activa ? null : x.id);
+                                onCerrar();
+                              }}
+                              className="rounded-[8px] py-2 pl-8 pr-4 active:bg-accent"
+                            >
+                              <Text
+                                className={cn(
+                                  'text-sm',
+                                  activa ? 'font-medium text-primary' : 'text-muted-foreground'
+                                )}
+                              >
+                                {x.nombre}
+                              </Text>
+                            </Pressable>
+                          );
+                        })}
+                      </View>
                     );
                   })}
-                </View>
-              )}
 
-              {/* Caso límite: el proveedor no tiene combustibles ni categorías
+                  {/* Categorías agnósticas (sin combustible): se listan bajo
+                "General" y no dependen del combustible activo; el RPC filtra
+                por p_categoria de forma independiente. */}
+                  {agnosticas.length > 0 && (
+                    <View className="pt-1">
+                      <View className="px-4 py-1.5">
+                        <View className="rounded-lg px-3 py-2.5">
+                          <Text className="text-sm font-semibold text-foreground">General</Text>
+                        </View>
+                      </View>
+                      {agnosticas.map((x) => {
+                        const activa = x.id === categoria;
+                        return (
+                          <Pressable
+                            key={x.id}
+                            accessibilityRole="button"
+                            accessibilityState={{ selected: activa }}
+                            onPress={() => {
+                              // La categoría agnóstica no depende del combustible:
+                              // solo se fija la categoría y se cierra el cajón. Una
+                              // segunda pulsación sobre la activa la deselecciona.
+                              setCategoria(activa ? null : x.id);
+                              onCerrar();
+                            }}
+                            className="rounded-[8px] py-2 pl-8 pr-4 active:bg-accent"
+                          >
+                            <Text
+                              className={cn(
+                                'text-sm',
+                                activa ? 'font-medium text-primary' : 'text-muted-foreground'
+                              )}
+                            >
+                              {x.nombre}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                  )}
+
+                  {/* Caso límite: el proveedor no tiene combustibles ni categorías
                 agnósticas (no debería pasar con datos sanos). */}
-              {combustibles.length === 0 && agnosticas.length === 0 && (
-                <Text className="px-4 py-3 text-sm text-muted-foreground">
-                  Este proveedor no tiene categorías.
-                </Text>
+                  {combustibles.length === 0 && agnosticas.length === 0 && (
+                    <Text className="px-4 py-3 text-sm text-muted-foreground">
+                      Este proveedor no tiene categorías.
+                    </Text>
+                  )}
+                </View>
               )}
             </ScrollView>
 

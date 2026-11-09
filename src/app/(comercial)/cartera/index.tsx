@@ -10,7 +10,6 @@ import { useCartera } from '@/features/cartera/hooks/use-comercial';
 import { EmptyState, ErrorView, LoadingView } from '@/shared/componentes/estados';
 import { ScreenScroll } from '@/shared/componentes/screen';
 import { ScreenHeader } from '@/shared/componentes/screen-header';
-import { NavInferior } from '@/shared/navegacion/nav-inferior';
 import { IconButton } from '@/shared/ui';
 import { Card } from '@/shared/ui/card';
 import { Text } from '@/shared/ui/text';
@@ -185,8 +184,6 @@ export default function Cartera() {
           </View>
         )}
       </ScreenScroll>
-
-      <NavInferior activa="cartera" />
     </>
   );
 }

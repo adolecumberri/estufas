@@ -8,7 +8,6 @@ import { ListCard } from '@/shared/componentes/list-card';
 import { ScreenScroll } from '@/shared/componentes/screen';
 import { ScreenHeader } from '@/shared/componentes/screen-header';
 import { SectionTitle } from '@/shared/componentes/section-title';
-import { NavInferior } from '@/shared/navegacion/nav-inferior';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
@@ -329,8 +328,6 @@ export default function Pedidos() {
           </View>
         )}
       </ScreenScroll>
-
-      <NavInferior activa="pedidos" />
     </>
   );
 }

@@ -8,7 +8,6 @@ import { EmptyState } from '@/shared/componentes/estados';
 import { ListCard } from '@/shared/componentes/list-card';
 import { ScreenScroll } from '@/shared/componentes/screen';
 import { ScreenHeader } from '@/shared/componentes/screen-header';
-import { NavInferior } from '@/shared/navegacion/nav-inferior';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent } from '@/shared/ui/card';
 import { IconButton } from '@/shared/ui';
@@ -266,8 +265,6 @@ export default function Solicitud() {
           </View>
         )}
       </ScreenScroll>
-
-      <NavInferior activa="solicitud" />
     </>
   );
 }

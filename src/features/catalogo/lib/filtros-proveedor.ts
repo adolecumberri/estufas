@@ -60,9 +60,7 @@ function leerPersistencia(): Promise<Record<string, EntradaCache>> {
         const crudo = await AsyncStorage.getItem(CLAVE_ALMACEN);
         const datos: unknown = crudo ? JSON.parse(crudo) : null;
         persistencia =
-          datos && typeof datos === 'object'
-            ? (datos as Record<string, EntradaCache>)
-            : {};
+          datos && typeof datos === 'object' ? (datos as Record<string, EntradaCache>) : {};
       } catch {
         // sin persistencia: solo memoria de sesión
         persistencia = {};
@@ -86,17 +84,13 @@ function guardar(clave: string, entrada: EntradaCache) {
   })();
 }
 
-async function obtenerFiltrosProveedorRed(
-  proveedorId: string | null
-): Promise<FiltrosProveedor> {
+async function obtenerFiltrosProveedorRed(proveedorId: string | null): Promise<FiltrosProveedor> {
   const { data, error } = await supabase.rpc('fn_filtros_proveedor', {
     p_proveedor: proveedorId ?? null,
   });
   if (error) throw error;
   const fila = (Array.isArray(data) ? data[0] : data) as
-    | { combustibles: string[] | null; categorias: CategoriaRpc[] | null }
-    | null
-    | undefined;
+    { combustibles: string[] | null; categorias: CategoriaRpc[] | null } | null | undefined;
 
   const combustibles = (fila?.combustibles ?? []).filter(
     (c): c is Combustible => c === 'pellets' || c === 'lena'
