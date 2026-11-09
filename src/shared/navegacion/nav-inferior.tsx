@@ -21,7 +21,7 @@ import type { Cap } from '@/shared/seguridad/capacidades';
 import { useColoresIcono } from '@/shared/lib/theme';
 import { cn } from '@/shared/lib/utils';
 
-type PestanaNav = 'catalogo' | 'solicitud' | 'pedidos' | 'cartera' | 'admin' | 'acceso';
+type PestanaNav = 'catalogo' | 'solicitud' | 'pedidos' | 'cartera' | 'gestion' | 'acceso';
 
 type Pestana = {
   id: PestanaNav;
@@ -63,10 +63,10 @@ const PESTANAS: Pestana[] = [
     caps: ['cartera:ver_clientes'],
   },
   {
-    id: 'admin',
-    etiqueta: 'Admin',
+    id: 'gestion',
+    etiqueta: 'Gestión',
     icono: ShieldCheck,
-    ruta: RUTAS.admin,
+    ruta: RUTAS.gestion,
     caps: ['admin:acceder'],
   },
 ];
@@ -81,29 +81,24 @@ const PESTANAS_ANONIMAS: Pestana[] = [
 // Barra de pestañas inferior compartida (diseño Stitch): fondo semántico,
 // acento ámbar en la pestaña activa y punto indicador en "Solicitud" cuando
 // el carrito tiene líneas. Cada pestaña exige su capacidad (anillo 3): el
-// resultado equivale al comportamiento anterior — admin solo Catálogo+Admin,
-// clientes sin Cartera, comercial con todo (salvo Admin).
+// resultado equivale al comportamiento anterior — admin con Catálogo +
+// Pedidos + Cartera + Gestión (pleno acceso operativo, decisión 10/11/2026),
+// clientes sin Cartera, comercial con todo (salvo Gestión).
 export function NavInferior({
   activa,
 }: {
-  activa: 'catalogo' | 'solicitud' | 'pedidos' | 'cartera' | 'admin';
+  activa: 'catalogo' | 'solicitud' | 'pedidos' | 'cartera' | 'gestion';
 }) {
   const insets = useSafeAreaInsets();
   const { lineas } = useSolicitud();
   const { session } = useAuth();
-  const { puede, soloLectura } = usePermisos();
+  const { puede } = usePermisos();
   const colores = useColoresIcono();
 
   const pestanas = React.useMemo(() => {
     if (!session) return PESTANAS_ANONIMAS;
-    return PESTANAS.filter((p) => {
-      if (!p.caps || !p.caps.some((c) => puede(c))) return false;
-      // La cartera del admin es solo lectura y su operación vive en /admin:
-      // la pestaña no se muestra (comportamiento actual: Catálogo+Admin).
-      if (p.id === 'cartera' && soloLectura) return false;
-      return true;
-    });
-  }, [session, puede, soloLectura]);
+    return PESTANAS.filter((p) => !p.caps || p.caps.some((c) => puede(c)));
+  }, [session, puede]);
 
   return (
     <View

@@ -5,7 +5,10 @@ import { supabase } from '@/shared/lib/supabase';
 import type { HistorialEstado, LineaPedido, Pedido, PerfilUsuario } from '@/shared/lib/types';
 
 // Pedidos del usuario autenticado (RLS devuelve solo los visibles por rol).
-export function usePedidos() {
+// `comercialId` es un alcance UX opcional (decisión 10/11/2026): filtra la
+// lista a los pedidos de ese comercial (el admin, desde la ficha de un
+// comercial, ve SOLO ese comercial). La autoridad real sigue en RLS.
+export function usePedidos(comercialId?: string | null) {
   const [pedidos, setPedidos] = React.useState<Pedido[]>([]);
   const [cargando, setCargando] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -13,17 +16,18 @@ export function usePedidos() {
   const recargar = React.useCallback(async () => {
     setCargando(true);
     setError(null);
-    const { data, error } = await supabase
-      .from('pedidos')
-      .select('*, pedido_lineas(*)')
-      .order('fecha_pedido', { ascending: false });
+    let consulta = supabase.from('pedidos').select('*, pedido_lineas(*)');
+    if (comercialId) consulta = consulta.eq('comercial_id', comercialId);
+    const { data, error } = await consulta.order('fecha_pedido', {
+      ascending: false,
+    });
     setCargando(false);
     if (error) {
       setError(error.message);
       return;
     }
     setPedidos((data ?? []) as Pedido[]);
-  }, []);
+  }, [comercialId]);
 
   React.useEffect(() => {
     void recargar();
@@ -95,11 +99,19 @@ export function usePedido(id: string | undefined) {
         .eq('pedido_id', id)
         .eq('borrado', false)
         .order('created_at'),
-      supabase
-        .from('pedido_historial_estados')
-        .select('*')
-        .eq('pedido_id', id)
-        .order('fecha_cambio', { ascending: false }),
+      // Atribución del actor en cada cambio (0028): fn_pedido_historial trae
+      // actor_nombre/actor_rol con el alcance del pedido. Sin el RPC (backend
+      // antiguo) se cae a la lectura directa (sin nombre/rol de actor).
+      rpcSegura<HistorialEstado[]>('fn_pedido_historial', { p_pedido: id }).then(
+        async (r) =>
+          r.data && r.data.length > 0
+            ? { data: r.data, error: null }
+            : supabase
+                .from('pedido_historial_estados')
+                .select('*')
+                .eq('pedido_id', id)
+                .order('fecha_cambio', { ascending: false }),
+      ),
     ]);
     setCargando(false);
 

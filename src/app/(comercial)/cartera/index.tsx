@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { RefreshCw, Users } from 'lucide-react-native';
 import * as React from 'react';
 import { View } from 'react-native';
@@ -32,7 +32,10 @@ interface ContadoresCartera {
 
 export default function Cartera() {
   const { perfil } = useAuth();
-  const { clientes, cargando, error, recargar } = useCartera();
+  // Alcance opcional por comercial (`?comercial=<id>`): el admin, desde la
+  // ficha de un comercial, ve SOLO los clientes de ese comercial.
+  const { comercial } = useLocalSearchParams<{ comercial?: string }>();
+  const { clientes, cargando, error, recargar } = useCartera(comercial);
   const [contadores, setContadores] = React.useState<ContadoresCartera | null>(null);
 
   const cargarContadores = React.useCallback(async () => {
@@ -153,11 +156,12 @@ export default function Cartera() {
           }
         />
 
-        {/* El admin entra en LECTURA (no gestiona descuentos ni confirma),
-            pero puede abrir la ficha de un cliente y crearle una solicitud. */}
-        {perfil?.rol === 'admin' ? (
+        {/* Alcance por comercial (entrada vía ?comercial=, p. ej. desde la
+            ficha de un comercial en el panel admin). Sin vocabulario de modo:
+            el admin tiene pleno acceso operativo (decisión 10/11/2026). */}
+        {comercial ? (
           <Card className="gap-1 rounded-lg border-primary/40 bg-primary/10 p-3">
-            <Text className="text-sm">Vista de solo lectura del comercial</Text>
+            <Text className="text-sm">Clientes de este comercial</Text>
           </Card>
         ) : null}
 

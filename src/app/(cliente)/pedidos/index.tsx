@@ -1,4 +1,4 @@
-import { router, useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Building2, CheckCircle2, ChevronRight, RefreshCw, User } from 'lucide-react-native';
 import * as React from 'react';
 import { ActivityIndicator, ScrollView, View } from 'react-native';
@@ -18,6 +18,7 @@ import { ESTADOS_PEDIDO, type EstadoPedido } from '@/shared/constantes';
 import { useAuth } from '@/features/auth/use-auth';
 import { useCartera } from '@/features/cartera/hooks/use-comercial';
 import { useAccionesPedido, usePedidos } from '@/features/pedidos/hooks/use-pedidos';
+import { usePermisos } from '@/shared/seguridad/use-permisos';
 import { formatEUR, formatFecha } from '@/shared/lib/format';
 import { useColoresIcono } from '@/shared/lib/theme';
 import type { Pedido } from '@/shared/lib/types';
@@ -29,8 +30,17 @@ type Filtro = (typeof FILTROS)[number];
 export default function Pedidos() {
   const colores = useColoresIcono();
   const { perfil } = useAuth();
-  const { pedidos, cargando: cargandoPedidos, error: errorPedidos, recargar } = usePedidos();
-  const { clientes } = useCartera();
+  const { puede } = usePermisos();
+  // Alcance opcional por comercial (`?comercial=<id>`): el admin, desde la
+  // ficha de un comercial, ve SOLO los pedidos de ese comercial.
+  const { comercial } = useLocalSearchParams<{ comercial?: string }>();
+  const {
+    pedidos,
+    cargando: cargandoPedidos,
+    error: errorPedidos,
+    recargar,
+  } = usePedidos(comercial);
+  const { clientes } = useCartera(comercial);
   const { confirmar } = useAccionesPedido();
 
   // Filtro de estado activo (local) y confirmación en curso (id del pedido).
@@ -51,9 +61,11 @@ export default function Pedidos() {
     }, [recargar])
   );
 
-  const esComercialOAdmin = perfil?.rol === 'comercial';
-  // Subtítulo de la cabecera según el rol (el cliente solo ve su email).
-  const etiquetaRol = perfil?.rol === 'comercial' ? 'Comercial' : null;
+  // Sección de pendientes: la ven el comercial y el admin (decisión 10/11/2026:
+  // el admin opera pedidos de clientes). Subtítulo según el rol.
+  const puedeConfirmar = puede('pedidos:confirmar');
+  const etiquetaRol =
+    perfil?.rol === 'comercial' ? 'Comercial' : perfil?.rol === 'admin' ? 'Admin' : null;
   const pendientes = pedidos.filter((p) => p.estado === 'solicitado');
   const pedidosFiltrados =
     filtro === 'todos' ? pedidos : pedidos.filter((p) => p.estado === filtro);
@@ -151,8 +163,8 @@ export default function Pedidos() {
           />
         ) : (
           <View className="gap-5">
-            {/* SECCIÓN 1: pedidos pendientes de confirmar (solo comercial/admin) */}
-            {esComercialOAdmin && (filtro === 'todos' || filtro === 'solicitado') && (
+            {/* SECCIÓN 1: pedidos pendientes de confirmar (comercial y admin) */}
+            {puedeConfirmar && (filtro === 'todos' || filtro === 'solicitado') && (
               <View className="gap-2">
                 <SectionTitle
                   accion={

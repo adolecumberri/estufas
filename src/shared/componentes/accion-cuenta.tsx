@@ -25,7 +25,7 @@ export function AccionCuenta() {
   const [abierta, setAbierta] = React.useState(false);
 
   const destinoCuenta = () => {
-    if (puede('admin:acceder')) return '/admin';
+    if (puede('admin:acceder')) return '/gestion';
     if (puede('cartera:ver_clientes')) return '/cartera';
     return '/pedidos';
   };

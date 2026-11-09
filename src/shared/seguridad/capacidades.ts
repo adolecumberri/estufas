@@ -21,6 +21,7 @@ export type Cap =
   | 'pedidos:crear_propio'
   | 'pedidos:crear_para_cliente'
   | 'pedidos:confirmar'
+  | 'pedidos:ver'
   | 'cuenta:ver_propia'
   | 'cartera:ver_clientes'
   | 'descuentos:gestionar'
@@ -43,6 +44,7 @@ const PROPIAS: Record<Rol, Cap[]> = {
   cliente: [
     'catalogo:ver_proveedores_propios', // los de SU comercial (no el general)
     'pedidos:crear_propio',
+    'pedidos:ver', // leer sus pedidos (la heredan comercial y admin)
     'cuenta:ver_propia',
   ],
   comercial: [
@@ -61,11 +63,15 @@ const AJUSTES: Partial<Record<Rol, { quita?: Cap[]; anade?: Cap[] }>> = {
     quita: ['catalogo:ver_general'], // el cliente no ve el catálogo general
   },
   admin: {
-    // El admin no compra ni pide para sí mismo (necesitaría otra cuenta):
-    quita: ['carrito:usar', 'pedidos:crear_propio', 'pedidos:confirmar'],
-    // Pero SÍ ve todo en lectura, incluido el catálogo general, y gestiona
-    // descuentos SOLO desde la ficha de un cliente (el admin no tiene cartera
-    // propia donde gestionarlos).
+    // DECISIÓN DEL USUARIO (10/11/2026): el admin NO está en ningún modo de
+    // solo lectura — tiene PLENO acceso operativo sobre los datos de terceros
+    // (confirma/avanza/cancela pedidos de clientes y gestiona descuentos).
+    // Única excepción acordada: no compra ni pide para sí mismo (para eso
+    // necesitaría otra cuenta), así que conserva sin carrito:usar y sin
+    // pedidos:crear_propio. pedidos:confirmar ya no se quita.
+    quita: ['carrito:usar', 'pedidos:crear_propio'],
+    // Recupera el catálogo general (el cliente/comercial no lo ven); los
+    // descuentos los gestiona desde la ficha de un cliente.
     anade: ['catalogo:ver_general', 'descuentos:gestionar'],
   },
 };
@@ -112,5 +118,5 @@ export const INICIO_POR_ROL: Record<Rol, string> = {
   anon: '/',
   cliente: '/',
   comercial: '/cartera',
-  admin: '/admin',
+  admin: '/gestion',
 };

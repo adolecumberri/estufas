@@ -17,22 +17,22 @@ import { temaProveedor } from '@/shared/lib/colores-proveedor';
 import { useColoresIcono } from '@/shared/lib/theme';
 import type { Proveedor } from '@/shared/lib/types';
 
-// Icono asociado a cada proveedor: llama (pellets), flor (leña) o cajas por
-// defecto. (Duplicada a propósito en admin/comerciales.tsx para no crear un
-// módulo compartido mientras otros workers editan estos archivos.)
+// Icono asociado a cada proveedor: llama (pellets), flor (leÃ±a) o cajas por
+// defecto. (Duplicada a propÃ³sito en gestion/comerciales.tsx para no crear un
+// mÃ³dulo compartido mientras otros workers editan estos archivos.)
 function iconoProveedor(icono: string | null | undefined): LucideIcon {
   if (icono === 'flame') return Flame;
   if (icono === 'flower') return Flower;
   return Boxes;
 }
 
-export default function AdminProveedores() {
+export default function GestionProveedores() {
   const colores = useColoresIcono();
 
   const { proveedores, cargando, error, recargar, crearProveedor, actualizarProveedor } =
     useProveedores();
 
-  // Formulario de creación, ahora en un modal como el de "Nuevo comercial".
+  // Formulario de creaciÃ³n, ahora en un modal como el de "Nuevo comercial".
   const [modalAbierto, setModalAbierto] = React.useState(false);
   const [nombre, setNombre] = React.useState('');
   const [nif, setNif] = React.useState('');
@@ -41,7 +41,7 @@ export default function AdminProveedores() {
   const [creando, setCreando] = React.useState(false);
   const [mensajeCrear, setMensajeCrear] = React.useState<string | null>(null);
 
-  // Mensajes de la edición inline (el modal está cerrado en ese caso).
+  // Mensajes de la ediciÃ³n inline (el modal estÃ¡ cerrado en ese caso).
   const [mensajeLista, setMensajeLista] = React.useState<string | null>(null);
 
   const [proveedorEditando, setProveedorEditando] = React.useState<string | null>(null);
@@ -92,12 +92,12 @@ export default function AdminProveedores() {
   const guardarEdicion = async (id: string) => {
     const nombreTrim = editNombre.trim();
     if (!nombreTrim) {
-      setMensajeLista('El nombre no puede quedar vacío.');
+      setMensajeLista('El nombre no puede quedar vacÃ­o.');
       return;
     }
-    // Los campos opcionales se envían tal cual (recortados): una cadena vacía
+    // Los campos opcionales se envÃ­an tal cual (recortados): una cadena vacÃ­a
     // significa "limpiar el campo" en el servidor (actualizar_proveedor usa
-    // NULLIF(btrim(...))), mientras que null significaría "sin cambios".
+    // NULLIF(btrim(...))), mientras que null significarÃ­a "sin cambios".
     const { error } = await actualizarProveedor(id, {
       nombre: nombreTrim,
       nif: editNif.trim(),
@@ -116,7 +116,7 @@ export default function AdminProveedores() {
       <ScreenScroll>
         <ScreenHeader
           titulo="Proveedores"
-          respaldo="/admin"
+          respaldo="/gestion"
           accion={
             <Button size="sm" onPress={abrirModal}>
               <Plus size={16} color={colores.primarioClaro} />
@@ -152,11 +152,11 @@ export default function AdminProveedores() {
                           />
                         </View>
                         <Text className="text-xs text-muted-foreground">
-                          {[p.nif, p.email, p.telefono].filter(Boolean).join(' · ') ||
+                          {[p.nif, p.email, p.telefono].filter(Boolean).join(' Â· ') ||
                             'Sin datos de contacto'}
                         </Text>
                       </View>
-                      {/* Solo lectura: la activación ya no se gestiona aquí. */}
+                      {/* Solo lectura: la activaciÃ³n ya no se gestiona aquÃ­. */}
                       <Badge variant={p.activo ? 'default' : 'outline'}>
                         <Text>{p.activo ? 'Activo' : 'Inactivo'}</Text>
                       </Badge>
@@ -167,8 +167,8 @@ export default function AdminProveedores() {
                         size="sm"
                         variant="outline"
                         style={{ borderColor: tema.borde }}
-                        // Ruta dedicada del catálogo del proveedor; si aún no
-                        // está en los tipos generados, el cast mantiene el
+                        // Ruta dedicada del catÃ¡logo del proveedor; si aÃºn no
+                        // estÃ¡ en los tipos generados, el cast mantiene el
                         // typecheck verde (se regeneran al arrancar dev).
                         onPress={() =>
                           router.push({
@@ -179,12 +179,12 @@ export default function AdminProveedores() {
                       >
                         <Boxes size={14} color={colores.tenue} />
                         <Text className="text-xs" style={{ color: tema.texto }}>
-                          Ver catálogo
+                          Ver catÃ¡logo
                         </Text>
                       </Button>
                       <Button size="sm" variant="outline" onPress={() => abrirEdicion(p)}>
                         <Text className="text-xs">
-                          {proveedorEditando === p.id ? 'Cerrar edición' : 'Editar'}
+                          {proveedorEditando === p.id ? 'Cerrar ediciÃ³n' : 'Editar'}
                         </Text>
                       </Button>
                     </View>
@@ -214,7 +214,7 @@ export default function AdminProveedores() {
                         <Input
                           value={editTelefono}
                           onChangeText={setEditTelefono}
-                          placeholder="Teléfono"
+                          placeholder="TelÃ©fono"
                           keyboardType="phone-pad"
                           className="h-9 text-sm"
                         />
@@ -246,7 +246,7 @@ export default function AdminProveedores() {
               <Text>Cancelar</Text>
             </Button>
             <Button size="sm" disabled={creando} onPress={() => void crear()}>
-              <Text>{creando ? 'Creando…' : 'Crear'}</Text>
+              <Text>{creando ? 'Creandoâ€¦' : 'Crear'}</Text>
             </Button>
           </>
         }
@@ -272,11 +272,11 @@ export default function AdminProveedores() {
             className="h-9 text-sm"
           />
         </FormField>
-        <FormField etiqueta="Teléfono">
+        <FormField etiqueta="TelÃ©fono">
           <Input
             value={telefono}
             onChangeText={setTelefono}
-            placeholder="Teléfono"
+            placeholder="TelÃ©fono"
             keyboardType="phone-pad"
             className="h-9 text-sm"
           />

@@ -15,6 +15,7 @@ import * as React from 'react';
 import { ScrollView, View } from 'react-native';
 
 import { EmptyState, ErrorView, LoadingView } from '@/shared/componentes/estados';
+import { FilaDetalle } from '@/shared/componentes/list-card';
 import { Screen, ScreenScroll } from '@/shared/componentes/screen';
 import { ScreenHeader } from '@/shared/componentes/screen-header';
 import { Badge } from '@/shared/ui/badge';
@@ -30,17 +31,17 @@ import {
   TIPOS_CLIENTE,
   type EstadoPedido,
 } from '@/shared/constantes';
-import { useAuth } from '@/features/auth/use-auth';
 import { useCatalogo } from '@/features/catalogo/hooks/use-catalogo';
 import { useAccionesPedido, usePedido } from '@/features/pedidos/hooks/use-pedidos';
 import { obtenerProducto } from '@/features/catalogo/lib/catalogo-local';
+import { usePermisos } from '@/shared/seguridad/use-permisos';
 import { formatEUR, formatFecha, formatFechaHora } from '@/shared/lib/format';
 import { fuenteImagen } from '@/features/catalogo/lib/imagenes';
 import { useColoresIcono } from '@/shared/lib/theme';
 
 export default function PedidoDetalle() {
   const { id, desde } = useLocalSearchParams<{ id: string; desde?: string }>();
-  const { perfil } = useAuth();
+  const { puede } = usePermisos();
   const { detalle, cargando, error, recargar } = usePedido(id);
   const { cancelar, confirmar, avanzar, ajustarDescuento } = useAccionesPedido();
   const catalogo = useCatalogo();
@@ -51,9 +52,12 @@ export default function PedidoDetalle() {
   const [mensaje, setMensaje] = React.useState<string | null>(null);
   const [trabajando, setTrabajando] = React.useState(false);
 
-  const esComercial = perfil?.rol === 'comercial';
-  const esCliente = perfil?.rol === 'cliente';
-  const puedeGestionar = esComercial;
+  // Acciones por capacidad (decisión 10/11/2026): el comercial y el admin
+  // operan pedidos de clientes (pedidos:confirmar); el bloque del cliente
+  // propietario (editar/cancelar su solicitud) usa pedidos:crear_propio, que
+  // el admin NO tiene por la excepción acordada.
+  const puedeGestionar = puede('pedidos:confirmar');
+  const puedeComoCliente = puede('pedidos:crear_propio');
 
   const varianteEstado = (estado: EstadoPedido) => {
     switch (estado) {
@@ -427,7 +431,7 @@ export default function PedidoDetalle() {
 
       {/* 6. Acciones por rol y estado */}
       <View className="gap-2">
-        {esCliente && pedido.estado === 'solicitado' && (
+        {puedeComoCliente && pedido.estado === 'solicitado' && (
           <>
             <Button onPress={() => router.push(`/solicitud?editar=${pedido.id}`)}>
               <Text>Editar solicitud</Text>
@@ -548,6 +552,20 @@ export default function PedidoDetalle() {
                   )}
                 </Text>
                 {h.nota && <Text className="text-xs text-muted-foreground">{h.nota}</Text>}
+                {/* Atribución del actor (0028): quién hizo el cambio, incluido
+                    el rol — decisión 10/11/2026: el admin también opera. */}
+                {h.actor_nombre ? (
+                  <FilaDetalle
+                    etiqueta="Por"
+                    valor={`${h.actor_nombre}${
+                      h.actor_rol
+                        ? ` (${
+                            ROLES[h.actor_rol as keyof typeof ROLES]?.etiqueta ?? h.actor_rol
+                          })`
+                        : ''
+                    }`}
+                  />
+                ) : null}
               </View>
               <Text className="text-xs text-muted-foreground">
                 {formatFechaHora(h.fecha_cambio)}

@@ -106,7 +106,7 @@ export const RUTAS = {
   registro: '/registro',
   pedidos: '/pedidos',
   cartera: '/cartera',
-  admin: '/admin',
+  gestion: '/gestion',
 } as const;
 
 export const IVA_MVP = 0; // SUPUESTO MVP: fiscal pendiente de decisión (PRD §14-4)

@@ -23,7 +23,7 @@ export default function Acceso() {
   const [enviando, setEnviando] = React.useState(false);
 
   const destinoPorRol = (rol?: string | null) => {
-    if (rol === 'admin') return '/admin';
+    if (rol === 'admin') return '/gestion';
     if (rol === 'comercial') return '/cartera';
     return '/pedidos';
   };

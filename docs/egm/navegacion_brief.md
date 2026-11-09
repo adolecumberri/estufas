@@ -1,8 +1,18 @@
 # Navigation brief — inventory, observed problems, candidate patterns, decision
 
-Status: **user answers received (10/11/2026); Pattern A implementation in
-progress on `main`. Goldfish review pending until the shell is adopted and
-stable.**
+Status: **DECISIÓN FINAL DEL USUARIO (10/11/2026): no hay modo helpdesk —
+admin es admin con PLENO acceso operativo (pedidos y descuentos de clientes);
+única excepción: no compra ni pide para sí. F1.1 implementado (capacidades,
+guards y acciones de pedidos por `puede()`); S0 resuelto. El resto del plan
+Pattern A (shell con "modo") queda SUPERSEDIDO y se conserva como registro.**
+
+> **NOTA DE RUTAS (10/11/2026):** las rutas `/admin/*` citadas en este brief
+> fueron renombradas a `/gestion/*` (una sola raíz de rutas compartidas +
+> zona de gestión), se borraron las huérfanas (`/admin/productos`,
+> `/admin/promociones`, `/admin/usuarios`) y `/admin/comerciales/[id]` es
+> ahora una ficha de ENLACES hacia `/cartera?comercial=<id>`,
+> `/pedidos?comercial=<id>` y `/catalogo?comercial=<id>` (sin modos). La
+> matriz vigente de navegación está en [MATRIZ_NAVEGACION.md](./MATRIZ_NAVEGACION.md).
 
 Date: 2026-11-09 (inventory), updated 2026-11-10 (decision + answers).
 Source: direct reading of the current code tree
@@ -10,6 +20,21 @@ Source: direct reading of the current code tree
 `src/shared/seguridad/**`) plus the user feedback recorded in
 [docs/design/REQUISITOS_FICHA_CLIENTE.md](../design/REQUISITOS_FICHA_CLIENTE.md)
 (review of 10/11/2026).
+
+---
+
+> ## DECISIÓN DEL USUARIO (10/11/2026) — registrada y ejecutada en F1.1
+>
+> "El admin NO está en ningún 'modo helpdesk': admin es admin, no hay modos.
+> Entrar en un comercial es solo el motivo por el que un admin abre su perfil.
+> El admin tiene PLENO ACCESO (habrá 1-2 admins)."
+>
+> - Identidades: anónimo, cliente, comercial, admin.
+> - Admin: pleno acceso operativo sobre datos de terceros (confirma/avanza/
+>   cancela pedidos de clientes y gestiona descuentos); mantiene la única
+>   excepción acordada: sin carrito propio ni pedidos propios.
+> - El alcance por comercial es un parámetro UX (`?comercial=`), no un modo.
+> - S0 RESUELTO: sí (ver §6).
 
 ---
 
@@ -201,7 +226,11 @@ For each option: what it solves, what it costs, what it breaks.
 
 ---
 
-## 4. Decision (user, 10/11/2026): Pattern A — single app shell with a "mode"
+## 4. Decision ANTERIOR (user, 10/11/2026): Pattern A — single app shell with a "mode"
+
+> SUPERSEDIDA el mismo 10/11/2026 por la decisión del bloque de arriba: el
+> admin no está en ningún "modo"; no hay estado mode/helpdesk ni banner
+> "Viendo como". Esta sección se conserva solo como registro histórico.
 
 The user chose **Option A**: one shell that receives a mode
 (`admin` | `comercial` | `admin-viendo-como-comercial`), a tab bar derived
@@ -279,9 +308,12 @@ what actually shipped (2026-11-10, branch `main`, uncommitted):
   `proveedores`/`activo`/`onSeleccionar` overrides); a comercial with no
   providers shows an empty state instead of the full catalog. The provider
   tint follows the scoped provider.
-- **Deferred (Lead decides):** whether the admin may confirm/advance/cancel
-  pedidos (S0 capability decision, `pedidos:confirmar` for admin) — no
-  capability change was made.
+- **S0 RESUELTO (10/11/2026):** el admin SÍ confirma/avanza/cancela pedidos
+  de clientes y gestiona descuentos (pleno acceso operativo; sin carrito ni
+  pedidos propios). Implementado en F1.1: `pedidos:confirmar` ya no se quita
+  al admin en `capacidades.ts`, nueva capacidad `pedidos:ver`, guard de
+  `(cliente)` por `pedidos:ver`, acciones de la UI de pedidos por `puede()`,
+  y alcance opcional por `?comercial=` en `usePedidos`/`useCartera`.
 - **Deleted/deferred by the reviews:** the "mode" type, the global header
   migration, the preview banner/Exit, and the drawer move (drawer stays
   catalog-only, which is already the case).
@@ -290,10 +322,12 @@ what actually shipped (2026-11-10, branch `main`, uncommitted):
 
 ## 7. Readiness
 
-**Respuestas recibidas (10/11/2026). Shell rechazado por las dos revisiones
-Goldfish; plan mínimo YAGNI S1–S4 implementado (2026-11-10). Pendiente de
-decisión del Lead: S0 (¿el admin confirma/avanza/cancela pedidos?). No
-lanzar más revisiones Goldfish hasta que esa decisión esté registrada.**
+**DECISIÓN FINAL REGISTRADA (10/11/2026): no hay modo helpdesk; el admin es
+admin con pleno acceso operativo (pedidos y descuentos de clientes), con la
+única excepción de no comprar/pedir para sí. S0 resuelto y F1.1 implementado
+(capacidades, guards y acciones de pedidos por `puede()`). El resto del plan
+Pattern A queda supersedido; las revisiones Goldfish posteriores deben
+partir de esta decisión.**
 
 All file paths cited in this brief were verified to exist on 2026-11-09 /
 2026-11-10. Typecheck and lint do not apply to a documentation-only change.

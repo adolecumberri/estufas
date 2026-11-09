@@ -83,7 +83,7 @@ export default function CatalogoScreen({
       setProveedoresComercial(lista);
       // Primer proveedor del comercial como selección inicial (no se pisa una
       // selección ya hecha dentro de esta vista).
-      setProveedorScoped((prev) => prev ?? (lista[0]?.id ?? null));
+      setProveedorScoped((prev) => prev ?? lista[0]?.id ?? null);
     })();
     return () => {
       cancelado = true;
@@ -94,7 +94,7 @@ export default function CatalogoScreen({
     proveedorIdOverride ??
     (comercialParam
       ? (proveedorScoped ?? proveedoresComercial?.[0]?.id ?? null)
-      : proveedorActivo?.id ?? null);
+      : (proveedorActivo?.id ?? null));
   const cat = useCatalogo(clienteObjetivoId, proveedorId);
   const [menuAbierto, setMenuAbierto] = React.useState(false);
   const colores = useColoresIcono();
@@ -250,50 +250,50 @@ export default function CatalogoScreen({
         <EmptyState titulo="Este comercial no tiene proveedores asignados" icono={Boxes} />
       ) : (
         <FlatList
-        showsVerticalScrollIndicator={false}
-        style={{ flex: 1 }}
-        data={cat.productos}
-        keyExtractor={(p) => p.producto_id}
-        numColumns={2}
-        columnWrapperStyle={{ gap: 12, paddingHorizontal: 16 }}
-        contentContainerStyle={{ gap: 12, paddingBottom: (session ? 88 : 24) + insets.bottom }}
-        renderItem={({ item }) => (
-          <TarjetaProducto producto={item} origen={origen} onAnadir={anadir} />
-        )}
-        ListEmptyComponent={
-          cat.cargando ? (
-            <LoadingView texto="Cargando modelos…" />
-          ) : cat.error ? (
-            <ErrorView mensaje={cat.error} />
-          ) : (
-            <EmptyState
-              titulo="No hay productos que coincidan con la búsqueda."
-              icono={Boxes}
-              accion={
-                cat.busqueda || cat.categoria ? (
-                  <Button variant="outline" size="sm" onPress={cat.limpiarFiltros}>
-                    <Text>Limpiar filtros</Text>
-                  </Button>
-                ) : undefined
-              }
-            />
-          )
-        }
-        ListFooterComponent={
-          cat.hayMas ? (
-            <View className="px-4 pb-4 pt-2">
-              <Button
-                variant="outline"
-                className="w-full rounded-lg py-2.5"
-                onPress={() => cat.setPagina((p) => p + 1)}
-              >
-                <RefreshCw size={18} color={colores.tenue} className="size-[18px]" />
-                <Text>Cargar más estufas</Text>
-              </Button>
-            </View>
-          ) : null
-        }
-      />
+          showsVerticalScrollIndicator={false}
+          style={{ flex: 1 }}
+          data={cat.productos}
+          keyExtractor={(p) => p.producto_id}
+          numColumns={2}
+          columnWrapperStyle={{ gap: 12, paddingHorizontal: 16 }}
+          contentContainerStyle={{ gap: 12, paddingBottom: (session ? 88 : 24) + insets.bottom }}
+          renderItem={({ item }) => (
+            <TarjetaProducto producto={item} origen={origen} onAnadir={anadir} />
+          )}
+          ListEmptyComponent={
+            cat.cargando ? (
+              <LoadingView texto="Cargando modelos…" />
+            ) : cat.error ? (
+              <ErrorView mensaje={cat.error} />
+            ) : (
+              <EmptyState
+                titulo="No hay productos que coincidan con la búsqueda."
+                icono={Boxes}
+                accion={
+                  cat.busqueda || cat.categoria ? (
+                    <Button variant="outline" size="sm" onPress={cat.limpiarFiltros}>
+                      <Text>Limpiar filtros</Text>
+                    </Button>
+                  ) : undefined
+                }
+              />
+            )
+          }
+          ListFooterComponent={
+            cat.hayMas ? (
+              <View className="px-4 pb-4 pt-2">
+                <Button
+                  variant="outline"
+                  className="w-full rounded-lg py-2.5"
+                  onPress={() => cat.setPagina((p) => p + 1)}
+                >
+                  <RefreshCw size={18} color={colores.tenue} className="size-[18px]" />
+                  <Text>Cargar más estufas</Text>
+                </Button>
+              </View>
+            ) : null
+          }
+        />
       )}
 
       {/* Navegación lateral (cajón) */}
@@ -306,6 +306,7 @@ export default function CatalogoScreen({
         setCombustible={cat.setCombustible}
         categoria={cat.categoria}
         setCategoria={cat.setCategoria}
+        conSelectorProveedor={!proveedorIdOverride}
       />
 
       {/* Barra inferior persistente: solo con sesión (los anónimos no la ven). */}

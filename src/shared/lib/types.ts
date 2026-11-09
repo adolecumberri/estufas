@@ -111,6 +111,10 @@ export interface HistorialEstado {
   cambiado_por: string | null;
   fecha_cambio: string;
   nota: string | null;
+  // Atribución del actor (fn_pedido_historial, 0028): nombre y rol de quien
+  // hizo el cambio. Opcionales: sin el RPC (backend antiguo) no llegan.
+  actor_nombre?: string | null;
+  actor_rol?: string | null;
 }
 
 export interface PerfilUsuario {

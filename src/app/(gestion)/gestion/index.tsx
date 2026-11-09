@@ -15,23 +15,23 @@ const SECCIONES = [
     titulo: 'Comerciales',
     descripcion: 'Comerciales, sus clientes y accesos a proveedores',
     icono: Users,
-    ruta: '/admin/comerciales',
+    ruta: '/gestion/comerciales',
   },
   {
     titulo: 'Proveedores',
     descripcion: 'Catálogo multi-empresa y comerciales',
     icono: Factory,
-    ruta: '/admin/proveedores',
+    ruta: '/gestion/proveedores',
   },
 ] as const;
 
-export default function Admin() {
+export default function Gestion() {
   const colores = useColoresIcono();
 
   return (
     <Screen padded>
       <View className="gap-3 pb-24">
-        <ScreenHeader titulo="Administración" respaldo="/" accion={<AccionCuenta />} />
+        <ScreenHeader titulo="Gestión" respaldo="/" accion={<AccionCuenta />} />
         {SECCIONES.map((s) => (
           <ListCard key={s.ruta} onPress={() => router.push(s.ruta)}>
             <View className="flex-row items-center gap-3">
@@ -48,7 +48,7 @@ export default function Admin() {
         </Pressable>
       </View>
       {/* Barra inferior: el admin no pierde el submenú al entrar en su panel. */}
-      <NavInferior activa="admin" />
+      <NavInferior activa="gestion" />
     </Screen>
   );
 }

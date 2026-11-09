@@ -24,10 +24,7 @@ export function usePermisos() {
   const puede = useCallback((cap: Cap) => puedeRol(rol, cap), [rol]);
 
   const esAdmin = rol === 'admin';
-  // Fase 1: el modo solo lectura coincide con el admin (no compra ni gestiona
-  // pedidos/descuentos para sí; su operación vive en el panel /admin).
-  const soloLectura = esAdmin;
   const inicio = INICIO_POR_ROL[rol];
 
-  return { rol, puede, capacidades, esAdmin, soloLectura, inicio };
+  return { rol, puede, capacidades, esAdmin, inicio };
 }

@@ -26,7 +26,7 @@ import { cn } from '@/shared/lib/utils';
 import type { PerfilUsuario, Proveedor } from '@/shared/lib/types';
 
 // Icono asociado a cada proveedor: llama (pellets), flor (leña) o cajas por
-// defecto. (Duplicada a propósito en admin/proveedores.tsx para no crear un
+// defecto. (Duplicada a propósito en gestion/proveedores.tsx para no crear un
 // módulo compartido mientras otros workers editan estos archivos.)
 function iconoProveedor(icono: string | null | undefined): LucideIcon {
   if (icono === 'flame') return Flame;
@@ -119,7 +119,7 @@ function FilaComercial({
   );
 }
 
-export default function AdminComerciales() {
+export default function GestionComerciales() {
   const colores = useColoresIcono();
 
   const { comerciales, clientesPorComercial, cargando, error, recargar } = useComerciales();
@@ -165,7 +165,7 @@ export default function AdminComerciales() {
         <ScreenHeader
           titulo="Comerciales"
           subtitulo="Equipo, clientes y accesos a proveedores"
-          respaldo="/admin"
+          respaldo="/gestion"
           accion={
             <View className="flex-row items-center gap-1.5">
               <AccionCuenta />
@@ -207,7 +207,7 @@ export default function AdminComerciales() {
                 <View key={c.id}>
                   <Pressable
                     onPress={() =>
-                      router.push({ pathname: '/admin/comerciales/[id]', params: { id: c.id } })
+                      router.push({ pathname: '/gestion/comerciales/[id]', params: { id: c.id } })
                     }
                     className="active:bg-accent"
                   >
@@ -295,7 +295,7 @@ export default function AdminComerciales() {
       </FormModal>
 
       {/* Barra inferior: el admin no pierde el submenú al entrar en su panel. */}
-      <NavInferior activa="admin" />
+      <NavInferior activa="gestion" />
     </>
   );
 }

@@ -7,6 +7,30 @@
   (verdict: reject-as-scoped), `docs/egm/reviews/migration.md` (verdict: NOT READY,
   5 blockers, 8 majors).
 
+> ## DECISIÓN DEL USUARIO (10/11/2026) — CORRIGE Y SUPERSEDE ESTE BRIEF
+>
+> "El admin NO está en ningún 'modo helpdesk': admin es admin, no hay modos.
+> Entrar en un comercial es solo el motivo por el que un admin abre su perfil.
+> El admin tiene PLENO ACCESO (habrá 1-2 admins)."
+>
+> - **Identidades:** anónimo, cliente, comercial y admin. No hay modo ni
+>   "vista como": abrir la ficha de un comercial es solo el punto de entrada
+>   para operar sus datos (alcance UX opcional por `?comercial=`, no un modo).
+> - **Admin = pleno acceso operativo** sobre datos de terceros: confirma,
+>   avanza y cancela pedidos de clientes (`pedidos:confirmar`) y gestiona
+>   descuentos (`descuentos:gestionar`).
+> - **Única excepción acordada:** el admin NO compra ni pide para sí mismo
+>   (sin `carrito:usar` ni `pedidos:crear_propio`; necesitaría otra cuenta).
+> - **S0 RESUELTO (10/11/2026):** sí, el admin opera pedidos y descuentos.
+>   Implementado en F1.1: capacidades (quita `pedidos:confirmar` de la lista
+>   `quita` del admin, nueva capacidad de lectura `pedidos:ver`), guard de
+>   `(cliente)` por `pedidos:ver`, acciones de la UI de pedidos por `puede()`
+>   y alcance por comercial en los hooks de cartera/pedidos.
+>
+> El resto de este documento (shell con "modo", banner "Viendo como", estado
+> "mode", etc.) queda SUPERSEDIDO por esta decisión y se conserva únicamente
+> como registro histórico del proceso de revisión.
+
 ## 1. Problem statement
 
 A support (helpdesk) admin opening a commercial's client file must be able to
@@ -22,10 +46,14 @@ group guard rejects the admin. There is no account/logout access anywhere in the
 admin flow. The users hurt are: the admin doing support work (primary), and any
 user who changes section and loses the menus (secondary).
 
-## 2. What the user has already decided (10/11/2026)
+## 2. Decisiones del usuario del 10/11/2026 (ANTERIORES — SUPERSEDIDAS)
 
-These answers are recorded here as resolved decisions; they were previously only
-verbal and one reviewer flagged that as a governance problem:
+These answers are recorded here as historical record; the user corrected the
+framing the same day (see the decision block at the top): no helpdesk mode,
+admin is admin with full access. Items 1-4 below (Pattern A "mode", the
+"Viendo como" banner, mode-derived tabs) are superseded; items 5-8 (account
+access, drawer as catalog filters, back/fallback, catalog tab removal) remain
+valid.
 
 1. **Pattern A chosen:** one app shell with a "mode" instead of per-screen menus
    (Options B–D rejected: admin-as-tab-stack, drawer-as-global-menu, breadcrumbs).
@@ -159,22 +187,23 @@ have a real route.
 
 ## 5. Open decisions that require the user
 
-1. **Can the admin OPERATE pedidos (confirm / advance / cancel), or only read?**
-   This is the single decision the reviewers could not make. If yes: add
-   `pedidos:confirmar` to the admin's `anade` in `capacidades.ts`, update
-   `ARQUITECTURA_ROLES.md` §4, replace role strings with `puede()` — and the
-   existing `/pedidos/[id]` screen works for the admin. If no: the copy must
-   stop promising "operate as the commercial" and the preview is read-only.
+1. ~~Can the admin OPERATE pedidos (confirm / advance / cancel), or only read?~~
+   **RESUELTO (10/11/2026): el admin SÍ opera pedidos de clientes y
+   descuentos** (pleno acceso; única excepción: sin comprar/pedir para sí).
+   Implementado en F1.1: `pedidos:confirmar` ya no se quita al admin en
+   `capacidades.ts`, se añadió `pedidos:ver`, la UI de pedidos usa `puede()` y
+   el actor queda auditado por los RPC existentes.
 2. **The matrix is still pending.** `rol/identidad × sección × ruta ×
    capacidad × destino de back` must be completed by the user (or signed off)
    before F2. Draft rows already proposed in `migration.md` F2 (anon, cliente,
    comercial, admin, admin+scope(comercial), admin+scope(cliente)); the
    `/solicitud?editar` active-tab and root-per-tab behavior need answers.
-3. **Scope of cartera/pedidos in admin-viewing-as-comercial.** Filter the
-   lists client-side by `id_comercial = scope.comercialId` (UX-only, RLS stays
-   global), or add server-side scoping (RPC/RLS change + pgTAP negatives)? And
-   is the admin preview read-only for discounts (`descuentos:gestionar` is
-   already granted) — the "solo lectura" label must match reality.
+3. ~~Scope of cartera/pedidos in admin-viewing-as-comercial.~~ **RESUELTO
+   (10/11/2026):** no hay "vista como" ni modo — el alcance es un parámetro UX
+   opcional (`?comercial=<id>`) que filtra las consultas en el cliente
+   (client-side, RLS intacto y sin cambios de servidor); el admin NO es
+   solo-lectura: `descuentos:gestionar` ya está concedido y las acciones de
+   pedidos funcionan igual que para el comercial.
 4. **Admin hub and the three orphan admin routes** (`productos`, `promociones`,
    `usuarios`): link them in the hub/menu or remove them.
 5. **Anon/cliente in the shell** (F4): include or exclude, and why.

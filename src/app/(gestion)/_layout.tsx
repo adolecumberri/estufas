@@ -2,9 +2,9 @@ import { Stack } from 'expo-router';
 
 import { GuardRuta } from '@/shared/seguridad/guard-ruta';
 
-// Grupo admin: panel de administración (comerciales, proveedores, y las
-// pantallas de gestión heredadas). Solo el admin.
-export default function LayoutAdmin() {
+// Grupo de gestión (antes /admin, renombrado 10/11/2026 por decisión del
+// usuario): comerciales y proveedores. Solo el admin (admin:acceder).
+export default function LayoutGestion() {
   return (
     <GuardRuta exige="admin:acceder">
       <Stack screenOptions={{ headerShown: false }} />

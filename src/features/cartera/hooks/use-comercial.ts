@@ -14,7 +14,10 @@ import type {
 } from '@/shared/lib/types';
 
 // Cartera comercial: clientes asignados (RLS lo garantiza) y sus pedidos.
-export function useCartera() {
+// `comercialId` es un alcance UX opcional (decisión 10/11/2026): filtra a los
+// clientes de ese comercial (el admin, desde su ficha, ve SOLO ese comercial).
+// La autoridad real sigue en RLS.
+export function useCartera(comercialId?: string | null) {
   const [clientes, setClientes] = React.useState<PerfilUsuario[]>([]);
   const [cargando, setCargando] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -22,19 +25,16 @@ export function useCartera() {
   const recargar = React.useCallback(async () => {
     setCargando(true);
     setError(null);
-    const { data, error } = await supabase
-      .from('usuarios')
-      .select('*')
-      .eq('rol', 'cliente')
-      .eq('borrado', false)
-      .order('nombre');
+    let consulta = supabase.from('usuarios').select('*').eq('rol', 'cliente').eq('borrado', false);
+    if (comercialId) consulta = consulta.eq('id_comercial', comercialId);
+    const { data, error } = await consulta.order('nombre');
     setCargando(false);
     if (error) {
       setError(error.message);
       return;
     }
     setClientes((data ?? []) as PerfilUsuario[]);
-  }, []);
+  }, [comercialId]);
 
   React.useEffect(() => {
     void recargar();

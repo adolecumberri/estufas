@@ -2,12 +2,13 @@ import { Stack } from 'expo-router';
 
 import { GuardRuta } from '@/shared/seguridad/guard-ruta';
 
-// Grupo del cliente: pedidos propios. Entran cliente y comercial (crear
-// propio / confirmar); el admin queda fuera porque la cascada le retira
-// ambas capacidades.
+// Grupo de pedidos: entran todos los roles con `pedidos:ver` — el cliente
+// (crea los suyos), el comercial (confirma los de su cartera) y el admin
+// (pleno acceso operativo sobre pedidos de clientes, decisión 10/11/2026).
+// El anónimo no tiene pedidos:ver y rebota a /acceso.
 export default function LayoutCliente() {
   return (
-    <GuardRuta exige={['pedidos:crear_propio', 'pedidos:confirmar']}>
+    <GuardRuta exige="pedidos:ver">
       <Stack screenOptions={{ headerShown: false }} />
     </GuardRuta>
   );

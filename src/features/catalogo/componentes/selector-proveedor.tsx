@@ -5,15 +5,16 @@ import { Pressable, ScrollView } from 'react-native';
 import { Text } from '@/shared/ui/text';
 import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { useProveedorActivo } from '@/features/catalogo/proveedor-activo-contexto';
-import { useSolicitud } from '@/features/carrito/contexto';
+import { useCambioProveedor } from '@/features/catalogo/use-cambio-proveedor';
 import { textoSobreProveedor, temaProveedor } from '@/shared/lib/colores-proveedor';
 import { useColoresIcono } from '@/shared/lib/theme';
 import { cn } from '@/shared/lib/utils';
 import type { Proveedor } from '@/shared/lib/types';
 
 // Icono lucide según el campo `icono` del proveedor (seed: 'flame'/'flower').
-// Cualquier valor no reconocido cae en Flame.
-function IconoProveedor({
+// Cualquier valor no reconocido cae en Flame. Exportado para reutilizarlo en
+// el selector de proveedores del menú lateral.
+export function IconoProveedor({
   icono,
   size,
   color,
@@ -30,7 +31,7 @@ function IconoProveedor({
 // el color de cada proveedor. Con un único proveedor no hay nada que elegir
 // (no se renderiza; en modo compacto muestra una línea con su nombre).
 //
-// Cambiar de proveedor con el carrito no vacío abre un modal de confirmación
+// Cambiar de proveedor con el carrito no vacío abre un diálogo de confirmación
 // (ARQUITECTURA_ROLES.md §5.2): confirmar vacía el carrito y cambia; cancelar
 // se queda como está. Con el carrito vacío el cambio es directo. El anónimo
 // ve la misma lista (los proveedores del catálogo general que devuelve
@@ -50,13 +51,19 @@ export function SelectorProveedor({
   onSeleccionar?: (id: string) => void;
 }) {
   const contexto = useProveedorActivo();
-  const { lineas, vaciar, proveedorDelCarrito } = useSolicitud();
+  const cambio = useCambioProveedor();
   const colores = useColoresIcono();
-  // Id del proveedor cuyo cambio está pendiente de confirmación.
-  const [pendiente, setPendiente] = React.useState<string | null>(null);
 
   const proveedores = listaExterna ?? contexto.proveedores;
-  const activo = activoExterno ?? (contexto.activo?.id ?? null);
+  const activo = activoExterno ?? contexto.activo?.id ?? null;
+
+  // Modo externo (catálogo de un comercial): cambio directo, sin carrito.
+  const pulsar = onSeleccionar
+    ? (id: string) => {
+        if (activo === id) return;
+        onSeleccionar(id);
+      }
+    : cambio.pulsar;
 
   if (proveedores.length <= 1) {
     if (compacto && proveedores.length === 1) {
@@ -68,35 +75,6 @@ export function SelectorProveedor({
     }
     return null;
   }
-
-  const totalArticulos = lineas.reduce((acc, l) => acc + l.cantidad, 0);
-
-  const pulsar = (id: string) => {
-    // Mismo proveedor: no hay nada que hacer.
-    if (activo === id) return;
-    // Modo externo (catálogo de un comercial): cambio directo, sin carrito.
-    if (onSeleccionar) {
-      onSeleccionar(id);
-      return;
-    }
-    // Carrito con artículos → confirmar antes (cambiar de proveedor lo vacía).
-    if (lineas.length > 0) {
-      setPendiente(id);
-      return;
-    }
-    contexto.setActivo(id);
-  };
-
-  const confirmarCambio = () => {
-    const id = pendiente;
-    setPendiente(null);
-    if (!id) return;
-    vaciar();
-    contexto.setActivo(id);
-  };
-
-  const nombreProveedorCarrito =
-    proveedorDelCarrito?.nombre ?? contexto.activo?.nombre ?? 'este proveedor';
 
   return (
     <>
@@ -141,15 +119,15 @@ export function SelectorProveedor({
 
       {/* Diálogo: confirmar cambio de proveedor con carrito no vacío */}
       <ConfirmDialog
-        visible={pendiente !== null}
+        visible={cambio.pendiente !== null}
         titulo="¿Cambiar de proveedor?"
-        mensaje={`Tu carrito tiene ${totalArticulos} artículo${
-          totalArticulos === 1 ? '' : 's'
-        } de ${nombreProveedorCarrito}. Al cambiar se vaciará.`}
+        mensaje={`Tu carrito tiene ${cambio.totalArticulos} artículo${
+          cambio.totalArticulos === 1 ? '' : 's'
+        } de ${cambio.nombreProveedorCarrito}. Al cambiar se vaciará.`}
         textoConfirmar="Cambiar y vaciar"
         textoCancelar="Cancelar"
-        onConfirmar={confirmarCambio}
-        onCancelar={() => setPendiente(null)}
+        onConfirmar={cambio.confirmarCambio}
+        onCancelar={cambio.cancelar}
       />
     </>
   );
