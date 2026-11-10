@@ -254,10 +254,7 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
         const { data } = await supabase.rpc('fn_proveedores_visibles');
         const visibles = ((data ?? []) as { id: string }[]).map((p) => p.id);
         const lineaConProveedor = lineas.find((l) => Boolean(l.proveedor_id));
-        if (
-          lineaConProveedor?.proveedor_id &&
-          !visibles.includes(lineaConProveedor.proveedor_id)
-        ) {
+        if (lineaConProveedor?.proveedor_id && !visibles.includes(lineaConProveedor.proveedor_id)) {
           setLineas([]);
           mostrarAviso(
             'Tu carrito era del catálogo general y tu comercial no incluye ese proveedor; se ha vaciado.'

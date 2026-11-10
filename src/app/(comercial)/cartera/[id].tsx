@@ -69,10 +69,11 @@ export default function ClienteDetalle() {
   };
 
   const empezarPedido = () => {
-    // Fija el cliente objetivo (cubo del borrador) y abre la solicitud:
-    // funciona igual para comercial y admin (creado_por lo registra el RPC).
+    // Fija el cliente objetivo y abre el catálogo con él seleccionado; el
+    // carrito se CONSERVA (asignar cliente no vacía, 10/11/2026). El pedido
+    // se crea al enviar la solicitud (creado_por lo registra el RPC).
     setClienteObjetivoId(id ?? null);
-    router.replace('/solicitud');
+    router.replace('/catalogo');
   };
 
   const nombreCliente = cliente

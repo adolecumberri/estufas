@@ -3,12 +3,12 @@ import { Flame, LogIn, Menu, ShoppingCart } from 'lucide-react-native';
 import * as React from 'react';
 import { Pressable, View } from 'react-native';
 
-import { Badge } from '@/shared/ui/badge';
 import { IconButton } from '@/shared/ui/icon-button';
 import { Text } from '@/shared/ui/text';
 import { APP, RUTAS } from '@/shared/constantes';
 import { AccionCuenta } from '@/shared/componentes/accion-cuenta';
 import { useSolicitud } from '@/features/carrito/contexto';
+import { useClienteObjetivoNombre } from '@/features/carrito/use-cliente-objetivo';
 import { useAuth } from '@/features/auth/use-auth';
 import { useColoresIcono } from '@/shared/lib/theme';
 
@@ -24,6 +24,7 @@ import { useColoresIcono } from '@/shared/lib/theme';
 export function EncabezadoCatalogo({ onAbrirMenu }: { onAbrirMenu?: () => void }) {
   const { session, perfil } = useAuth();
   const { lineas, clienteObjetivoId } = useSolicitud();
+  const nombreClienteObjetivo = useClienteObjetivoNombre();
   const colores = useColoresIcono();
 
   const totalLineas = lineas.reduce((acc, l) => acc + l.cantidad, 0);
@@ -74,9 +75,16 @@ export function EncabezadoCatalogo({ onAbrirMenu }: { onAbrirMenu?: () => void }
         )}
 
         {clienteObjetivoId && (
-          <Badge variant="outline">
-            <Text>Para cliente</Text>
-          </Badge>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Pedido para ${nombreClienteObjetivo ?? 'un cliente'}. Ver solicitud`}
+            onPress={() => router.push('/solicitud')}
+            className="max-w-40 rounded-full border border-border px-2 py-1 active:bg-accent"
+          >
+            <Text className="text-xs font-medium" numberOfLines={1}>
+              Pedido para {nombreClienteObjetivo ?? 'un cliente'}
+            </Text>
+          </Pressable>
         )}
 
         {session ? (
