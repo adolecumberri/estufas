@@ -21,6 +21,7 @@ import { ScreenHeader } from '@/shared/componentes/screen-header';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
+import { ConfirmDialog } from '@/shared/ui/confirm-dialog';
 import { Input } from '@/shared/ui/input';
 import { Separator } from '@/shared/ui/separator';
 import { Text } from '@/shared/ui/text';
@@ -51,6 +52,16 @@ export default function PedidoDetalle() {
   const [pctAjuste, setPctAjuste] = React.useState('');
   const [mensaje, setMensaje] = React.useState<string | null>(null);
   const [trabajando, setTrabajando] = React.useState(false);
+
+  // Confirmación previa a cualquier cambio de estado (feedback 10/11/2026):
+  // la acción real se ejecuta solo al confirmar el diálogo.
+  type AccionDetalle =
+    | 'cancelar_cliente'
+    | 'confirmar'
+    | 'preparacion'
+    | 'completado'
+    | 'cancelar';
+  const [dialogo, setDialogo] = React.useState<AccionDetalle | null>(null);
 
   // Acciones por capacidad (decisión 10/11/2026): el comercial y el admin
   // operan pedidos de clientes (pedidos:confirmar); el bloque del cliente
@@ -152,6 +163,61 @@ export default function PedidoDetalle() {
 
   const { pedido, lineas, historial } = detalle;
   const total = lineas.reduce((acc, l) => acc + l.total_linea, 0);
+
+  // Datos del diálogo de confirmación: texto con el pedido (nº/cliente) y la
+  // acción concreta a ejecutar tras confirmar.
+  const nombreClientePedido = pedido.cliente
+    ? (pedido.cliente.razon_social ??
+      `${pedido.cliente.nombre} ${pedido.cliente.apellidos ?? ''}`.trim())
+    : null;
+  const destinoPedido = `el pedido nº ${pedido.numero_pedido}${
+    nombreClientePedido ? ` de ${nombreClientePedido}` : ''
+  }`;
+  const datosDialogo =
+    dialogo === null
+      ? null
+      : ({
+          cancelar_cliente: {
+            titulo: 'Cancelar solicitud',
+            mensaje: `¿Cancelar tu solicitud nº ${pedido.numero_pedido}? No podrás recuperarla.`,
+            texto: 'Cancelar solicitud',
+            destructivo: true,
+            fn: () => cancelar(pedido.id, 'Cancelado por el cliente'),
+            ok: 'Pedido cancelado',
+          },
+          confirmar: {
+            titulo: 'Confirmar pedido',
+            mensaje: `¿Confirmar ${destinoPedido}? Pasará a confirmado y dejará de estar pendiente.`,
+            texto: 'Confirmar pedido',
+            destructivo: false,
+            fn: () => confirmar(pedido.id, 'Pedido confirmado'),
+            ok: 'Pedido confirmado',
+          },
+          preparacion: {
+            titulo: 'Pasar a preparación',
+            mensaje: `¿Marcar ${destinoPedido} como en preparación?`,
+            texto: 'Marcar en preparación',
+            destructivo: false,
+            fn: () => avanzar(pedido.id, 'en_preparacion', 'Pasa a preparación'),
+            ok: 'Pedido en preparación',
+          },
+          completado: {
+            titulo: 'Marcar completado',
+            mensaje: `¿Marcar ${destinoPedido} como completado? Esta acción cierra el pedido.`,
+            texto: 'Marcar completado',
+            destructivo: false,
+            fn: () => avanzar(pedido.id, 'completado', 'Pedido completado'),
+            ok: 'Pedido completado',
+          },
+          cancelar: {
+            titulo: 'Cancelar pedido',
+            mensaje: `¿Cancelar ${destinoPedido}? Esta acción no se puede deshacer.`,
+            texto: 'Cancelar pedido',
+            destructivo: true,
+            fn: () => cancelar(pedido.id, 'Cancelado por comercial'),
+            ok: 'Pedido cancelado',
+          },
+        })[dialogo];
 
   // El embed `pedido.proveedor` lo añade el worker backend (types.ts +
   // use-pedidos.ts). Cast seguro mientras el campo no esté en el tipo Pedido;
@@ -429,7 +495,7 @@ export default function PedidoDetalle() {
         </CardContent>
       </Card>
 
-      {/* 6. Acciones por rol y estado */}
+      {/* 6. Acciones por rol y estado (todas con confirmación previa) */}
       <View className="gap-2">
         {puedeComoCliente && pedido.estado === 'solicitado' && (
           <>
@@ -440,12 +506,7 @@ export default function PedidoDetalle() {
               variant="outline"
               className="border-destructive"
               disabled={trabajando}
-              onPress={() =>
-                void ejecutar(
-                  () => cancelar(pedido.id, 'Cancelado por el cliente'),
-                  'Pedido cancelado'
-                )
-              }
+              onPress={() => setDialogo('cancelar_cliente')}
             >
               <XCircle size={18} color={colores.destructivo} />
               <Text className="text-destructive">Cancelar solicitud</Text>
@@ -454,12 +515,7 @@ export default function PedidoDetalle() {
         )}
         {puedeGestionar && pedido.estado === 'solicitado' && (
           <>
-            <Button
-              disabled={trabajando}
-              onPress={() =>
-                void ejecutar(() => confirmar(pedido.id, 'Pedido confirmado'), 'Pedido confirmado')
-              }
-            >
+            <Button disabled={trabajando} onPress={() => setDialogo('confirmar')}>
               <CheckCircle2 size={18} color={colores.primarioClaro} />
               <Text>Confirmar pedido</Text>
             </Button>
@@ -467,12 +523,7 @@ export default function PedidoDetalle() {
               variant="outline"
               className="border-destructive"
               disabled={trabajando}
-              onPress={() =>
-                void ejecutar(
-                  () => cancelar(pedido.id, 'Cancelado por comercial'),
-                  'Pedido cancelado'
-                )
-              }
+              onPress={() => setDialogo('cancelar')}
             >
               <XCircle size={18} color={colores.destructivo} />
               <Text className="text-destructive">Cancelar pedido</Text>
@@ -481,27 +532,14 @@ export default function PedidoDetalle() {
         )}
         {puedeGestionar && pedido.estado === 'confirmado' && (
           <>
-            <Button
-              disabled={trabajando}
-              onPress={() =>
-                void ejecutar(
-                  () => avanzar(pedido.id, 'en_preparacion', 'Pasa a preparación'),
-                  'Pedido en preparación'
-                )
-              }
-            >
+            <Button disabled={trabajando} onPress={() => setDialogo('preparacion')}>
               <Text>Marcar en preparación</Text>
             </Button>
             <Button
               variant="outline"
               className="border-destructive"
               disabled={trabajando}
-              onPress={() =>
-                void ejecutar(
-                  () => cancelar(pedido.id, 'Cancelado por comercial'),
-                  'Pedido cancelado'
-                )
-              }
+              onPress={() => setDialogo('cancelar')}
             >
               <XCircle size={18} color={colores.destructivo} />
               <Text className="text-destructive">Cancelar pedido</Text>
@@ -509,15 +547,7 @@ export default function PedidoDetalle() {
           </>
         )}
         {puedeGestionar && pedido.estado === 'en_preparacion' && (
-          <Button
-            disabled={trabajando}
-            onPress={() =>
-              void ejecutar(
-                () => avanzar(pedido.id, 'completado', 'Pedido completado'),
-                'Pedido completado'
-              )
-            }
-          >
+          <Button disabled={trabajando} onPress={() => setDialogo('completado')}>
             <Text>Marcar completado</Text>
           </Button>
         )}
@@ -574,6 +604,22 @@ export default function PedidoDetalle() {
           ))}
         </CardContent>
       </Card>
+
+      {/* Confirmación previa a cambios de estado (feedback 10/11/2026) */}
+      <ConfirmDialog
+        visible={datosDialogo !== null}
+        titulo={datosDialogo?.titulo ?? ''}
+        mensaje={datosDialogo?.mensaje ?? ''}
+        textoConfirmar={datosDialogo?.texto ?? 'Confirmar'}
+        destructivo={datosDialogo?.destructivo}
+        onConfirmar={() => {
+          if (!datosDialogo) return;
+          const { fn, ok } = datosDialogo;
+          setDialogo(null);
+          void ejecutar(fn, ok);
+        }}
+        onCancelar={() => setDialogo(null)}
+      />
     </ScreenScroll>
   );
 }

@@ -75,7 +75,10 @@ SELECT throws_ok(
 );
 
 -- 7. SIN MARCHA ATRÁS (feedback 10/11/2026): un pedido confirmado no puede
---    volver a solicitado (ni con UPDATE directo; el trigger lo impide).
+--    volver a solicitado. Se prueba con el OWNER (RESET ROLE) porque la RLS
+--    no concede UPDATE directo sobre pedidos a ningún rol — la app solo
+--    transiciona vía RPC; el trigger es la red final y debe lanzar.
+RESET ROLE;
 SELECT throws_ok(
     $q$ UPDATE pedidos SET estado = 'solicitado'
          WHERE id = (SELECT pedido_id FROM tmp_pedido2) $q$,

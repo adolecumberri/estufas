@@ -1,5 +1,13 @@
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { Building2, CheckCircle2, ChevronRight, RefreshCw, User } from 'lucide-react-native';
+import {
+  Building2,
+  CheckCircle2,
+  ChevronRight,
+  PackageOpen,
+  RefreshCw,
+  User,
+  XCircle,
+} from 'lucide-react-native';
 import * as React from 'react';
 import { ActivityIndicator, ScrollView, View } from 'react-native';
 
@@ -12,7 +20,7 @@ import { BannerContexto } from '@/shared/componentes/banner-contexto';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
-import { Chip, IconButton } from '@/shared/ui';
+import { Chip, ConfirmDialog, IconButton } from '@/shared/ui';
 import { Text } from '@/shared/ui/text';
 import { ESTADOS_PEDIDO, type EstadoPedido } from '@/shared/constantes';
 import { useAuth } from '@/features/auth/use-auth';
@@ -41,12 +49,54 @@ export default function Pedidos() {
     recargar,
   } = usePedidos(comercial);
   const { clientes } = useCartera(comercial);
-  const { confirmar } = useAccionesPedido();
+  const { confirmar, avanzar, cancelar } = useAccionesPedido();
 
   // Filtro de estado activo (local) y confirmación en curso (id del pedido).
   const [filtro, setFiltro] = React.useState<Filtro>('todos');
   const [confirmando, setConfirmando] = React.useState<string | null>(null);
   const [mensajeConfirmar, setMensajeConfirmar] = React.useState<string | null>(null);
+
+  // Confirmación previa a cualquier cambio de estado (feedback 10/11/2026):
+  // evitar clics accidentales. La acción real se ejecuta solo al confirmar.
+  type AccionDialogo = 'confirmar' | 'preparacion' | 'completado' | 'cancelar';
+  const [dialogo, setDialogo] = React.useState<{ accion: AccionDialogo; pedido: Pedido } | null>(
+    null
+  );
+
+  const ejecutarAccion = async () => {
+    if (!dialogo) return;
+    const { accion, pedido: p } = dialogo;
+    setDialogo(null);
+    setConfirmando(p.id);
+    setMensajeConfirmar(null);
+    let error: string | null = null;
+    if (accion === 'confirmar') {
+      ({ error } = await confirmar(p.id, 'Pedido confirmado'));
+    } else if (accion === 'preparacion') {
+      ({ error } = await avanzar(p.id, 'en_preparacion', 'Pasa a preparación'));
+    } else if (accion === 'completado') {
+      ({ error } = await avanzar(p.id, 'completado', 'Pedido completado'));
+    } else {
+      ({ error } = await cancelar(p.id, 'Cancelado por comercial'));
+    }
+    setConfirmando(null);
+    if (error) {
+      setMensajeConfirmar(error);
+      return;
+    }
+    // Refresca la lista: el pedido cambia de estado.
+    void recargar();
+  };
+
+  const tituloDialogo =
+    dialogo === null
+      ? ''
+      : {
+          confirmar: 'Confirmar pedido',
+          preparacion: 'Pasar a preparación',
+          completado: 'Marcar completado',
+          cancelar: 'Cancelar pedido',
+        }[dialogo.accion];
 
   // La primera carga ya la hace el hook al montar; en los siguientes enfoques
   // se refresca (la lista de pendientes queda al día al volver de confirmar).
@@ -80,6 +130,26 @@ export default function Pedidos() {
     return c ? (c.razon_social ?? `${c.nombre} ${c.apellidos ?? ''}`.trim()) : null;
   };
 
+  // Texto del diálogo: incluye el pedido (nº) y su cliente para que la
+  // confirmación sea inequívoca. Se calcula aquí porque usa nombreClienteDe.
+  const mensajeDialogo = (() => {
+    if (!dialogo) return '';
+    const cliente = nombreClienteDe(dialogo.pedido);
+    const destino = `el pedido nº ${dialogo.pedido.numero_pedido}${
+      cliente ? ` de ${cliente}` : ''
+    }`;
+    switch (dialogo.accion) {
+      case 'confirmar':
+        return `¿Confirmar ${destino}? Pasará a confirmado y dejará de estar pendiente.`;
+      case 'preparacion':
+        return `¿Pasar a preparación ${destino}?`;
+      case 'completado':
+        return `¿Marcar como completado ${destino}? Esta acción cierra el pedido.`;
+      case 'cancelar':
+        return `¿Cancelar ${destino}? Esta acción no se puede deshacer.`;
+    }
+  })();
+
   const varianteEstado = (estado: EstadoPedido) => {
     switch (estado) {
       case 'solicitado':
@@ -93,19 +163,6 @@ export default function Pedidos() {
       case 'cancelado':
         return 'destructive' as const;
     }
-  };
-
-  const confirmarPedido = async (pedidoId: string) => {
-    setConfirmando(pedidoId);
-    setMensajeConfirmar(null);
-    const { error } = await confirmar(pedidoId, 'Pedido confirmado');
-    setConfirmando(null);
-    if (error) {
-      setMensajeConfirmar(error);
-      return;
-    }
-    // Refresca la lista: el pedido deja de estar pendiente.
-    void recargar();
   };
 
   return (
@@ -245,7 +302,7 @@ export default function Pedidos() {
                               <Button
                                 size="sm"
                                 disabled={confirmando === p.id}
-                                onPress={() => void confirmarPedido(p.id)}
+                                onPress={() => setDialogo({ accion: 'confirmar', pedido: p })}
                               >
                                 {confirmando === p.id ? (
                                   <ActivityIndicator color={colores.primarioClaro} />
@@ -331,6 +388,51 @@ export default function Pedidos() {
                             {nombreClienteDe(p) ?? 'Cliente sin asignar'}
                           </Text>
                         </View>
+                        {/* Acciones por estado sin entrar al detalle (comercial
+                            y admin): siguiente estado según la máquina +
+                            cancelar (solo solicitado/confirmado). */}
+                        {puedeConfirmar && (
+                          <View className="flex-row flex-wrap gap-2">
+                            {p.estado === 'confirmado' && (
+                              <Button
+                                size="sm"
+                                onPress={(e) => {
+                                  e.stopPropagation();
+                                  setDialogo({ accion: 'preparacion', pedido: p });
+                                }}
+                              >
+                                <PackageOpen size={14} color={colores.primarioClaro} />
+                                <Text>Pasar a preparación</Text>
+                              </Button>
+                            )}
+                            {p.estado === 'en_preparacion' && (
+                              <Button
+                                size="sm"
+                                onPress={(e) => {
+                                  e.stopPropagation();
+                                  setDialogo({ accion: 'completado', pedido: p });
+                                }}
+                              >
+                                <CheckCircle2 size={14} color={colores.primarioClaro} />
+                                <Text>Marcar completado</Text>
+                              </Button>
+                            )}
+                            {(p.estado === 'solicitado' || p.estado === 'confirmado') && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-destructive"
+                                onPress={(e) => {
+                                  e.stopPropagation();
+                                  setDialogo({ accion: 'cancelar', pedido: p });
+                                }}
+                              >
+                                <XCircle size={14} color={colores.destructivo} />
+                                <Text className="text-destructive">Cancelar</Text>
+                              </Button>
+                            )}
+                          </View>
+                        )}
                       </ListCard>
                     );
                   })}
@@ -340,6 +442,25 @@ export default function Pedidos() {
           </View>
         )}
       </ScreenScroll>
+
+      {/* Confirmación previa a cambios de estado (feedback 10/11/2026) */}
+      <ConfirmDialog
+        visible={dialogo !== null}
+        titulo={tituloDialogo}
+        mensaje={mensajeDialogo}
+        textoConfirmar={
+          dialogo?.accion === 'preparacion'
+            ? 'Pasar a preparación'
+            : dialogo?.accion === 'completado'
+              ? 'Marcar completado'
+              : dialogo?.accion === 'cancelar'
+                ? 'Cancelar pedido'
+                : 'Confirmar'
+        }
+        destructivo={dialogo?.accion === 'cancelar'}
+        onConfirmar={() => void ejecutarAccion()}
+        onCancelar={() => setDialogo(null)}
+      />
     </>
   );
 }
