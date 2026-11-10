@@ -16,6 +16,7 @@ import { Label } from '@/shared/ui/label';
 import { Separator } from '@/shared/ui/separator';
 import { Text } from '@/shared/ui/text';
 import { useSolicitud } from '@/features/carrito/contexto';
+import { useClienteObjetivoNombre } from '@/features/carrito/use-cliente-objetivo';
 import { useAuth } from '@/features/auth/use-auth';
 import { useAccionesPedido, usePedido } from '@/features/pedidos/hooks/use-pedidos';
 import { formatEUR } from '@/shared/lib/format';
@@ -41,6 +42,7 @@ export default function Solicitud() {
   const params = useLocalSearchParams<{ editar?: string }>();
   const { detalle } = usePedido(params.editar);
   const colores = useColoresIcono();
+  const nombreClienteObjetivo = useClienteObjetivoNombre();
 
   const [observaciones, setObservaciones] = React.useState('');
   const [error, setError] = React.useState<string | null>(null);
@@ -140,7 +142,9 @@ export default function Solicitud() {
               <UserRound size={18} color={colores.tenue} />
               {clienteObjetivoId ? (
                 <View className="flex-1 gap-1">
-                  <Text className="text-sm font-medium">Pedido para un cliente asignado</Text>
+                  <Text className="text-sm font-medium">
+                    Pedido para {nombreClienteObjetivo ?? 'un cliente'}
+                  </Text>
                   <Text className="text-xs text-muted-foreground">
                     Los precios mostrados son los del cliente. Al crear el pedido se vaciará la
                     solicitud actual.

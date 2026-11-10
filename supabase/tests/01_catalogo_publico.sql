@@ -17,11 +17,13 @@ $$;
 
 SET LOCAL ROLE anon;
 
--- 1. El visitante ve los productos publicados (6 estufas + 95 Eider + 969 Fansa activos = 1070;
---    el borrador TF-X queda oculto).
+-- 1. El visitante ve los productos publicados (84 Eider + 969 Fansa activos = 1053;
+--    el borrador TF-X queda oculto). Antes eran 1070: el soft-delete de los 17
+--    productos Eider sin precio (bug 0030) bajó el conteo de Eider de 95 a 84
+--    (las 6 estufas están asignadas a Eider desde 0014).
 SELECT results_eq(
     'SELECT count(*)::int FROM productos',
-    ARRAY[1070],
+    ARRAY[1053],
     'anon ve solo los productos publicados'
 );
 
@@ -40,11 +42,11 @@ SELECT results_eq(
 );
 
 -- 4. La vista pública de precios expone UNA FILA POR PRODUCTO publicado
---    (6 estufas + 95 Eider + 969 Fansa = 1070).
+--    (84 Eider + 969 Fansa = 1053; antes 1070, ver nota del assert 1).
 SELECT results_eq(
     'SELECT count(*)::int FROM v_productos_precio_vigente',
-    ARRAY[1070],
-    'la vista pública expone 1070 productos'
+    ARRAY[1053],
+    'la vista pública expone 1053 productos'
 );
 
 -- 5. No puede insertar pedidos directamente (RLS lo rechaza).

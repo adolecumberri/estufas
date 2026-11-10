@@ -20,11 +20,12 @@ GRANT EXECUTE ON FUNCTION tests.authenticate_as(UUID) TO anon, authenticated;
 
 -- Datos autocontenidos (como postgres, sin RLS): un producto SIN precio y uno
 -- CON precio vigente, ambos activos y del proveedor Eider.
-INSERT INTO productos (id, referencia, nombre, slug, destacado, activo, proveedor_id, datos)
-VALUES ('f9000000-0000-4000-8000-000000000001', 'T15-SIN', 'Producto sin precio', 't15-sin-precio', FALSE, TRUE, '91000000-0000-4000-8000-000000000004', '[]'::jsonb);
+-- (tipo_producto_id es NOT NULL en productos: se usa el tipo Estufa.)
+INSERT INTO productos (id, referencia, nombre, slug, tipo_producto_id, destacado, activo, proveedor_id, datos)
+VALUES ('f9000000-0000-4000-8000-000000000001', 'T15-SIN', 'Producto sin precio', 't15-sin-precio', 'b1000000-0000-4000-8000-000000000001', FALSE, TRUE, '91000000-0000-4000-8000-000000000004', '[]'::jsonb);
 
-INSERT INTO productos (id, referencia, nombre, slug, destacado, activo, proveedor_id, datos)
-VALUES ('f9000000-0000-4000-8000-000000000002', 'T15-CON', 'Producto con precio', 't15-con-precio', FALSE, TRUE, '91000000-0000-4000-8000-000000000004', '[]'::jsonb);
+INSERT INTO productos (id, referencia, nombre, slug, tipo_producto_id, destacado, activo, proveedor_id, datos)
+VALUES ('f9000000-0000-4000-8000-000000000002', 'T15-CON', 'Producto con precio', 't15-con-precio', 'b1000000-0000-4000-8000-000000000001', FALSE, TRUE, '91000000-0000-4000-8000-000000000004', '[]'::jsonb);
 
 INSERT INTO producto_precios (producto_id, precio, moneda, fecha_inicio)
 VALUES ('f9000000-0000-4000-8000-000000000002', 100.00, 'EUR', fn_hoy());

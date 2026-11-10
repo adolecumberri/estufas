@@ -196,12 +196,10 @@ export default function Cartera() {
                 pedidos={contadores?.pedidos.get(c.id) ?? 0}
                 onPress={() => {
                   if (modoSeleccion) {
+                    // Asigna el cliente (el carrito NO se toca) y navega al
+                    // catálogo con él seleccionado (10/11/2026).
                     setClienteObjetivoId(c.id);
-                    if (seleccion !== '1' && seleccion.startsWith('/')) {
-                      router.replace(seleccion as never);
-                    } else {
-                      router.back();
-                    }
+                    router.replace('/catalogo');
                     return;
                   }
                   router.push(`/cartera/${c.id}`);

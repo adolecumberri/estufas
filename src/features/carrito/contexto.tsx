@@ -1,7 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as React from 'react';
 
-import { STORAGE_KEYS } from '@/shared/constantes';
 import { useAuth } from '@/features/auth/use-auth';
 import { supabase } from '@/shared/lib/supabase';
 import type { LineaSolicitud } from '@/shared/lib/types';
@@ -16,7 +15,7 @@ interface SolicitudContextValue {
   reemplazar: (lineas: LineaSolicitud[]) => void;
   vaciar: () => void;
   total: number;
-  // Proveedor del carrito activo (derivado de su primera línea).
+  // Proveedor del carrito (derivado de su primera línea con proveedor).
   proveedorDelCarrito: { id: string; nombre: string } | null;
   // Aviso global (p. ej. intento de mezclar proveedores) y su cierre manual.
   aviso: string | null;
@@ -25,48 +24,49 @@ interface SolicitudContextValue {
 
 const SolicitudContext = React.createContext<SolicitudContextValue | null>(null);
 
-// Clave del cubo que guarda el carrito del PROPIO usuario (clientes, o un
-// comercial pidiendo para sí mismo cuando no tiene cliente seleccionado).
-// El resto de claves del mapa son clienteId (UUID): un borrador por cliente.
-const CLAVE_PROPIA = 'propia';
+// ============================================================================
+// Modelo 10/11/2026 (feedback del usuario): UN SOLO CARRITO POR CUENTA.
+//   - `lineas`: la única lista de líneas de la cuenta (o del anónimo).
+//   - `clienteObjetivoId`: a quién se ASIGNARÁ el pedido. Asignar/cliente NO
+//     mueve ni vacía el carrito.
+//   - Persistencia: una clave por cuenta (`estufas.carrito.v1.<uid|anon>`).
+//   - Vaciar vacía ESE carrito y se persiste como vacío (no hay otros cubos
+//     de los que puedan reaparecer valores).
+// Las claves LEGACY (cubos por cliente `estufas.carritos.v2.*` y el plano
+// `estufas.solicitud`) se migran UNA VEZ (cubo activo → carrito único) y se
+// BORRAN para que los valores viejos no reaparezcan al volver a la pantalla.
+// ============================================================================
 
-// Forma persistida en AsyncStorage (STORAGE_KEYS.carritos).
+const CLAVE_CARRITO = 'estufas.carrito.v1';
+const CLAVE_CUBOS_V2 = 'estufas.carritos.v2';
+const CLAVE_PLANO_V1 = 'estufas.solicitud';
+
 interface EstadoPersistido {
-  carritos: Record<string, LineaSolicitud[]>;
+  lineas: LineaSolicitud[];
   clienteObjetivoId: string | null;
 }
 
-// Solicitudes en curso (carritos de pedido). Se mantiene UN BORRADOR POR
-// CUBO para que un comercial no mezcle pedidos de distintos clientes:
-//   - cubo 'propia': carrito del usuario autenticado;
-//   - cubo <clienteId>: borrador del pedido que el comercial prepara para
-//     ese cliente. Cambiar de cliente solo cambia el cubo activo (no toca
-//     los datos de los demás). Se persiste en el dispositivo para tolerar
-//     reinicios de la app; el pedido real se crea con el RPC crear_pedido.
+function sanitizarEstado(bruto: unknown): EstadoPersistido | null {
+  if (typeof bruto !== 'object' || bruto === null || Array.isArray(bruto)) return null;
+  const d = bruto as { lineas?: unknown; clienteObjetivoId?: unknown };
+  const lineas = Array.isArray(d.lineas) ? (d.lineas as LineaSolicitud[]) : [];
+  const clienteObjetivoId = typeof d.clienteObjetivoId === 'string' ? d.clienteObjetivoId : null;
+  return { lineas, clienteObjetivoId };
+}
+
 export function SolicitudProvider({ children }: { children: React.ReactNode }) {
-  const [carritos, setCarritos] = React.useState<Record<string, LineaSolicitud[]>>({});
+  const [lineas, setLineas] = React.useState<LineaSolicitud[]>([]);
   const [clienteObjetivoId, setClienteObjetivoId] = React.useState<string | null>(null);
   const [hidratado, setHidratado] = React.useState(false);
 
-  // Los borradores se aíslan por CUENTA: cada usuario autenticado tiene su
-  // propia clave de almacenamiento, para que en un dispositivo compartido un
-  // cliente no vea (ni envíe) el carrito o los borradores de otro usuario.
+  // Los carritos se aíslan por CUENTA: cada usuario autenticado tiene su
+  // propia clave de almacenamiento; los anónimos usan la clave .anon.
   const { session, perfil, refreshPerfil } = useAuth();
   const uid = session?.user?.id ?? null;
-  // Los anónimos también persisten su carrito (clave .anon): la regla de
-  // login (§5 de roles) lo funde en el cubo propio de la cuenta que entra.
-  const claveAlmacen = uid ? `${STORAGE_KEYS.carritos}.${uid}` : `${STORAGE_KEYS.carritos}.anon`;
+  const claveAlmacen = `${CLAVE_CARRITO}.${uid ?? 'anon'}`;
 
-  // Líneas VISIBLES: derivadas del cubo activo (cliente seleccionado o propio).
-  // No hay useState para `lineas`: el cubo activo manda y así el cambio de
-  // cliente muestra inmediatamente su borrador (vacío si no tiene).
-  const claveActiva = clienteObjetivoId ?? CLAVE_PROPIA;
-  const lineas = carritos[claveActiva] ?? [];
-
-  // Proveedor del carrito activo: se DERIVA de CUALQUIER línea con proveedor
-  // del cubo (no solo de la primera: los borradores antiguos pueden empezar
-  // con líneas sin proveedor). Un pedido no puede mezclar proveedores, así
-  // que una sola línea con proveedor define el proveedor efectivo.
+  // Proveedor del carrito: se DERIVA de CUALQUIER línea con proveedor (no solo
+  // de la primera: los datos antiguos pueden empezar con líneas sin proveedor).
   const proveedorDelCarrito = React.useMemo(() => {
     const lineaConProveedor = lineas.find((l): l is LineaSolicitud & { proveedor_id: string } =>
       Boolean(l.proveedor_id)
@@ -97,7 +97,6 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
     avisoTimer.current = setTimeout(() => setAviso(null), 5000);
   }, []);
 
-  // Limpieza del timer al desmontar el proveedor.
   React.useEffect(
     () => () => {
       if (avisoTimer.current) clearTimeout(avisoTimer.current);
@@ -106,91 +105,105 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
   );
 
   // Generación de hidratación: invalida lecturas asíncronas obsoletas cuando
-  // cambia la cuenta (un cambio de sesión rápido no debe restaurar el estado
-  // de la cuenta anterior). uidHidratado registra a qué cuenta corresponde el
-  // estado cargado, para que la persistencia no escriba datos ajenos.
+  // cambia la cuenta. uidHidratado registra a qué cuenta corresponde el estado
+  // cargado para que la persistencia no escriba datos ajenos.
   const hidratacionId = React.useRef(0);
   const uidHidratado = React.useRef<string | null>(null);
   // Si la LECTURA falla, la persistencia queda deshabilitada: escribir el
-  // carrito vacío en memoria sobrescribiría los borradores guardados. Se
-  // rehabilita cuando el usuario inicia explícitamente un carrito nuevo.
+  // carrito vacío en memoria sobrescribiría lo guardado.
   const lecturaFallida = React.useRef(false);
-  // Fusión del carrito anónimo al iniciar sesión (ARQUITECTURA_ROLES §5):
-  // uidAnterior detecta la transición anónimo → cuenta y anonimoPendiente
-  // guarda las líneas del catálogo general antes del reset de hidratación.
+  // Fusión del carrito anónimo al iniciar sesión (ARQUITECTURA_ROLES §5).
   const uidAnterior = React.useRef<string | null>(null);
   const anonimoPendiente = React.useRef<LineaSolicitud[]>([]);
   // Regla de carrito en login aplicada (una vez por cuenta, sin bucles).
   const reglaLoginAplicada = React.useRef<string | null>(null);
-  // Espejo síncrono de `carritos` para leer su valor justo ANTES del reset de
-  // hidratación (el effect de hidratación solo se re-suscribe cuando cambia
-  // la cuenta; no conviene añadir `carritos` a sus dependencias).
-  const carritosRef = React.useRef<Record<string, LineaSolicitud[]>>({});
-  carritosRef.current = carritos;
+  // Espejo síncrono de `lineas` para leer su valor justo ANTES del reset de
+  // hidratación.
+  const lineasRef = React.useRef<LineaSolicitud[]>([]);
+  lineasRef.current = lineas;
 
-  // Hidratación desde el almacenamiento de LA CUENTA ACTIVA. Al cambiar de
-  // usuario se parte de cubos vacíos (sin mezclar borradores entre cuentas),
-  // salvo el carrito del anónimo, que se funde en el cubo propio de la cuenta
-  // entrante (la regla de login decidirá después si se conserva o se vacía).
-  // El dato legado plano (STORAGE_KEYS.solicitud) NO se migra automáticamente:
-  // no tiene dueño verificable y adoptarlo podría entregar un carrito ajeno a
-  // la primera cuenta que inicie sesión en un dispositivo compartido.
+  // Hidratación del carrito ÚNICO de la cuenta activa. Al cambiar de usuario
+  // se parte de carrito vacío (sin mezclar datos entre cuentas), salvo el
+  // carrito del anónimo, que se funde en el de la cuenta entrante.
   React.useEffect(() => {
     const idActual = ++hidratacionId.current;
     const uidDeLectura = uid;
     const claveDeLectura = claveAlmacen;
-    // Transición anónimo → cuenta: se captura el carrito del catálogo general
-    // (cubo propia en memoria) antes de resetear el estado.
+    // Transición anónimo → cuenta: se captura el carrito anónimo en memoria.
     const veniaDeAnonimo = uidAnterior.current === null && uidDeLectura !== null;
     uidAnterior.current = uidDeLectura;
-    anonimoPendiente.current = veniaDeAnonimo ? (carritosRef.current[CLAVE_PROPIA] ?? []) : [];
+    anonimoPendiente.current = veniaDeAnonimo ? lineasRef.current : [];
     uidHidratado.current = null;
     setHidratado(false);
-    setCarritos({});
+    setLineas([]);
     setClienteObjetivoId(null);
     void (async () => {
       let falloLectura = false;
       try {
-        const guardado = await AsyncStorage.getItem(claveDeLectura);
+        let datos: EstadoPersistido | null = null;
+
+        // 1) Clave actual (modelo de carrito único).
+        const nuevo = await AsyncStorage.getItem(claveDeLectura);
+        if (nuevo) datos = sanitizarEstado(JSON.parse(nuevo));
         if (idActual !== hidratacionId.current) return;
-        const saneados: Record<string, LineaSolicitud[]> = {};
-        if (guardado) {
-          const datos: unknown = JSON.parse(guardado);
-          const esObjeto = typeof datos === 'object' && datos !== null && !Array.isArray(datos);
-          const crudos = esObjeto ? (datos as { carritos?: unknown }).carritos : null;
-          // Solo se conservan los cubos cuyo valor es un array de líneas.
-          if (typeof crudos === 'object' && crudos !== null && !Array.isArray(crudos)) {
-            for (const [cubo, lineas] of Object.entries(crudos)) {
-              if (Array.isArray(lineas)) saneados[cubo] = lineas;
-            }
+
+        // 2) Migración ONE-TIME desde los cubos v2 (cubo activo → carrito).
+        if (!datos) {
+          const cuboLegado = uidDeLectura
+            ? `${CLAVE_CUBOS_V2}.${uidDeLectura}`
+            : `${CLAVE_CUBOS_V2}.anon`;
+          const legado = await AsyncStorage.getItem(cuboLegado);
+          if (legado) {
+            const parsed = JSON.parse(legado) as {
+              carritos?: Record<string, LineaSolicitud[]>;
+              clienteObjetivoId?: unknown;
+            };
+            const objetivo =
+              typeof parsed.clienteObjetivoId === 'string' ? parsed.clienteObjetivoId : null;
+            const cubos = parsed.carritos ?? {};
+            const lista =
+              (objetivo && Array.isArray(cubos[objetivo]) && cubos[objetivo].length > 0
+                ? cubos[objetivo]
+                : cubos['propia']) ?? [];
+            datos = {
+              lineas: Array.isArray(lista) ? lista : [],
+              clienteObjetivoId: objetivo,
+            };
           }
-          const idObjetivo = esObjeto
-            ? (datos as { clienteObjetivoId?: unknown }).clienteObjetivoId
-            : null;
-          setClienteObjetivoId(typeof idObjetivo === 'string' ? idObjetivo : null);
         }
-        // Fusión del carrito anónimo en el cubo propio de la cuenta entrante
-        // (sumando cantidades si el producto ya estaba). La regla de login
-        // decidirá si el resultado se conserva (comercial por defecto) o se
-        // vacía (proveedor no visible para el comercial del cliente).
+
+        // 3) Borrado de claves legacy (v1 plano y cubos v2): los valores
+        //    viejos no deben reaparecer al volver a la pantalla.
+        await Promise.all(
+          [
+            AsyncStorage.removeItem(`${CLAVE_CUBOS_V2}.${uidDeLectura ?? 'anon'}`),
+            AsyncStorage.removeItem(`${CLAVE_CUBOS_V2}.anon`),
+            AsyncStorage.removeItem(CLAVE_PLANO_V1),
+          ].map((p) => p.catch(() => {}))
+        );
+        if (idActual !== hidratacionId.current) return;
+
+        // 4) Fusión del carrito anónimo en el de la cuenta entrante (sumando
+        //    cantidades si el producto ya estaba).
         const anonimas = anonimoPendiente.current;
         if (anonimas.length > 0) {
           anonimoPendiente.current = [];
           const combinado = new Map<string, LineaSolicitud>();
-          for (const l of saneados[CLAVE_PROPIA] ?? []) combinado.set(l.producto_id, { ...l });
+          for (const l of datos?.lineas ?? []) combinado.set(l.producto_id, { ...l });
           for (const l of anonimas) {
             const previo = combinado.get(l.producto_id);
             if (previo) previo.cantidad = Math.min(999, previo.cantidad + l.cantidad);
             else combinado.set(l.producto_id, { ...l });
           }
-          saneados[CLAVE_PROPIA] = Array.from(combinado.values());
-          // El carrito anónimo ya se fundió: su clave queda obsoleta.
-          void AsyncStorage.removeItem(`${STORAGE_KEYS.carritos}.anon`).catch(() => {});
+          datos = {
+            lineas: Array.from(combinado.values()),
+            clienteObjetivoId: datos?.clienteObjetivoId ?? null,
+          };
         }
-        setCarritos(saneados);
+
+        setClienteObjetivoId(datos?.clienteObjetivoId ?? null);
+        setLineas(datos?.lineas ?? []);
       } catch {
-        // Lectura fallida: NO se marca como hidratado; la persistencia queda
-        // deshabilitada para no sobrescribir los borradores guardados.
         falloLectura = true;
       }
       if (idActual !== hidratacionId.current) return;
@@ -200,10 +213,9 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
     })();
   }, [uid, claveAlmacen]);
 
-  // Persistencia en cada cambio (todos los cubos + cliente activo) en la
-  // clave de la cuenta activa. Solo escribe cuando el estado hidratado
-  // pertenece a la cuenta actual (evita guardar el carrito de la cuenta
-  // anterior bajo la clave de la nueva) y cuando la lectura inicial no falló.
+  // Persistencia en cada cambio (carrito único + cliente objetivo) en la clave
+  // de la cuenta activa. Solo escribe cuando el estado hidratado pertenece a
+  // la cuenta actual y cuando la lectura inicial no falló.
   React.useEffect(() => {
     if (!hidratado || !claveAlmacen || uidHidratado.current !== uid || lecturaFallida.current) {
       return;
@@ -212,40 +224,41 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
       try {
         await AsyncStorage.setItem(
           claveAlmacen,
-          JSON.stringify({ carritos, clienteObjetivoId } satisfies EstadoPersistido)
+          JSON.stringify({ lineas, clienteObjetivoId } satisfies EstadoPersistido)
         );
       } catch (error) {
         console.warn('No se pudo persistir la solicitud en el dispositivo', error);
       }
     })();
-  }, [carritos, clienteObjetivoId, hidratado, claveAlmacen, uid]);
+  }, [lineas, clienteObjetivoId, hidratado, claveAlmacen, uid]);
 
   // Regla de carrito al iniciar sesión (ARQUITECTURA_ROLES §5): SOLO clientes
-  // y UNA vez por cuenta. Con el cubo propio hidratado y con líneas:
+  // y UNA vez por cuenta. Con el carrito hidratado y con líneas:
   //  - sin comercial asignado → fn_asignar_comercial_defecto() + refresco del
-  //    perfil; el carrito se CONSERVA (el comercial por defecto es el del
-  //    catálogo general, cuyos proveedores son justo los del carrito);
+  //    perfil; el carrito se CONSERVA;
   //  - con comercial → si el proveedor del carrito NO está entre los visibles
-  //    para el cliente, se vacía el cubo propio con aviso.
+  //    para el cliente, se vacía con aviso.
   // Si la red falla el carrito se conserva: el servidor validará al enviar.
   React.useEffect(() => {
     if (!uid || perfil?.rol !== 'cliente' || !hidratado) return;
-    if (reglaLoginAplicada.current === uid) return; // evita bucles (una vez)
-    const propio = carritos[CLAVE_PROPIA] ?? [];
-    if (propio.length === 0) return;
+    if (reglaLoginAplicada.current === uid) return;
+    if (lineas.length === 0) return;
     void (async () => {
       reglaLoginAplicada.current = uid;
       try {
         if (perfil.id_comercial == null) {
           await supabase.rpc('fn_asignar_comercial_defecto');
           await refreshPerfil();
-          return; // carrito conservado
+          return;
         }
         const { data } = await supabase.rpc('fn_proveedores_visibles');
         const visibles = ((data ?? []) as { id: string }[]).map((p) => p.id);
-        const lineaConProveedor = propio.find((l) => Boolean(l.proveedor_id));
-        if (lineaConProveedor?.proveedor_id && !visibles.includes(lineaConProveedor.proveedor_id)) {
-          setCarritos((previos) => ({ ...previos, [CLAVE_PROPIA]: [] }));
+        const lineaConProveedor = lineas.find((l) => Boolean(l.proveedor_id));
+        if (
+          lineaConProveedor?.proveedor_id &&
+          !visibles.includes(lineaConProveedor.proveedor_id)
+        ) {
+          setLineas([]);
           mostrarAviso(
             'Tu carrito era del catálogo general y tu comercial no incluye ese proveedor; se ha vaciado.'
           );
@@ -254,15 +267,14 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
         // sin red: se conserva el carrito; el servidor validará al enviar
       }
     })();
-  }, [uid, perfil, hidratado, carritos, mostrarAviso, refreshPerfil]);
+  }, [uid, perfil, hidratado, lineas, mostrarAviso, refreshPerfil]);
 
-  // Todas las mutaciones operan SOLO sobre el cubo activo (cliente
-  // seleccionado o carrito propio), nunca sobre los demás borradores.
+  // Mutaciones: todas operan sobre EL carrito único. Asignar un cliente
+  // (setClienteObjetivoId) NO toca las líneas.
   const anadir = React.useCallback(
     (linea: LineaSolicitud) => {
       // El admin no usa carrito propio: SOLO puede añadir cuando prepara el
-      // borrador de un cliente (clienteObjetivoId fijado). Sin cliente
-      // objetivo se rechaza con aviso (la UI ya oculta los botones).
+      // pedido de un cliente (clienteObjetivoId fijado).
       if (perfil?.rol === 'admin' && !clienteObjetivoId) {
         mostrarAviso(
           'El administrador no tiene carrito propio: selecciona un cliente para preparar su pedido.'
@@ -275,12 +287,9 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
         lecturaFallida.current = false;
         setHidratado(true);
       }
-      // Proveedor único por carrito: si CUALQUIER línea del cubo activo tiene
-      // proveedor y la nueva trae OTRO proveedor, la adición se rechaza y se
-      // muestra un aviso visible (el servidor valida la misma regla al crear
-      // el pedido). Casos permitidos: cubo vacío, nueva línea sin proveedor
-      // (no desempareja), o proveedor coincidente → se añade y se limpia el
-      // aviso previo.
+      // Proveedor único por carrito: si CUALQUIER línea tiene proveedor y la
+      // nueva trae OTRO proveedor, la adición se rechaza con aviso (el
+      // servidor valida la misma regla al crear el pedido).
       const lineaConProveedor = lineas.find((l) => Boolean(l.proveedor_id));
       if (
         lineaConProveedor?.proveedor_id &&
@@ -295,73 +304,45 @@ export function SolicitudProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       limpiarAviso();
-      setCarritos((previos) => {
-        const clave = clienteObjetivoId ?? CLAVE_PROPIA;
-        const actuales = previos[clave] ?? [];
+      setLineas((actuales) => {
         const existente = actuales.find((l) => l.producto_id === linea.producto_id);
-        const nuevas = existente
+        return existente
           ? actuales.map((l) =>
               l.producto_id === linea.producto_id
                 ? { ...l, cantidad: Math.min(l.cantidad + linea.cantidad, 999) }
                 : l
             )
           : [...actuales, linea];
-        return { ...previos, [clave]: nuevas };
       });
     },
     [clienteObjetivoId, lineas, mostrarAviso, limpiarAviso, perfil?.rol]
   );
 
-  const quitar = React.useCallback(
-    (productoId: string) => {
-      setCarritos((previos) => {
-        const clave = clienteObjetivoId ?? CLAVE_PROPIA;
-        return {
-          ...previos,
-          [clave]: (previos[clave] ?? []).filter((l) => l.producto_id !== productoId),
-        };
-      });
-    },
-    [clienteObjetivoId]
-  );
+  const quitar = React.useCallback((productoId: string) => {
+    setLineas((actuales) => actuales.filter((l) => l.producto_id !== productoId));
+  }, []);
 
-  const cambiarCantidad = React.useCallback(
-    (productoId: string, delta: number) => {
-      setCarritos((previos) => {
-        const clave = clienteObjetivoId ?? CLAVE_PROPIA;
-        return {
-          ...previos,
-          [clave]: (previos[clave] ?? [])
-            .map((l) =>
-              l.producto_id === productoId
-                ? { ...l, cantidad: Math.min(999, Math.max(0, l.cantidad + delta)) }
-                : l
-            )
-            .filter((l) => l.cantidad > 0),
-        };
-      });
-    },
-    [clienteObjetivoId]
-  );
+  const cambiarCantidad = React.useCallback((productoId: string, delta: number) => {
+    setLineas((actuales) =>
+      actuales
+        .map((l) =>
+          l.producto_id === productoId
+            ? { ...l, cantidad: Math.min(999, Math.max(0, l.cantidad + delta)) }
+            : l
+        )
+        .filter((l) => l.cantidad > 0)
+    );
+  }, []);
 
-  const reemplazar = React.useCallback(
-    (nuevas: LineaSolicitud[]) => {
-      setCarritos((previos) => {
-        const clave = clienteObjetivoId ?? CLAVE_PROPIA;
-        return { ...previos, [clave]: nuevas };
-      });
-    },
-    [clienteObjetivoId]
-  );
+  const reemplazar = React.useCallback((nuevas: LineaSolicitud[]) => {
+    setLineas(nuevas);
+  }, []);
 
-  // Limpia SOLO el cubo activo: tras enviar un pedido se vacía el borrador de
-  // ese cliente (o el carrito propio) y los demás borradores se conservan.
+  // Vacía EL carrito único (y la persistencia refleja el vacío: no hay otros
+  // cubos de los que puedan reaparecer valores al volver).
   const vaciar = React.useCallback(() => {
-    setCarritos((previos) => {
-      const clave = clienteObjetivoId ?? CLAVE_PROPIA;
-      return { ...previos, [clave]: [] };
-    });
-  }, [clienteObjetivoId]);
+    setLineas([]);
+  }, []);
 
   const total = React.useMemo(
     () => lineas.reduce((acc, l) => acc + l.precio_final * l.cantidad, 0),
