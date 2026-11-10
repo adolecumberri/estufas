@@ -11,6 +11,7 @@ import { useSolicitud } from '@/features/carrito/contexto';
 import { EmptyState, ErrorView, LoadingView } from '@/shared/componentes/estados';
 import { ScreenScroll } from '@/shared/componentes/screen';
 import { ScreenHeader } from '@/shared/componentes/screen-header';
+import { BannerContexto } from '@/shared/componentes/banner-contexto';
 import { IconButton } from '@/shared/ui';
 import { Card } from '@/shared/ui/card';
 import { Text } from '@/shared/ui/text';
@@ -37,9 +38,10 @@ export default function Cartera() {
   // ficha de un comercial, ve SOLO los clientes de ese comercial.
   // `?seleccion` = modo selección (FEEDBACK 10/11 §6): al pulsar un cliente se
   // vuelve a /solicitud con ese cliente elegido, sin abrir su ficha.
-  const { comercial, seleccion } = useLocalSearchParams<{
+  const { comercial, seleccion, desde } = useLocalSearchParams<{
     comercial?: string;
     seleccion?: string;
+    desde?: string;
   }>();
   const modoSeleccion = seleccion != null;
   const { clientes, cargando, error, recargar } = useCartera(comercial);
@@ -153,7 +155,7 @@ export default function Cartera() {
         <ScreenHeader
           titulo="Cartera"
           subtitulo={perfil?.email}
-          respaldo="/"
+          respaldo={desde ?? '/'}
           accion={
             <IconButton
               icono={RefreshCw}
@@ -163,14 +165,8 @@ export default function Cartera() {
           }
         />
 
-        {/* Alcance por comercial (entrada vía ?comercial=, p. ej. desde la
-            ficha de un comercial en el panel admin). Sin vocabulario de modo:
-            el admin tiene pleno acceso operativo (decisión 10/11/2026). */}
-        {comercial ? (
-          <Card className="gap-1 rounded-lg border-primary/40 bg-primary/10 p-3">
-            <Text className="text-sm">Clientes de este comercial</Text>
-          </Card>
-        ) : null}
+        {/* Contexto scoped: el admin ve claramente DE QUIÉN es la cartera. */}
+        {comercial && <BannerContexto comercialId={comercial} prefijo="Cartera de" />}
 
         {/* Modo selección (FEEDBACK 10/11 §6): elegir cliente destinatario
             para la solicitud, sin abrir la ficha. */}
@@ -202,7 +198,9 @@ export default function Cartera() {
                     router.replace('/catalogo');
                     return;
                   }
-                  router.push(`/cartera/${c.id}`);
+                  router.push(
+                    `/cartera/${c.id}${desde ? `?desde=${encodeURIComponent(desde)}` : ''}`
+                  );
                 }}
               />
             ))}

@@ -92,13 +92,20 @@ export function NavInferior({
   const insets = useSafeAreaInsets();
   const { lineas } = useSolicitud();
   const { session } = useAuth();
-  const { puede } = usePermisos();
+  const { puede, esAdmin } = usePermisos();
   const colores = useColoresIcono();
 
   const pestanas = React.useMemo(() => {
     if (!session) return PESTANAS_ANONIMAS;
-    return PESTANAS.filter((p) => !p.caps || p.caps.some((c) => puede(c)));
-  }, [session, puede]);
+    return PESTANAS.filter((p) => {
+      if (!p.caps || !p.caps.some((c) => puede(c))) return false;
+      // El admin NO ve Pedidos ni Cartera globales: su acceso a ellos es
+      // SIEMPRE scoped desde /gestion/comerciales/[id] con ?comercial=<id>
+      // (feedback 10/11). Su set por defecto: Catálogo + Gestión.
+      if (esAdmin && (p.id === 'pedidos' || p.id === 'cartera')) return false;
+      return true;
+    });
+  }, [session, puede, esAdmin]);
 
   return (
     <View

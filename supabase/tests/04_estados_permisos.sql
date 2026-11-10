@@ -2,7 +2,7 @@
 -- Test 04: estados y permisos de gestión de pedidos
 -- ============================================================================
 BEGIN;
-SELECT plan(6);
+SELECT plan(7);
 
 CREATE SCHEMA IF NOT EXISTS tests;
 
@@ -72,6 +72,15 @@ SELECT throws_ok(
     $q$ SELECT cancelar_pedido((SELECT pedido_id FROM tmp_pedido2)) $q$,
     'El cliente solo puede cancelar solicitudes pendientes',
     'el cliente no cancela pedidos confirmados'
+);
+
+-- 7. SIN MARCHA ATRÁS (feedback 10/11/2026): un pedido confirmado no puede
+--    volver a solicitado (ni con UPDATE directo; el trigger lo impide).
+SELECT throws_ok(
+    $q$ UPDATE pedidos SET estado = 'solicitado'
+         WHERE id = (SELECT pedido_id FROM tmp_pedido2) $q$,
+    'Transición de estado no permitida: confirmado -> solicitado',
+    'un pedido confirmado no vuelve a solicitado'
 );
 
 SELECT * FROM finish();

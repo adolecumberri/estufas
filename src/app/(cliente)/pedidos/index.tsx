@@ -8,6 +8,7 @@ import { ListCard } from '@/shared/componentes/list-card';
 import { ScreenScroll } from '@/shared/componentes/screen';
 import { ScreenHeader } from '@/shared/componentes/screen-header';
 import { SectionTitle } from '@/shared/componentes/section-title';
+import { BannerContexto } from '@/shared/componentes/banner-contexto';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
@@ -32,7 +33,7 @@ export default function Pedidos() {
   const { puede } = usePermisos();
   // Alcance opcional por comercial (`?comercial=<id>`): el admin, desde la
   // ficha de un comercial, ve SOLO los pedidos de ese comercial.
-  const { comercial } = useLocalSearchParams<{ comercial?: string }>();
+  const { comercial, desde } = useLocalSearchParams<{ comercial?: string; desde?: string }>();
   const {
     pedidos,
     cargando: cargandoPedidos,
@@ -113,7 +114,7 @@ export default function Pedidos() {
         {/* Cabecera (el cierre de sesión vive en la navegación lateral) */}
         <ScreenHeader
           titulo="Pedidos"
-          respaldo="/"
+          respaldo={desde ?? '/'}
           subtitulo={
             etiquetaRol ? `${etiquetaRol} · ${perfil?.email ?? ''}` : (perfil?.email ?? '')
           }
@@ -125,6 +126,9 @@ export default function Pedidos() {
             />
           }
         />
+
+        {/* Contexto scoped: el admin ve claramente DE QUIÉN son los pedidos. */}
+        {comercial && <BannerContexto comercialId={comercial} prefijo="Pedidos de" />}
 
         {/* Chips de filtro por estado (deslizables, con contadores) */}
         <ScrollView
@@ -230,7 +234,11 @@ export default function Pedidos() {
                               <Button
                                 size="sm"
                                 variant="secondary"
-                                onPress={() => router.push(`/pedidos/${p.id}`)}
+                                onPress={() =>
+                                  router.push(
+                                    `/pedidos/${p.id}${desde ? `?desde=${encodeURIComponent(desde)}` : ''}`
+                                  )
+                                }
                               >
                                 <Text>Detalle</Text>
                               </Button>
@@ -283,7 +291,11 @@ export default function Pedidos() {
                     return (
                       <ListCard
                         key={p.id}
-                        onPress={() => router.push(`/pedidos/${p.id}`)}
+                        onPress={() =>
+                          router.push(
+                            `/pedidos/${p.id}${desde ? `?desde=${encodeURIComponent(desde)}` : ''}`
+                          )
+                        }
                         className="gap-2 p-3.5"
                       >
                         <View className="flex-row items-center justify-between gap-2">

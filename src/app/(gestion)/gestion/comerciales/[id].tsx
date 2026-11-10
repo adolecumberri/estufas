@@ -69,7 +69,13 @@ export default function GestionComercialDetalle() {
             Las operaciones que hagas aquí quedan registradas con tu usuario.
           </Text>
 
-          <ListCard onPress={() => router.push(`/cartera?comercial=${id ?? ''}`)}>
+          <ListCard
+            onPress={() =>
+              router.push(
+                `/cartera?comercial=${id ?? ''}&desde=${encodeURIComponent(`/gestion/comerciales/${id ?? ''}`)}`
+              )
+            }
+          >
             <View className="flex-row items-center gap-3">
               <Users size={20} color={colores.primario} />
               <View className="flex-1 gap-0.5">
@@ -81,7 +87,13 @@ export default function GestionComercialDetalle() {
             </View>
           </ListCard>
 
-          <ListCard onPress={() => router.push(`/pedidos?comercial=${id ?? ''}`)}>
+          <ListCard
+            onPress={() =>
+              router.push(
+                `/pedidos?comercial=${id ?? ''}&desde=${encodeURIComponent(`/gestion/comerciales/${id ?? ''}`)}`
+              )
+            }
+          >
             <View className="flex-row items-center gap-3">
               <ReceiptText size={20} color={colores.primario} />
               <View className="flex-1 gap-0.5">
