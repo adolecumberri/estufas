@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { CircleCheck, Copy, Flame, Mail, Percent, ShieldCheck, Trash2 } from 'lucide-react-native';
+import { CircleCheck, Copy, Mail, Percent, ShieldCheck, Trash2 } from 'lucide-react-native';
 import * as React from 'react';
 import { Share, View } from 'react-native';
 
@@ -15,8 +15,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
 import { Text } from '@/shared/ui/text';
-import { COMBUSTIBLES, ESTADOS_PEDIDO, TIPOS_CLIENTE } from '@/shared/constantes';
-import type { CombustibleId } from '@/shared/constantes';
+import { ESTADOS_PEDIDO, TIPOS_CLIENTE } from '@/shared/constantes';
 import { useSolicitud } from '@/features/carrito/contexto';
 import { DescuentosProveedor } from '@/features/cartera/componentes/descuentos-proveedor';
 import { usePermisos } from '@/shared/seguridad/use-permisos';
@@ -26,11 +25,6 @@ import { usePedidos } from '@/features/pedidos/hooks/use-pedidos';
 import { formatEUR, formatFecha, formatPct } from '@/shared/lib/format';
 import { useColoresIcono } from '@/shared/lib/theme';
 
-const DESCRIPCIONES_COMBUSTIBLE: Record<CombustibleId, string> = {
-  pellets: 'Canalizadas, Aire y Autónomas',
-  lena: 'Fundición, Cassette e Insert',
-};
-
 export default function ClienteDetalle() {
   const { id, desde } = useLocalSearchParams<{ id: string; desde?: string }>();
   const { setClienteObjetivoId } = useSolicitud();
@@ -38,17 +32,13 @@ export default function ClienteDetalle() {
   // del alcance lo valida el backend (RLS/RPC, anillo 1).
   const { puede } = usePermisos();
   const puedeGestionar = puede('pedidos:crear_para_cliente');
-  const { cliente, descuentos, descuentosCombustible, cargando, error, recargar } = useCliente(id);
-  const { asignarGeneral, anularProducto, asignarCombustible, anularCombustible } = useDescuentos();
+  const { cliente, descuentos, cargando, error, recargar } = useCliente(id);
+  const { asignarGeneral, anularProducto } = useDescuentos();
   const { pedidos } = usePedidos();
   const catalogo = useCatalogo(id);
   const colores = useColoresIcono();
 
   const [pctGeneral, setPctGeneral] = React.useState('');
-  const [pctCombustibles, setPctCombustibles] = React.useState<{ pellets: string; lena: string }>({
-    pellets: '',
-    lena: '',
-  });
   const [mensaje, setMensaje] = React.useState<string | null>(null);
 
   // Pre-rellena el valor del descuento general con el vigente al cargar
@@ -75,24 +65,6 @@ export default function ClienteDetalle() {
   const anularDescuentoProducto = async (productoId: string) => {
     const { error } = await anularProducto(id!, productoId);
     setMensaje(error ?? 'Descuento anulado.');
-    if (!error) await recargar();
-  };
-
-  const guardarCombustible = async (combustible: CombustibleId, valor: string) => {
-    const texto = valor.trim().replace(',', '.');
-    const pct = Number(texto);
-    if (texto === '' || Number.isNaN(pct) || pct < 0 || pct > 100) {
-      setMensaje('Porcentaje inválido (0-100).');
-      return;
-    }
-    const { error } = await asignarCombustible(id!, combustible, pct);
-    setMensaje(error ?? 'Descuento por combustible actualizado.');
-    if (!error) await recargar();
-  };
-
-  const anularCombustibleDescuento = async (combustible: CombustibleId) => {
-    const { error } = await anularCombustible(id!, combustible);
-    setMensaje(error ?? 'Descuento por combustible anulado.');
     if (!error) await recargar();
   };
 
@@ -233,83 +205,6 @@ export default function ClienteDetalle() {
           {/* Descuentos por proveedor (pestañas con categorías y productos de
               cada proveedor + historial; solo si el rol puede gestionarlos) */}
           <DescuentosProveedor clienteId={id} />
-
-          {/* Por categoría técnica (descuento por combustible) */}
-          <View className="gap-2">
-            <SectionTitle
-              accion={
-                <Text className="text-xs text-muted-foreground">
-                  {descuentosCombustible.length} reglas activas en catálogo
-                </Text>
-              }
-            >
-              Por Categoría Técnica
-            </SectionTitle>
-            {COMBUSTIBLES.map((c) => {
-              const descuento = descuentosCombustible.find((d) => d.combustible === c.id);
-              return (
-                <Card key={c.id} className="rounded-lg">
-                  <CardContent className="gap-3">
-                    <View className="flex-row items-center justify-between gap-2">
-                      <View className="flex-row items-center gap-2">
-                        <View className="h-9 w-9 items-center justify-center rounded-lg bg-muted">
-                          <Flame size={18} color={colores.primerPlano} />
-                        </View>
-                        <View className="flex-1 gap-0.5">
-                          <Text className="text-sm font-semibold">{c.etiqueta}</Text>
-                          <Text className="text-xs text-muted-foreground">
-                            {DESCRIPCIONES_COMBUSTIBLE[c.id]}
-                          </Text>
-                        </View>
-                      </View>
-                      {descuento ? (
-                        <View className="rounded-md bg-primary/10 px-2 py-1">
-                          <Text className="text-xs font-semibold text-primary">
-                            {formatPct(descuento.descuento_porcentaje)} Dto.
-                          </Text>
-                        </View>
-                      ) : (
-                        <Text className="text-xs text-muted-foreground">Sin descuento</Text>
-                      )}
-                    </View>
-                    <View className="flex-row flex-wrap items-center gap-2">
-                      <Label nativeID={`pct-combustible-${c.id}`}>%</Label>
-                      <Input
-                        nativeID={`pct-combustible-${c.id}`}
-                        keyboardType="decimal-pad"
-                        value={pctCombustibles[c.id]}
-                        onChangeText={(v) =>
-                          setPctCombustibles((prev) => {
-                            const siguiente = { ...prev };
-                            siguiente[c.id] = v;
-                            return siguiente;
-                          })
-                        }
-                        placeholder="0"
-                        className="h-10 w-24 text-sm"
-                      />
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onPress={() => void guardarCombustible(c.id, pctCombustibles[c.id])}
-                      >
-                        <Text>Guardar</Text>
-                      </Button>
-                      {descuento ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onPress={() => void anularCombustibleDescuento(c.id)}
-                        >
-                          <Text className="text-xs">Anular</Text>
-                        </Button>
-                      ) : null}
-                    </View>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </View>
 
           {/* Descuentos por producto (lista de reglas existentes; el alta por
               artículo vive en la pestaña del proveedor correspondiente) */}
