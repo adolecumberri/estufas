@@ -66,4 +66,5 @@ docs/fansa_normalizado.json
 # desloppify state
 .desloppify/
 scorecard.png
-
+.tmp-web
+.tmp-export
